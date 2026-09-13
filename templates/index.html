@@ -1,73 +1,399 @@
 <!doctype html>
+
 <html lang="pt-BR">
+
 <head>
+
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Agendamento | Studio de Unhas</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="theme-color" content="#8f5f67">
+
+<meta name="description" content="Agendamento online Rayssa Lima Nail Designer">
+
+<title>Agende seu horário | Rayssa Lima Nail Designer</title>
+
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
 </head>
+
+
 <body>
-<main class="card">
-  <div class="logo">
-    <img src="{{ url_for('static', filename='logo.png') }}" alt="Rayssa Lima Nail Designer" style="width: 220px; max-width: 100%; height: auto; display: block; margin: 0 auto 20px;">
-</div>
-  <h1>Agende seu horário</h1>
-  <p class="sub">Escolha o serviço, a data e o melhor horário para você.</p>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-      <div class="alert {{ category }}">{{ message }}</div>
-    {% endfor %}
-  {% endwith %}
+<div class="decor decor-top"></div>
+<div class="decor decor-bottom"></div>
 
-  <form method="post" action="{{ url_for('agendar') }}">
-    <label>Serviço *</label>
-    <select name="service" required>
-      <option value="">Selecione...</option>
-      {% for name, duration, price in services %}
-      <option value="{{ name }}">{{ name }} — {{ duration }} min — R$ {{ "%.2f"|format(price)|replace(".", ",") }}</option>
-      {% endfor %}
-    </select>
 
-    <label>Nome *</label>
-    <input name="name" placeholder="Seu nome" required>
+<main class="card booking-card">
 
-    <label>WhatsApp *</label>
-    <input name="phone" type="tel" placeholder="(47) 99999-9999" required>
 
-    <label>Data *</label>
-    <input id="date" name="date" type="date" min="{{ now }}" required>
+    <!-- LOGO -->
 
-    <label>Horário *</label>
-    <select id="time" name="time" required disabled>
-      <option>Escolha uma data primeiro</option>
-    </select>
+    <div class="logo">
 
-    <label>Observação</label>
-    <textarea name="notes" rows="3" placeholder="Alguma observação?"></textarea>
+        <img
+            src="{{ url_for('static', filename='logo.png') }}"
+            alt="Rayssa Lima Nail Designer"
+        >
 
-    <button type="submit">Confirmar agendamento</button>
-  </form>
+    </div>
+
+
+    <!-- CABEÇALHO -->
+
+    <div class="brand-divider">
+        <span></span>
+        <b>♡</b>
+        <span></span>
+    </div>
+
+
+    <h1>Agende seu horário</h1>
+
+    <p class="sub">
+        Escolha o serviço, a data e o melhor horário para você.
+    </p>
+
+
+    <div class="welcome">
+
+        <span class="welcome-icon">✦</span>
+
+        <div>
+            <strong>Seu momento de beleza</strong>
+            <small>
+                Reserve seu horário de forma rápida e segura.
+            </small>
+        </div>
+
+    </div>
+
+
+    <!-- MENSAGENS DO SISTEMA -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% for category, message in messages %}
+
+            <div class="alert {{ category }}">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    {% endwith %}
+
+
+    <!-- FORMULÁRIO -->
+
+    <form
+        method="post"
+        action="{{ url_for('agendar') }}"
+        class="booking-form"
+    >
+
+
+        <!-- SERVIÇO -->
+
+        <div class="field">
+
+            <label for="service">
+                Serviço <span>*</span>
+            </label>
+
+            <div class="input-wrap">
+
+                <span class="field-icon">✦</span>
+
+                <select
+                    id="service"
+                    name="service"
+                    required
+                >
+
+                    <option value="">
+                        Selecione o serviço
+                    </option>
+
+                    {% for name, duration, price in services %}
+
+                    <option value="{{ name }}">
+                        {{ name }} — {{ duration }} min — R$ {{ "%.2f"|format(price)|replace(".", ",") }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <!-- NOME -->
+
+        <div class="field">
+
+            <label for="name">
+                Nome <span>*</span>
+            </label>
+
+            <div class="input-wrap">
+
+                <span class="field-icon">♡</span>
+
+                <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    placeholder="Digite seu nome"
+                    autocomplete="name"
+                    required
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- WHATSAPP -->
+
+        <div class="field">
+
+            <label for="phone">
+                WhatsApp <span>*</span>
+            </label>
+
+            <div class="input-wrap">
+
+                <span class="field-icon">◉</span>
+
+                <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    placeholder="(47) 99999-9999"
+                    autocomplete="tel"
+                    required
+                >
+
+            </div>
+
+            <small class="field-help">
+                Usaremos seu número para informações sobre o agendamento.
+            </small>
+
+        </div>
+
+
+        <!-- DATA -->
+
+        <div class="field">
+
+            <label for="date">
+                Data <span>*</span>
+            </label>
+
+            <div class="input-wrap">
+
+                <span class="field-icon">▣</span>
+
+                <input
+                    id="date"
+                    name="date"
+                    type="date"
+                    min="{{ now }}"
+                    required
+                >
+
+            </div>
+
+        </div>
+
+
+        <!-- HORÁRIO -->
+
+        <div class="field">
+
+            <label for="time">
+                Horário <span>*</span>
+            </label>
+
+            <div class="input-wrap">
+
+                <span class="field-icon">◷</span>
+
+                <select
+                    id="time"
+                    name="time"
+                    required
+                    disabled
+                >
+
+                    <option value="">
+                        Escolha uma data primeiro
+                    </option>
+
+                </select>
+
+            </div>
+
+            <small class="field-help">
+                Os horários disponíveis aparecerão após escolher a data.
+            </small>
+
+        </div>
+
+
+        <!-- OBSERVAÇÃO -->
+
+        <div class="field">
+
+            <label for="notes">
+                Observação
+            </label>
+
+            <div class="input-wrap textarea-wrap">
+
+                <span class="field-icon textarea-icon">♡</span>
+
+                <textarea
+                    id="notes"
+                    name="notes"
+                    rows="4"
+                    placeholder="Alguma observação ou pedido especial?"
+                ></textarea>
+
+            </div>
+
+        </div>
+
+
+        <!-- BOTÃO -->
+
+        <button
+            type="submit"
+            class="booking-button"
+        >
+
+            <span>Confirmar agendamento</span>
+
+            <strong>→</strong>
+
+        </button>
+
+
+        <p class="privacy-note">
+            🔒 Seus dados são utilizados somente para o seu agendamento.
+        </p>
+
+
+    </form>
+
+
+    <!-- RODAPÉ -->
+
+    <div class="footer-divider">
+
+        <span></span>
+        <b>♡</b>
+        <span></span>
+
+    </div>
+
+
+    <footer>
+
+        <strong>Rayssa Lima</strong>
+
+        <span>NAIL DESIGNER</span>
+
+        <small>
+            Atendimento com carinho e cuidado.
+        </small>
+
+    </footer>
+
+
 </main>
 
+
 <script>
+
 const dateInput = document.getElementById("date");
+
 const timeSelect = document.getElementById("time");
 
+
 dateInput.addEventListener("change", async () => {
-  timeSelect.innerHTML = "<option>Carregando...</option>";
-  timeSelect.disabled = true;
-  const res = await fetch(`/horarios?date=${dateInput.value}`);
-  const data = await res.json();
-  timeSelect.innerHTML = "";
-  if (!data.slots.length) {
-    timeSelect.innerHTML = "<option>Nenhum horário disponível</option>";
-    return;
-  }
-  timeSelect.append(new Option("Selecione...", ""));
-  data.slots.forEach(t => timeSelect.append(new Option(t, t)));
-  timeSelect.disabled = false;
+
+    timeSelect.innerHTML =
+        "<option value=''>Carregando horários...</option>";
+
+    timeSelect.disabled = true;
+
+
+    try {
+
+        const res =
+            await fetch(`/horarios?date=${dateInput.value}`);
+
+
+        if (!res.ok) {
+
+            throw new Error("Erro ao buscar horários.");
+
+        }
+
+
+        const data = await res.json();
+
+
+        timeSelect.innerHTML = "";
+
+
+        if (!data.slots.length) {
+
+            timeSelect.innerHTML =
+                "<option value=''>Nenhum horário disponível</option>";
+
+            return;
+
+        }
+
+
+        timeSelect.append(
+            new Option("Selecione o horário", "")
+        );
+
+
+        data.slots.forEach(t => {
+
+            timeSelect.append(
+                new Option(t, t)
+            );
+
+        });
+
+
+        timeSelect.disabled = false;
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        timeSelect.innerHTML =
+            "<option value=''>Erro ao carregar horários</option>";
+
+    }
+
 });
+
 </script>
+
+
 </body>
+
 </html>
