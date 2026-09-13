@@ -1232,3 +1232,39 @@ a {
         padding: 11px 13px;
     }
 }
+/* =========================================================
+   CORREÇÃO DOS ÍCONES NOS CAMPOS - CELULAR
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    /* Remove os ícones decorativos que estavam sobrepondo o texto */
+    .field-icon {
+        display: none !important;
+    }
+
+    /* Deixa o texto dos campos começar normalmente */
+    .input-wrap input,
+    .input-wrap select,
+    .input-wrap textarea {
+        padding-left: 13px !important;
+    }
+
+    /* Mantém o select com espaço adequado para a seta nativa */
+    .input-wrap select {
+        padding-right: 42px !important;
+    }
+
+    /* Campo de observação */
+    .textarea-wrap textarea {
+        padding-left: 13px !important;
+    }
+
+    /* Ajuda abaixo dos campos */
+    .field-help {
+        display: block;
+        margin: 6px 3px 0;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+}
