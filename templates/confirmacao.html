@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agendamento confirmado</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<main class="card center">
+  <div class="success">✓</div>
+  <h1>Agendamento confirmado!</h1>
+  <p>Olá, <strong>{{ name }}</strong>. Seu horário foi reservado.</p>
+  <div class="summary">
+    <p><strong>Serviço:</strong> {{ service }}</p>
+    <p><strong>Data:</strong> {{ day }}</p>
+    <p><strong>Horário:</strong> {{ time }}</p>
+  </div>
+  <a class="button" href="{{ url_for('index') }}">Fazer outro agendamento</a>
+</main>
+</body>
+</html>

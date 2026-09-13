@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agendamento | Studio de Unhas</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<main class="card">
+  <div class="brand">✦ STUDIO DE UNHAS</div>
+  <h1>Agende seu horário</h1>
+  <p class="sub">Escolha o serviço, a data e o melhor horário para você.</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert {{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="post" action="{{ url_for('agendar') }}">
+    <label>Serviço *</label>
+    <select name="service" required>
+      <option value="">Selecione...</option>
+      {% for name, duration, price in services %}
+      <option value="{{ name }}">{{ name }} — {{ duration }} min — R$ {{ "%.2f"|format(price)|replace(".", ",") }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Nome *</label>
+    <input name="name" placeholder="Seu nome" required>
+
+    <label>WhatsApp *</label>
+    <input name="phone" type="tel" placeholder="(47) 99999-9999" required>
+
+    <label>Data *</label>
+    <input id="date" name="date" type="date" min="{{ now }}" required>
+
+    <label>Horário *</label>
+    <select id="time" name="time" required disabled>
+      <option>Escolha uma data primeiro</option>
+    </select>
+
+    <label>Observação</label>
+    <textarea name="notes" rows="3" placeholder="Alguma observação?"></textarea>
+
+    <button type="submit">Confirmar agendamento</button>
+  </form>
+</main>
+
+<script>
+const dateInput = document.getElementById("date");
+const timeSelect = document.getElementById("time");
+
+dateInput.addEventListener("change", async () => {
+  timeSelect.innerHTML = "<option>Carregando...</option>";
+  timeSelect.disabled = true;
+  const res = await fetch(`/horarios?date=${dateInput.value}`);
+  const data = await res.json();
+  timeSelect.innerHTML = "";
+  if (!data.slots.length) {
+    timeSelect.innerHTML = "<option>Nenhum horário disponível</option>";
+    return;
+  }
+  timeSelect.append(new Option("Selecione...", ""));
+  data.slots.forEach(t => timeSelect.append(new Option(t, t)));
+  timeSelect.disabled = false;
+});
+</script>
+</body>
+</html>
