@@ -1,11 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, Response
 import sqlite3
 from datetime import datetime, date, timedelta
 from pathlib import Path
 import os
+from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = "troque-esta-chave-em-producao"
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 DB = Path(__file__).with_name("agendamentos.db")
 
 SERVICES = [
@@ -116,8 +118,23 @@ def agendar():
     con.close()
 
     return render_template("confirmacao.html", name=name, service=service, day=day, time=time)
+def proteger_admin(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        auth = request.authorization
 
+        if not auth or auth.password != ADMIN_PASSWORD:
+            return Response(
+                "Acesso restrito. Digite a senha correta.",
+                401,
+                {"WWW-Authenticate": 'Basic realm="Área administrativa"'}
+            )
+
+        return func(*args, **kwargs)
+
+    return wrapperv
 @app.route("/admin")
+@proteger_admin
 def admin():
     con = db()
     appointments = con.execute("""
@@ -128,6 +145,7 @@ def admin():
     return render_template("admin.html", appointments=appointments)
 
 @app.post("/admin/cancelar/<int:appointment_id>")
+@proteger_admin
 def cancelar(appointment_id):
     con = db()
     con.execute("DELETE FROM appointments WHERE id = ?", (appointment_id,))
