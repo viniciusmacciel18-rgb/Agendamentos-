@@ -1151,3 +1151,84 @@ a {
         border-radius: 12px;
     }
 }
+/* =========================================================
+   AJUSTE FINO - CELULAR
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    body {
+        padding: 5px;
+    }
+
+    .card {
+        margin: 0 auto;
+        padding: 18px 14px 24px;
+        border-radius: 18px;
+    }
+
+    /* Logo */
+    .logo {
+        margin-bottom: 4px;
+    }
+
+    .logo img {
+        width: 165px;
+        max-width: 70%;
+    }
+
+    /* Título */
+    h1 {
+        margin: 4px 0;
+        font-size: 25px;
+        line-height: 1.2;
+    }
+
+    .card h1::after {
+        margin-top: 8px;
+    }
+
+    .sub {
+        margin: 0 auto 16px;
+        font-size: 13px;
+        line-height: 1.4;
+    }
+
+    /* Espaçamento dos campos */
+    label {
+        margin: 12px 0 5px;
+        font-size: 12px;
+    }
+
+    input,
+    select,
+    textarea {
+        padding: 11px 13px;
+        min-height: 46px;
+        border-radius: 11px;
+    }
+
+    textarea {
+        min-height: 80px;
+    }
+
+    /* Botão */
+    button,
+    .button {
+        min-height: 48px;
+        margin-top: 18px;
+        padding: 11px 15px;
+    }
+
+    /* Resumo */
+    .summary {
+        margin: 18px 0;
+        padding: 15px;
+    }
+
+    /* Mensagens */
+    .alert {
+        margin: 10px 0;
+        padding: 11px 13px;
+    }
+}
