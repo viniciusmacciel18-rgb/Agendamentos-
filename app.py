@@ -9,10 +9,14 @@ app.secret_key = "troque-esta-chave-em-producao"
 DB = Path(__file__).with_name("agendamentos.db")
 
 SERVICES = [
-    ("Manicure", 30, 35.00),
-    ("Pedicure", 45, 45.00),
-    ("Manicure + Pedicure", 75, 75.00),
-    ("Alongamento de unhas", 120, 120.00),
+    ("Esmaltação simples", 30, 30.00),
+    ("Esmaltação em Gel", 90, 45.00),
+    ("Blindagem de unhas", 60, 30.00),
+    ("Pedicure", 45, 30.00),
+    ("Manicure + Pedicure", 60, 50.00),
+    ("Alongamento de unhas", 120, 60.00),
+    ("Plano mensao", 90, 150.00)
+    
 ]
 
 def db():
