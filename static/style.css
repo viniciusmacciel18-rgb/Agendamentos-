@@ -1,20 +1,1086 @@
-*{box-sizing:border-box}
-body{margin:0;background:#f8f2f4;color:#30272b;font-family:Arial,sans-serif;padding:24px}
-.card,.wide{max-width:620px;margin:30px auto;background:white;border-radius:22px;padding:32px;box-shadow:0 12px 35px rgba(0,0,0,.08)}
-.wide{max-width:1100px}
-.brand{text-align:center;letter-spacing:3px;font-size:13px;margin-bottom:18px}
-h1{text-align:center;margin:8px 0;font-size:30px}
-.sub{text-align:center;color:#766a70;margin-bottom:28px}
-label{display:block;margin:15px 0 7px;font-weight:bold}
-input,select,textarea{width:100%;padding:13px;border:1px solid #ddd1d6;border-radius:11px;font-size:16px;background:#fff}
-button,.button{display:inline-block;width:100%;border:0;border-radius:12px;padding:14px;margin-top:22px;background:#30272b;color:white;font-size:16px;text-align:center;text-decoration:none;cursor:pointer}
-.alert{padding:12px;border-radius:10px;margin:12px 0;background:#fff0f2}
-.success{margin:auto;width:60px;height:60px;border-radius:50%;display:grid;place-items:center;background:#e7f7ec;font-size:30px}
-.center{text-align:center}
-.summary{background:#faf6f7;border-radius:14px;padding:12px;margin:20px 0}
-table{width:100%;border-collapse:collapse}
-th,td{padding:12px;border-bottom:1px solid #eee;text-align:left}
-.danger{background:#9f3040;margin:0;padding:8px}
-.table-wrap{overflow:auto}
-a{color:#6e4050}
-@media(max-width:650px){body{padding:10px}.card,.wide{margin:10px auto;padding:22px}h1{font-size:25px}th,td{white-space:nowrap}}
+/* =========================================================
+   RAYSSA LIMA NAIL DESIGNER
+   ESTILO PREMIUM
+   ========================================================= */
+
+
+/* ---------- CONFIGURAÇÕES GERAIS ---------- */
+
+* {
+    box-sizing: border-box;
+}
+
+
+:root {
+
+    --rose-dark: #704851;
+    --rose: #9a6871;
+    --rose-light: #c9959d;
+
+    --cream: #fffaf8;
+    --cream-soft: #fdf4f2;
+
+    --text: #34282c;
+    --text-soft: #77666a;
+
+    --border: #ead8d8;
+
+    --white: #ffffff;
+
+    --shadow:
+        0 25px 70px rgba(91, 55, 61, 0.12);
+
+}
+
+
+html {
+    scroll-behavior: smooth;
+}
+
+
+body {
+
+    margin: 0;
+
+    min-height: 100vh;
+
+    padding: 40px 18px;
+
+    background:
+        radial-gradient(
+            circle at 10% 10%,
+            rgba(214, 166, 172, 0.28),
+            transparent 30%
+        ),
+
+        radial-gradient(
+            circle at 90% 90%,
+            rgba(207, 166, 153, 0.22),
+            transparent 32%
+        ),
+
+        linear-gradient(
+            135deg,
+            #fbf2f1 0%,
+            #f8eeee 50%,
+            #f5e8e8 100%
+        );
+
+    color: var(--text);
+
+    font-family:
+        "Segoe UI",
+        Arial,
+        sans-serif;
+
+}
+
+
+/* ---------- DETALHES DECORATIVOS ---------- */
+
+.decor {
+
+    position: fixed;
+
+    width: 260px;
+
+    height: 260px;
+
+    border: 1px solid rgba(154, 104, 113, 0.16);
+
+    border-radius: 50%;
+
+    pointer-events: none;
+
+    z-index: 0;
+
+}
+
+
+.decor-top {
+
+    top: -150px;
+
+    left: -130px;
+
+}
+
+
+.decor-bottom {
+
+    right: -150px;
+
+    bottom: -150px;
+
+}
+
+
+.decor-top::after,
+.decor-bottom::after {
+
+    content: "✦";
+
+    position: absolute;
+
+    color: rgba(154, 104, 113, 0.25);
+
+    font-size: 22px;
+
+}
+
+
+.decor-top::after {
+
+    right: 45px;
+
+    bottom: 42px;
+
+}
+
+
+.decor-bottom::after {
+
+    left: 45px;
+
+    top: 42px;
+
+}
+
+
+/* ---------- CARD PRINCIPAL ---------- */
+
+.card {
+
+    position: relative;
+
+    z-index: 1;
+
+    width: 100%;
+
+    max-width: 620px;
+
+    margin: 0 auto;
+
+    padding: 38px 42px 30px;
+
+    background:
+
+        linear-gradient(
+            145deg,
+            rgba(255,255,255,0.98),
+            rgba(255,249,248,0.98)
+        );
+
+    border: 1px solid rgba(255,255,255,0.9);
+
+    border-radius: 30px;
+
+    box-shadow: var(--shadow);
+
+}
+
+
+/* ---------- LOGO ---------- */
+
+.logo {
+
+    text-align: center;
+
+    margin-bottom: 5px;
+
+}
+
+
+.logo img {
+
+    display: block;
+
+    width: 245px;
+
+    max-width: 80%;
+
+    height: auto;
+
+    margin: 0 auto;
+
+}
+
+
+/* ---------- DIVISÓRIA ---------- */
+
+.brand-divider,
+.footer-divider {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 12px;
+
+    margin: 3px auto 17px;
+
+}
+
+
+.brand-divider span,
+.footer-divider span {
+
+    display: block;
+
+    width: 58px;
+
+    height: 1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            var(--rose-light)
+        );
+
+}
+
+
+.brand-divider span:last-child,
+.footer-divider span:last-child {
+
+    background:
+        linear-gradient(
+            90deg,
+            var(--rose-light),
+            transparent
+        );
+
+}
+
+
+.brand-divider b,
+.footer-divider b {
+
+    color: var(--rose);
+
+    font-size: 16px;
+
+    font-weight: 400;
+
+}
+
+
+/* ---------- TÍTULOS ---------- */
+
+h1 {
+
+    margin: 0;
+
+    text-align: center;
+
+    color: var(--text);
+
+    font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
+    font-size: clamp(28px, 5vw, 36px);
+
+    font-weight: 500;
+
+    letter-spacing: -0.5px;
+
+}
+
+
+.sub {
+
+    max-width: 430px;
+
+    margin: 9px auto 22px;
+
+    text-align: center;
+
+    color: var(--text-soft);
+
+    font-size: 14px;
+
+    line-height: 1.6;
+
+}
+
+
+/* ---------- CAIXA DE BOAS-VINDAS ---------- */
+
+.welcome {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 13px;
+
+    margin: 0 0 25px;
+
+    padding: 13px 16px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fff7f5,
+            #fdf0ef
+        );
+
+    border: 1px solid #f0dddd;
+
+    border-radius: 15px;
+
+}
+
+
+.welcome-icon {
+
+    display: grid;
+
+    place-items: center;
+
+    flex: 0 0 36px;
+
+    width: 36px;
+
+    height: 36px;
+
+    border-radius: 50%;
+
+    background: var(--rose-dark);
+
+    color: white;
+
+    font-size: 15px;
+
+}
+
+
+.welcome strong {
+
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: var(--rose-dark);
+
+    font-size: 13px;
+
+}
+
+
+.welcome small {
+
+    display: block;
+
+    color: var(--text-soft);
+
+    font-size: 12px;
+
+}
+
+
+/* ---------- ALERTAS ---------- */
+
+.alert {
+
+    padding: 13px 15px;
+
+    margin: 0 0 18px;
+
+    border-radius: 13px;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+
+}
+
+
+.alert.success {
+
+    background: #eef8f1;
+
+    border: 1px solid #d3ead9;
+
+    color: #386245;
+
+}
+
+
+.alert.error,
+.alert.danger {
+
+    background: #fff0f1;
+
+    border: 1px solid #efd1d5;
+
+    color: #8c3945;
+
+}
+
+
+/* ---------- FORMULÁRIO ---------- */
+
+.booking-form {
+
+    width: 100%;
+
+}
+
+
+.field {
+
+    margin-bottom: 18px;
+
+}
+
+
+label {
+
+    display: block;
+
+    margin: 0 0 7px;
+
+    color: var(--rose-dark);
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.2px;
+
+}
+
+
+label span {
+
+    color: #b56f7b;
+
+}
+
+
+/* ---------- CAMPOS ---------- */
+
+.input-wrap {
+
+    position: relative;
+
+}
+
+
+.field-icon {
+
+    position: absolute;
+
+    left: 15px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: var(--rose);
+
+    font-size: 14px;
+
+    pointer-events: none;
+
+    z-index: 2;
+
+}
+
+
+input,
+select,
+textarea {
+
+    width: 100%;
+
+    border: 1px solid var(--border);
+
+    border-radius: 14px;
+
+    outline: none;
+
+    background: rgba(255,255,255,0.92);
+
+    color: var(--text);
+
+    font-family: inherit;
+
+    font-size: 15px;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease,
+        transform 0.2s ease;
+
+}
+
+
+input,
+select {
+
+    min-height: 52px;
+
+    padding: 13px 15px 13px 43px;
+
+}
+
+
+textarea {
+
+    min-height: 110px;
+
+    resize: vertical;
+
+    padding: 15px 15px 15px 43px;
+
+    line-height: 1.5;
+
+}
+
+
+textarea + * {
+
+    pointer-events: none;
+
+}
+
+
+input::placeholder,
+textarea::placeholder {
+
+    color: #a49498;
+
+}
+
+
+input:hover,
+select:hover,
+textarea:hover {
+
+    border-color: #d6b8bd;
+
+}
+
+
+input:focus,
+select:focus,
+textarea:focus {
+
+    border-color: var(--rose);
+
+    background: #fff;
+
+    box-shadow:
+        0 0 0 4px rgba(154,104,113,0.10);
+
+}
+
+
+select {
+
+    cursor: pointer;
+
+    appearance: auto;
+
+}
+
+
+select:disabled {
+
+    background: #f8f4f4;
+
+    color: #a99da0;
+
+    cursor: not-allowed;
+
+}
+
+
+/* ---------- TEXTO AUXILIAR ---------- */
+
+.field-help {
+
+    display: block;
+
+    margin: 7px 2px 0;
+
+    color: #96868a;
+
+    font-size: 11px;
+
+    line-height: 1.4;
+
+}
+
+
+/* ---------- BOTÃO ---------- */
+
+.booking-button {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 12px;
+
+    width: 100%;
+
+    min-height: 56px;
+
+    margin-top: 8px;
+
+    padding: 14px 20px;
+
+    border: 0;
+
+    border-radius: 15px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #65434a,
+            #91616a
+        );
+
+    color: white;
+
+    font-family: inherit;
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.2px;
+
+    box-shadow:
+        0 10px 22px rgba(112,72,81,0.20);
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        filter 0.2s ease;
+
+}
+
+
+.booking-button strong {
+
+    font-size: 20px;
+
+    font-weight: 400;
+
+    transition: transform 0.2s ease;
+
+}
+
+
+.booking-button:hover {
+
+    filter: brightness(1.05);
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 14px 28px rgba(112,72,81,0.26);
+
+}
+
+
+.booking-button:hover strong {
+
+    transform: translateX(4px);
+
+}
+
+
+.booking-button:active {
+
+    transform: translateY(0);
+
+}
+
+
+/* ---------- PRIVACIDADE ---------- */
+
+.privacy-note {
+
+    margin: 13px 0 0;
+
+    text-align: center;
+
+    color: #9a8a8e;
+
+    font-size: 11px;
+
+    line-height: 1.5;
+
+}
+
+
+/* ---------- RODAPÉ ---------- */
+
+.footer-divider {
+
+    margin-top: 28px;
+
+    margin-bottom: 18px;
+
+}
+
+
+footer {
+
+    text-align: center;
+
+}
+
+
+footer strong {
+
+    display: block;
+
+    color: var(--rose-dark);
+
+    font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
+    font-size: 17px;
+
+    font-weight: 500;
+
+    letter-spacing: 0.3px;
+
+}
+
+
+footer span {
+
+    display: block;
+
+    margin-top: 4px;
+
+    color: #9c7a80;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing: 3px;
+
+}
+
+
+footer small {
+
+    display: block;
+
+    margin-top: 8px;
+
+    color: #a49397;
+
+    font-size: 10px;
+
+}
+
+
+/* =========================================================
+   CONFIRMAÇÃO / PAINEL ADMIN
+   ========================================================= */
+
+.wide {
+
+    width: 100%;
+
+    max-width: 1100px;
+
+    margin: 0 auto;
+
+}
+
+
+.center {
+
+    text-align: center;
+
+}
+
+
+.summary {
+
+    margin: 22px 0;
+
+    padding: 18px;
+
+    background: #fff7f6;
+
+    border: 1px solid #f0dddd;
+
+    border-radius: 16px;
+
+}
+
+
+.summary p {
+
+    margin: 8px 0;
+
+}
+
+
+.success {
+
+    display: grid;
+
+    place-items: center;
+
+    width: 68px;
+
+    height: 68px;
+
+    margin: 0 auto 18px;
+
+    border-radius: 50%;
+
+    background: #e8f6ed;
+
+    color: #47865a;
+
+    font-size: 30px;
+
+    box-shadow: 0 8px 20px rgba(71,134,90,0.12);
+
+}
+
+
+.button {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 100%;
+
+    min-height: 52px;
+
+    padding: 13px 18px;
+
+    border-radius: 14px;
+
+    background: var(--rose-dark);
+
+    color: white;
+
+    text-decoration: none;
+
+    font-weight: 700;
+
+    transition: transform 0.2s ease;
+
+}
+
+
+.button:hover {
+
+    transform: translateY(-2px);
+
+}
+
+
+/* ---------- TABELA ADMIN ---------- */
+
+table {
+
+    width: 100%;
+
+    border-collapse: separate;
+
+    border-spacing: 0;
+
+    overflow: hidden;
+
+    background: white;
+
+    border: 1px solid var(--border);
+
+    border-radius: 15px;
+
+}
+
+
+th,
+td {
+
+    padding: 13px 14px;
+
+    border-bottom: 1px solid #f0e6e7;
+
+    text-align: left;
+
+    font-size: 14px;
+
+}
+
+
+th {
+
+    background: #fbf1f1;
+
+    color: var(--rose-dark);
+
+    font-weight: 700;
+
+}
+
+
+tr:last-child td {
+
+    border-bottom: 0;
+
+}
+
+
+.table-wrap {
+
+    width: 100%;
+
+    overflow-x: auto;
+
+}
+
+
+.danger {
+
+    width: auto;
+
+    margin: 0;
+
+    padding: 8px 13px;
+
+    border: 0;
+
+    border-radius: 9px;
+
+    background: #9f3040;
+
+    color: white;
+
+    cursor: pointer;
+
+}
+
+
+a {
+
+    color: var(--rose-dark);
+
+}
+
+
+/* =========================================================
+   RESPONSIVO
+   ========================================================= */
+
+@media (max-width: 650px) {
+
+    body {
+
+        padding: 16px 10px;
+
+    }
+
+
+    .card {
+
+        padding: 27px 20px 24px;
+
+        border-radius: 24px;
+
+    }
+
+
+    .logo img {
+
+        width: 215px;
+
+    }
+
+
+    h1 {
+
+        font-size: 28px;
+
+    }
+
+
+    .sub {
+
+        font-size: 13px;
+
+    }
+
+
+    .welcome {
+
+        padding: 12px;
+
+    }
+
+
+    input,
+    select {
+
+        min-height: 51px;
+
+    }
+
+
+    .decor {
+
+        opacity: 0.5;
+
+    }
+
+}
+
+
+@media (max-width: 400px) {
+
+    .card {
+
+        padding-left: 16px;
+
+        padding-right: 16px;
+
+    }
+
+
+    .logo img {
+
+        width: 195px;
+
+    }
+
+
+    h1 {
+
+        font-size: 25px;
+
+    }
+
+}
