@@ -46,17 +46,68 @@ def init_db():
     con.close()
 
 def slots_for(day):
-    # Segunda a sábado, 09:00–18:00, intervalo de 30 min.
+    # Segunda a sexta:
+    # Manhã: 07:30 às 11:00
+    # Tarde: 13:30 às 20:00
+    #
+    # Sábado:
+    # 09:00 às 16:00
+    #
+    # Domingo: fechado
+    # Horários de 30 em 30 minutos.
+
     d = datetime.strptime(day, "%Y-%m-%d").date()
+
+    # Domingo fechado
     if d.weekday() == 6:
         return []
-    start = datetime.combine(d, datetime.min.time()).replace(hour=9)
-    end = datetime.combine(d, datetime.min.time()).replace(hour=18)
+
     slots = []
-    cur = start
-    while cur < end:
-        slots.append(cur.strftime("%H:%M"))
-        cur += timedelta(minutes=30)
+
+    # Segunda a sexta
+    if d.weekday() <= 4:
+
+        # Manhã
+        cur = datetime.combine(d, datetime.min.time()).replace(
+            hour=7, minute=30
+        )
+
+        end_morning = datetime.combine(d, datetime.min.time()).replace(
+            hour=11, minute=0
+        )
+
+        while cur <= end_morning:
+            slots.append(cur.strftime("%H:%M"))
+            cur += timedelta(minutes=30)
+
+        # Tarde
+        cur = datetime.combine(d, datetime.min.time()).replace(
+            hour=13, minute=30
+        )
+
+        end_afternoon = datetime.combine(d, datetime.min.time()).replace(
+            hour=20, minute=0
+        )
+
+        while cur <= end_afternoon:
+            slots.append(cur.strftime("%H:%M"))
+            cur += timedelta(minutes=30)
+
+    # Sábado
+    else:
+
+        cur = datetime.combine(d, datetime.min.time()).replace(
+            hour=9, minute=0
+        )
+
+        end_saturday = datetime.combine(d, datetime.min.time()).replace(
+            hour=16, minute=0
+        )
+
+        while cur <= end_saturday:
+            slots.append(cur.strftime("%H:%M"))
+            cur += timedelta(minutes=30)
+
     return slots
 
 @app.context_processor
