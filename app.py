@@ -7,6 +7,7 @@ from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = "troque-esta-chave-em-producao"
+ADMIN_USERNAME = "Rayssa"
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 DB = Path(__file__).with_name("agendamentos.db")
 
@@ -123,7 +124,7 @@ def proteger_admin(func):
     def wrapper(*args, **kwargs):
         auth = request.authorization
 
-        if not auth or auth.password != ADMIN_PASSWORD:
+        if not auth or auth.username != ADMIN_USERNAME or auth.password != ADMIN_PASSWORD:
             return Response(
                 "Acesso restrito. Digite a senha correta.",
                 401,
