@@ -132,7 +132,7 @@ def proteger_admin(func):
 
         return func(*args, **kwargs)
 
-    return wrapperv
+    return wrapper
 @app.route("/admin")
 @proteger_admin
 def admin():
