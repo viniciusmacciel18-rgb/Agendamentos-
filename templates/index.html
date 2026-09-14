@@ -321,12 +321,27 @@
 
 <script>
 
+<script>
+
 const dateInput = document.getElementById("date");
 
 const timeSelect = document.getElementById("time");
 
+const serviceSelect = document.getElementById("service");
 
-dateInput.addEventListener("change", async () => {
+
+async function carregarHorarios() {
+
+    if (!dateInput.value || !serviceSelect.value) {
+
+        timeSelect.innerHTML =
+            "<option value=''>Escolha o serviço e a data</option>";
+
+        timeSelect.disabled = true;
+
+        return;
+    }
+
 
     timeSelect.innerHTML =
         "<option value=''>Carregando horários...</option>";
@@ -336,8 +351,9 @@ dateInput.addEventListener("change", async () => {
 
     try {
 
-        const res =
-            await fetch(`/horarios?date=${dateInput.value}`);
+        const res = await fetch(
+            `/horarios?date=${dateInput.value}&service=${encodeURIComponent(serviceSelect.value)}`
+        );
 
 
         if (!res.ok) {
@@ -387,13 +403,19 @@ dateInput.addEventListener("change", async () => {
         timeSelect.innerHTML =
             "<option value=''>Erro ao carregar horários</option>";
 
+        timeSelect.disabled = true;
+
     }
 
-});
+}
+
+
+/* Quando escolher uma data */
+dateInput.addEventListener("change", carregarHorarios);
+
+
+/* Quando trocar o serviço */
+serviceSelect.addEventListener("change", carregarHorarios);
+
 
 </script>
-
-
-</body>
-
-</html>
