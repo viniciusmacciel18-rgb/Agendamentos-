@@ -1,1561 +1,974 @@
 /* =========================================================
-   RAYSSA LIMA NAIL DESIGNER
-   ESTILO PREMIUM
+   RAYSSA LIMA • NAIL DESIGNER
+   ESTILO GERAL
    ========================================================= */
-
-
-/* ---------- CONFIGURAÇÕES GERAIS ---------- */
 
 * {
     box-sizing: border-box;
 }
 
-
 :root {
+    --fundo: #f7eeee;
+    --fundo-claro: #fffaf9;
+    --branco: #ffffff;
 
-    --rose-dark: #704851;
-    --rose: #9a6871;
-    --rose-light: #c9959d;
+    --texto: #302629;
+    --texto-suave: #806e73;
 
-    --cream: #fffaf8;
-    --cream-soft: #fdf4f2;
+    --rosa: #8b5964;
+    --rosa-escuro: #70434f;
+    --rosa-claro: #f8e9eb;
 
-    --text: #34282c;
-    --text-soft: #77666a;
+    --borda: #ead5d9;
 
-    --border: #ead8d8;
+    --verde: #4d8b68;
+    --verde-claro: #e8f5ed;
 
-    --white: #ffffff;
+    --vermelho: #a93448;
 
-    --shadow:
-        0 25px 70px rgba(91, 55, 61, 0.12);
+    --sombra:
+        0 20px 60px rgba(91, 54, 63, 0.10);
 
+    --raio: 24px;
 }
 
 
-html {
-    scroll-behavior: smooth;
-}
-
+/* =========================================================
+   BODY
+   ========================================================= */
 
 body {
-
     margin: 0;
-
     min-height: 100vh;
-
-    padding: 40px 18px;
 
     background:
         radial-gradient(
-            circle at 10% 10%,
-            rgba(214, 166, 172, 0.28),
-            transparent 30%
+            circle at top left,
+            rgba(235, 204, 211, 0.45),
+            transparent 35%
         ),
-
         radial-gradient(
-            circle at 90% 90%,
-            rgba(207, 166, 153, 0.22),
-            transparent 32%
+            circle at bottom right,
+            rgba(224, 191, 199, 0.35),
+            transparent 35%
         ),
+        var(--fundo);
 
-        linear-gradient(
-            135deg,
-            #fbf2f1 0%,
-            #f8eeee 50%,
-            #f5e8e8 100%
-        );
-
-    color: var(--text);
+    color: var(--texto);
 
     font-family:
+        -apple-system,
+        BlinkMacSystemFont,
         "Segoe UI",
         Arial,
         sans-serif;
 
+    padding: 30px;
 }
 
 
-/* ---------- DETALHES DECORATIVOS ---------- */
-
-.decor {
-
-    position: fixed;
-
-    width: 260px;
-
-    height: 260px;
-
-    border: 1px solid rgba(154, 104, 113, 0.16);
-
-    border-radius: 50%;
-
-    pointer-events: none;
-
-    z-index: 0;
-
-}
-
-
-.decor-top {
-
-    top: -150px;
-
-    left: -130px;
-
-}
-
-
-.decor-bottom {
-
-    right: -150px;
-
-    bottom: -150px;
-
-}
-
-
-.decor-top::after,
-.decor-bottom::after {
-
-    content: "✦";
-
-    position: absolute;
-
-    color: rgba(154, 104, 113, 0.25);
-
-    font-size: 22px;
-
-}
-
-
-.decor-top::after {
-
-    right: 45px;
-
-    bottom: 42px;
-
-}
-
-
-.decor-bottom::after {
-
-    left: 45px;
-
-    top: 42px;
-
-}
-
-
-/* ---------- CARD PRINCIPAL ---------- */
+/* =========================================================
+   PÁGINA PRINCIPAL
+   ========================================================= */
 
 .card {
-
-    position: relative;
-
-    z-index: 1;
-
     width: 100%;
+    max-width: 680px;
 
-    max-width: 620px;
+    margin: 25px auto;
 
-    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.94);
 
-    padding: 38px 42px 30px;
+    border: 1px solid rgba(234, 213, 217, 0.9);
 
-    background:
+    border-radius: var(--raio);
 
-        linear-gradient(
-            145deg,
-            rgba(255,255,255,0.98),
-            rgba(255,249,248,0.98)
-        );
+    padding: 42px;
 
-    border: 1px solid rgba(255,255,255,0.9);
+    box-shadow: var(--sombra);
 
-    border-radius: 30px;
-
-    box-shadow: var(--shadow);
-
+    backdrop-filter: blur(8px);
 }
 
 
-/* ---------- LOGO ---------- */
+/* =========================================================
+   LOGO
+   ========================================================= */
 
 .logo {
-
     text-align: center;
-
-    margin-bottom: 5px;
-
+    margin-bottom: 18px;
 }
-
 
 .logo img {
-
-    display: block;
-
-    width: 245px;
-
-    max-width: 80%;
-
+    width: 240px;
+    max-width: 75%;
     height: auto;
 
+    display: block;
     margin: 0 auto;
 
+    border-radius: 16px;
 }
 
 
-/* ---------- DIVISÓRIA ---------- */
-
-.brand-divider,
-.footer-divider {
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    gap: 12px;
-
-    margin: 3px auto 17px;
-
-}
-
-
-.brand-divider span,
-.footer-divider span {
-
-    display: block;
-
-    width: 58px;
-
-    height: 1px;
-
-    background:
-        linear-gradient(
-            90deg,
-            transparent,
-            var(--rose-light)
-        );
-
-}
-
-
-.brand-divider span:last-child,
-.footer-divider span:last-child {
-
-    background:
-        linear-gradient(
-            90deg,
-            var(--rose-light),
-            transparent
-        );
-
-}
-
-
-.brand-divider b,
-.footer-divider b {
-
-    color: var(--rose);
-
-    font-size: 16px;
-
-    font-weight: 400;
-
-}
-
-
-/* ---------- TÍTULOS ---------- */
+/* =========================================================
+   TÍTULOS
+   ========================================================= */
 
 h1 {
-
-    margin: 0;
+    margin: 8px 0 8px;
 
     text-align: center;
 
-    color: var(--text);
+    color: var(--texto);
 
-    font-family:
-        Georgia,
-        "Times New Roman",
-        serif;
+    font-family: Georgia, "Times New Roman", serif;
 
-    font-size: clamp(28px, 5vw, 36px);
-
+    font-size: 38px;
     font-weight: 500;
 
     letter-spacing: -0.5px;
-
 }
 
-
 .sub {
+    margin: 0 auto 30px;
 
-    max-width: 430px;
-
-    margin: 9px auto 22px;
+    max-width: 520px;
 
     text-align: center;
 
-    color: var(--text-soft);
+    color: var(--texto-suave);
 
-    font-size: 14px;
-
+    font-size: 16px;
     line-height: 1.6;
-
 }
 
 
-/* ---------- CAIXA DE BOAS-VINDAS ---------- */
+/* =========================================================
+   FORMULÁRIO
+   ========================================================= */
 
-.welcome {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 13px;
-
-    margin: 0 0 25px;
-
-    padding: 13px 16px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #fff7f5,
-            #fdf0ef
-        );
-
-    border: 1px solid #f0dddd;
-
-    border-radius: 15px;
-
-}
-
-
-.welcome-icon {
-
-    display: grid;
-
-    place-items: center;
-
-    flex: 0 0 36px;
-
-    width: 36px;
-
-    height: 36px;
-
-    border-radius: 50%;
-
-    background: var(--rose-dark);
-
-    color: white;
-
-    font-size: 15px;
-
-}
-
-
-.welcome strong {
-
-    display: block;
-
-    margin-bottom: 3px;
-
-    color: var(--rose-dark);
-
-    font-size: 13px;
-
-}
-
-
-.welcome small {
-
-    display: block;
-
-    color: var(--text-soft);
-
-    font-size: 12px;
-
-}
-
-
-/* ---------- ALERTAS ---------- */
-
-.alert {
-
-    padding: 13px 15px;
-
-    margin: 0 0 18px;
-
-    border-radius: 13px;
-
-    font-size: 14px;
-
-    line-height: 1.5;
-
-}
-
-
-.alert.success {
-
-    background: #eef8f1;
-
-    border: 1px solid #d3ead9;
-
-    color: #386245;
-
-}
-
-
-.alert.error,
-.alert.danger {
-
-    background: #fff0f1;
-
-    border: 1px solid #efd1d5;
-
-    color: #8c3945;
-
-}
-
-
-/* ---------- FORMULÁRIO ---------- */
-
-.booking-form {
-
+form {
     width: 100%;
-
 }
-
-
-.field {
-
-    margin-bottom: 18px;
-
-}
-
 
 label {
-
     display: block;
 
-    margin: 0 0 7px;
+    margin: 20px 0 8px;
 
-    color: var(--rose-dark);
+    color: var(--rosa-escuro);
 
-    font-size: 13px;
-
+    font-size: 14px;
     font-weight: 700;
 
     letter-spacing: 0.2px;
-
 }
-
-
-label span {
-
-    color: #b56f7b;
-
-}
-
-
-/* ---------- CAMPOS ---------- */
-
-.input-wrap {
-
-    position: relative;
-
-}
-
-
-.field-icon {
-
-    position: absolute;
-
-    left: 15px;
-
-    top: 50%;
-
-    transform: translateY(-50%);
-
-    color: var(--rose);
-
-    font-size: 14px;
-
-    pointer-events: none;
-
-    z-index: 2;
-
-}
-
 
 input,
 select,
 textarea {
-
     width: 100%;
 
-    border: 1px solid var(--border);
+    padding: 15px 16px;
 
-    border-radius: 14px;
+    border: 1px solid var(--borda);
 
-    outline: none;
+    border-radius: 15px;
 
-    background: rgba(255,255,255,0.92);
+    background: #fffdfd;
 
-    color: var(--text);
+    color: var(--texto);
 
     font-family: inherit;
+    font-size: 16px;
 
-    font-size: 15px;
+    outline: none;
 
     transition:
         border-color 0.2s ease,
         box-shadow 0.2s ease,
-        background 0.2s ease,
-        transform 0.2s ease;
-
+        background 0.2s ease;
 }
-
-
-input,
-select {
-
-    min-height: 52px;
-
-    padding: 13px 15px 13px 43px;
-
-}
-
-
-textarea {
-
-    min-height: 110px;
-
-    resize: vertical;
-
-    padding: 15px 15px 15px 43px;
-
-    line-height: 1.5;
-
-}
-
-
-textarea + * {
-
-    pointer-events: none;
-
-}
-
 
 input::placeholder,
 textarea::placeholder {
-
-    color: #a49498;
-
+    color: #b6a6aa;
 }
-
-
-input:hover,
-select:hover,
-textarea:hover {
-
-    border-color: #d6b8bd;
-
-}
-
 
 input:focus,
 select:focus,
 textarea:focus {
+    border-color: #c48d99;
 
-    border-color: var(--rose);
-
-    background: #fff;
+    background: #ffffff;
 
     box-shadow:
-        0 0 0 4px rgba(154,104,113,0.10);
+        0 0 0 4px rgba(196, 141, 153, 0.12);
+}
 
+textarea {
+    min-height: 130px;
+
+    resize: vertical;
+
+    line-height: 1.5;
 }
 
 
-select {
+/* =========================================================
+   BOTÕES
+   ========================================================= */
 
-    cursor: pointer;
-
-    appearance: auto;
-
-}
-
-
-select:disabled {
-
-    background: #f8f4f4;
-
-    color: #a99da0;
-
-    cursor: not-allowed;
-
-}
-
-
-/* ---------- TEXTO AUXILIAR ---------- */
-
-.field-help {
-
-    display: block;
-
-    margin: 7px 2px 0;
-
-    color: #96868a;
-
-    font-size: 11px;
-
-    line-height: 1.4;
-
-}
-
-
-/* ---------- BOTÃO ---------- */
-
-.booking-button {
-
-    display: flex;
+button,
+.button {
+    display: inline-flex;
 
     align-items: center;
-
     justify-content: center;
-
-    gap: 12px;
 
     width: 100%;
 
-    min-height: 56px;
+    min-height: 54px;
 
-    margin-top: 8px;
+    margin-top: 24px;
 
-    padding: 14px 20px;
+    padding: 15px 20px;
 
     border: 0;
 
-    border-radius: 15px;
+    border-radius: 16px;
 
     background:
         linear-gradient(
             135deg,
-            #65434a,
-            #91616a
+            var(--rosa-escuro),
+            var(--rosa)
         );
 
     color: white;
 
     font-family: inherit;
-
-    font-size: 15px;
-
+    font-size: 16px;
     font-weight: 700;
 
-    letter-spacing: 0.2px;
-
-    box-shadow:
-        0 10px 22px rgba(112,72,81,0.20);
+    text-align: center;
+    text-decoration: none;
 
     cursor: pointer;
+
+    box-shadow:
+        0 10px 25px rgba(112, 67, 79, 0.18);
 
     transition:
         transform 0.2s ease,
         box-shadow 0.2s ease,
         filter 0.2s ease;
-
 }
 
-
-.booking-button strong {
-
-    font-size: 20px;
-
-    font-weight: 400;
-
-    transition: transform 0.2s ease;
-
-}
-
-
-.booking-button:hover {
-
-    filter: brightness(1.05);
-
+button:hover,
+.button:hover {
     transform: translateY(-2px);
 
     box-shadow:
-        0 14px 28px rgba(112,72,81,0.26);
+        0 14px 30px rgba(112, 67, 79, 0.24);
 
+    filter: brightness(1.04);
 }
 
-
-.booking-button:hover strong {
-
-    transform: translateX(4px);
-
-}
-
-
-.booking-button:active {
-
+button:active,
+.button:active {
     transform: translateY(0);
-
-}
-
-
-/* ---------- PRIVACIDADE ---------- */
-
-.privacy-note {
-
-    margin: 13px 0 0;
-
-    text-align: center;
-
-    color: #9a8a8e;
-
-    font-size: 11px;
-
-    line-height: 1.5;
-
-}
-
-
-/* ---------- RODAPÉ ---------- */
-
-.footer-divider {
-
-    margin-top: 28px;
-
-    margin-bottom: 18px;
-
-}
-
-
-footer {
-
-    text-align: center;
-
-}
-
-
-footer strong {
-
-    display: block;
-
-    color: var(--rose-dark);
-
-    font-family:
-        Georgia,
-        "Times New Roman",
-        serif;
-
-    font-size: 17px;
-
-    font-weight: 500;
-
-    letter-spacing: 0.3px;
-
-}
-
-
-footer span {
-
-    display: block;
-
-    margin-top: 4px;
-
-    color: #9c7a80;
-
-    font-size: 9px;
-
-    font-weight: 700;
-
-    letter-spacing: 3px;
-
-}
-
-
-footer small {
-
-    display: block;
-
-    margin-top: 8px;
-
-    color: #a49397;
-
-    font-size: 10px;
-
 }
 
 
 /* =========================================================
-   CONFIRMAÇÃO / PAINEL ADMIN
+   MENSAGENS
    ========================================================= */
 
-.wide {
+.alert {
+    padding: 14px 16px;
 
-    width: 100%;
+    margin: 18px 0;
 
-    max-width: 1100px;
+    border-radius: 14px;
 
-    margin: 0 auto;
+    background: var(--rosa-claro);
 
+    color: var(--rosa-escuro);
+
+    border: 1px solid var(--borda);
 }
-
-
-.center {
-
-    text-align: center;
-
-}
-
-
-.summary {
-
-    margin: 22px 0;
-
-    padding: 18px;
-
-    background: #fff7f6;
-
-    border: 1px solid #f0dddd;
-
-    border-radius: 16px;
-
-}
-
-
-.summary p {
-
-    margin: 8px 0;
-
-}
-
 
 .success {
+    width: 74px;
+    height: 74px;
+
+    margin: 0 auto 25px;
 
     display: grid;
-
     place-items: center;
-
-    width: 68px;
-
-    height: 68px;
-
-    margin: 0 auto 18px;
 
     border-radius: 50%;
 
-    background: #e8f6ed;
+    background: var(--verde-claro);
 
-    color: #47865a;
+    color: var(--verde);
 
-    font-size: 30px;
+    font-size: 38px;
+    font-weight: 700;
 
-    box-shadow: 0 8px 20px rgba(71,134,90,0.12);
+    box-shadow:
+        0 10px 30px rgba(77, 139, 104, 0.12);
+}
 
+.center {
+    text-align: center;
 }
 
 
-.button {
+/* =========================================================
+   RESUMO DA CONFIRMAÇÃO
+   ========================================================= */
 
+.summary {
+    margin: 25px 0;
+
+    padding: 20px;
+
+    border-radius: 18px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fff8f7,
+            #fdf1f3
+        );
+
+    border: 1px solid var(--borda);
+}
+
+.summary p {
+    margin: 10px 0;
+
+    font-size: 17px;
+    line-height: 1.5;
+}
+
+.summary strong {
+    color: var(--rosa-escuro);
+}
+
+
+/* =========================================================
+   PAINEL ADMINISTRATIVO
+   ========================================================= */
+
+.admin-page {
+    padding: 35px;
+}
+
+.admin-container {
+    width: 100%;
+    max-width: 1250px;
+
+    margin: 0 auto;
+}
+
+
+/* Cabeçalho */
+
+.admin-header {
+    display: grid;
+
+    grid-template-columns: 180px 1fr;
+
+    align-items: center;
+
+    gap: 30px;
+
+    margin-bottom: 25px;
+
+    padding: 28px;
+
+    background: rgba(255, 255, 255, 0.88);
+
+    border: 1px solid var(--borda);
+
+    border-radius: var(--raio);
+
+    box-shadow: var(--sombra);
+}
+
+.admin-brand img {
+    width: 160px;
+    max-width: 100%;
+
+    display: block;
+
+    margin: 0 auto;
+
+    border-radius: 14px;
+}
+
+.admin-title {
+    text-align: left;
+}
+
+.admin-eyebrow {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: var(--rosa);
+
+    font-size: 11px;
+    font-weight: 800;
+
+    letter-spacing: 2px;
+}
+
+.admin-title h1 {
+    margin: 0 0 6px;
+
+    text-align: left;
+
+    font-size: 34px;
+}
+
+.admin-title p {
+    margin: 0;
+
+    color: var(--texto-suave);
+
+    font-size: 15px;
+}
+
+
+/* =========================================================
+   RESUMO DO ADMIN
+   ========================================================= */
+
+.admin-summary {
+    display: flex;
+
+    align-items: center;
+
+    gap: 16px;
+
+    margin-bottom: 22px;
+
+    padding: 18px 22px;
+
+    background: rgba(255, 255, 255, 0.88);
+
+    border: 1px solid var(--borda);
+
+    border-radius: 18px;
+
+    box-shadow: 0 10px 30px rgba(91, 54, 63, 0.06);
+}
+
+.summary-icon {
+    width: 48px;
+    height: 48px;
+
+    display: grid;
+    place-items: center;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background: var(--rosa-claro);
+
+    color: var(--rosa);
+
+    font-size: 23px;
+}
+
+.summary-label {
+    display: block;
+
+    color: var(--texto-suave);
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 1.5px;
+}
+
+.admin-summary strong {
+    display: block;
+
+    margin-top: 2px;
+
+    color: var(--rosa-escuro);
+
+    font-family: Georgia, "Times New Roman", serif;
+
+    font-size: 28px;
+    font-weight: 500;
+}
+
+.summary-text {
+    margin-left: auto;
+
+    color: var(--texto-suave);
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   CARD DA AGENDA
+   ========================================================= */
+
+.appointments-card {
+    overflow: hidden;
+
+    background: rgba(255, 255, 255, 0.94);
+
+    border: 1px solid var(--borda);
+
+    border-radius: var(--raio);
+
+    box-shadow: var(--sombra);
+}
+
+.appointments-header {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 25px 28px;
+
+    border-bottom: 1px solid var(--borda);
+}
+
+.appointments-header h2 {
+    margin: 0;
+
+    color: var(--texto);
+
+    font-family: Georgia, "Times New Roman", serif;
+
+    font-size: 25px;
+    font-weight: 500;
+}
+
+.back-button {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 11px 17px;
+
+    border-radius: 12px;
+
+    background: var(--rosa-claro);
+
+    color: var(--rosa-escuro);
+
+    font-size: 14px;
+    font-weight: 700;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+
+    transition: 0.2s ease;
+}
+
+.back-button:hover {
+    background: #f1dde1;
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   TABELA
+   ========================================================= */
+
+.table-wrap {
+    width: 100%;
+
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+
+    min-width: 950px;
+
+    border-collapse: collapse;
+}
+
+th {
+    padding: 15px 16px;
+
+    background: #fdf4f5;
+
+    color: var(--rosa-escuro);
+
+    font-size: 12px;
+    font-weight: 800;
+
+    text-align: left;
+
+    letter-spacing: 0.4px;
+
+    white-space: nowrap;
+}
+
+td {
+    padding: 17px 16px;
+
+    border-top: 1px solid #f0e3e5;
+
+    color: var(--texto);
+
+    font-size: 14px;
+
+    vertical-align: middle;
+}
+
+tbody tr {
+    transition: background 0.2s ease;
+}
+
+tbody tr:hover {
+    background: #fffafa;
+}
+
+
+/* =========================================================
+   BADGES DA TABELA
+   ========================================================= */
+
+.time-badge {
     display: inline-flex;
 
     align-items: center;
 
-    justify-content: center;
+    padding: 7px 11px;
 
-    width: 100%;
+    border-radius: 10px;
 
-    min-height: 52px;
+    background: var(--rosa-claro);
 
-    padding: 13px 18px;
+    color: var(--rosa-escuro);
 
-    border-radius: 14px;
-
-    background: var(--rose-dark);
-
-    color: white;
-
-    text-decoration: none;
-
-    font-weight: 700;
-
-    transition: transform 0.2s ease;
-
+    font-weight: 800;
 }
 
+.service-badge {
+    display: inline-block;
 
-.button:hover {
-
-    transform: translateY(-2px);
-
-}
-
-
-/* ---------- TABELA ADMIN ---------- */
-
-table {
-
-    width: 100%;
-
-    border-collapse: separate;
-
-    border-spacing: 0;
-
-    overflow: hidden;
-
-    background: white;
-
-    border: 1px solid var(--border);
-
-    border-radius: 15px;
-
-}
-
-
-th,
-td {
-
-    padding: 13px 14px;
-
-    border-bottom: 1px solid #f0e6e7;
-
-    text-align: left;
-
-    font-size: 14px;
-
-}
-
-
-th {
-
-    background: #fbf1f1;
-
-    color: var(--rose-dark);
-
-    font-weight: 700;
-
-}
-
-
-tr:last-child td {
-
-    border-bottom: 0;
-
-}
-
-
-.table-wrap {
-
-    width: 100%;
-
-    overflow-x: auto;
-
-}
-
-
-.danger {
-
-    width: auto;
-
-    margin: 0;
-
-    padding: 8px 13px;
-
-    border: 0;
+    padding: 7px 10px;
 
     border-radius: 9px;
 
-    background: #9f3040;
+    background: #faf0f1;
 
-    color: white;
+    color: var(--rosa-escuro);
 
-    cursor: pointer;
-
+    font-size: 13px;
 }
 
+.notes-cell {
+    max-width: 220px;
+
+    color: var(--texto-suave);
+
+    line-height: 1.4;
+}
+
+.no-notes {
+    color: #c0b2b5;
+}
+
+
+/* =========================================================
+   BOTÃO CANCELAR
+   ========================================================= */
+
+button.danger {
+    width: auto;
+
+    min-height: auto;
+
+    margin: 0;
+
+    padding: 9px 14px;
+
+    border-radius: 10px;
+
+    background: #a93448;
+
+    box-shadow: none;
+
+    font-size: 13px;
+}
+
+button.danger:hover {
+    background: #8f293b;
+
+    box-shadow: none;
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   NENHUM AGENDAMENTO
+   ========================================================= */
+
+.empty-state {
+    padding: 55px 25px !important;
+
+    text-align: center;
+}
+
+.empty-icon {
+    margin-bottom: 10px;
+
+    color: #c4939d;
+
+    font-size: 34px;
+}
+
+.empty-state strong {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: var(--texto);
+
+    font-size: 16px;
+}
+
+.empty-state span {
+    display: block;
+
+    color: var(--texto-suave);
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   RODAPÉ DO ADMIN
+   ========================================================= */
+
+.admin-footer {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 20px 5px;
+
+    color: var(--texto-suave);
+
+    font-size: 13px;
+}
+
+.admin-footer a {
+    color: var(--rosa-escuro);
+
+    font-weight: 700;
+
+    text-decoration: none;
+}
+
+.admin-footer a:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   LINKS
+   ========================================================= */
 
 a {
-
-    color: var(--rose-dark);
-
+    color: var(--rosa-escuro);
 }
 
 
 /* =========================================================
-   RESPONSIVO
+   WIDE — COMPATIBILIDADE COM PÁGINAS ANTIGAS
    ========================================================= */
 
-@media (max-width: 650px) {
+.wide {
+    width: 100%;
+    max-width: 1100px;
+
+    margin: 30px auto;
+
+    padding: 32px;
+
+    background: white;
+
+    border-radius: var(--raio);
+
+    box-shadow: var(--sombra);
+}
+
+
+/* =========================================================
+   RESPONSIVO — CELULAR
+   ========================================================= */
+
+@media (max-width: 800px) {
 
     body {
-
-        padding: 16px 10px;
-
+        padding: 15px;
     }
-
 
     .card {
+        margin: 10px auto;
 
-        padding: 27px 20px 24px;
+        padding: 28px 20px;
 
-        border-radius: 24px;
-
+        border-radius: 20px;
     }
-
 
     .logo img {
-
-        width: 215px;
-
+        width: 210px;
     }
-
 
     h1 {
-
-        font-size: 28px;
-
+        font-size: 32px;
     }
-
 
     .sub {
-
-        font-size: 13px;
-
+        font-size: 15px;
     }
 
-
-    .welcome {
-
-        padding: 12px;
-
+    .admin-page {
+        padding: 10px;
     }
 
+    .admin-header {
+        grid-template-columns: 1fr;
 
-    input,
-    select {
+        text-align: center;
 
-        min-height: 51px;
+        padding: 24px 18px;
 
+        gap: 15px;
     }
 
-
-    .decor {
-
-        opacity: 0.5;
-
+    .admin-brand img {
+        width: 140px;
     }
 
+    .admin-title {
+        text-align: center;
+    }
+
+    .admin-title h1 {
+        text-align: center;
+
+        font-size: 29px;
+    }
+
+    .admin-summary {
+        padding: 16px;
+    }
+
+    .summary-text {
+        display: none;
+    }
+
+    .appointments-header {
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        padding: 22px 18px;
+    }
+
+    .back-button {
+        width: 100%;
+    }
+
+    .admin-footer {
+        flex-direction: column;
+
+        text-align: center;
+    }
+
+    .wide {
+        margin: 10px auto;
+
+        padding: 22px 16px;
+    }
 }
 
 
-@media (max-width: 400px) {
-
-    .card {
-
-        padding-left: 16px;
-
-        padding-right: 16px;
-
-    }
-
-
-    .logo img {
-
-        width: 195px;
-
-    }
-
-
-    h1 {
-
-        font-size: 25px;
-
-    }
-
-}
 /* =========================================================
-   AJUSTE MOBILE - ESPAÇAMENTO
+   CELULARES PEQUENOS
    ========================================================= */
 
-@media (max-width: 600px) {
+@media (max-width: 480px) {
 
     body {
         padding: 8px;
     }
 
     .card {
-        width: 100%;
-        margin: 5px auto;
-        padding: 22px 16px;
-        border-radius: 20px;
-    }
+        padding: 24px 16px;
 
-    .logo {
-        margin-bottom: 8px;
+        border-radius: 18px;
     }
 
     .logo img {
-        width: 175px;
-        max-width: 75%;
+        width: 190px;
     }
 
     h1 {
-        margin: 6px 0 6px;
-        font-size: 24px;
-        line-height: 1.25;
-    }
-
-    .card h1::after {
-        margin-top: 10px;
-    }
-
-    .sub {
-        margin: 0 auto 18px;
-        font-size: 13px;
-        line-height: 1.45;
-    }
-
-    label {
-        margin: 14px 0 6px;
-        font-size: 12px;
+        font-size: 28px;
     }
 
     input,
     select,
     textarea {
-        padding: 12px 13px;
-        border-radius: 11px;
-        font-size: 16px;
-    }
-
-    textarea {
-        min-height: 85px;
+        padding: 14px;
     }
 
     button,
     .button {
-        min-height: 48px;
-        margin-top: 20px;
-        padding: 12px 16px;
-        border-radius: 12px;
-    }
-}
-/* =========================================================
-   AJUSTE FINO - CELULAR
-   ========================================================= */
+        min-height: 52px;
 
-@media (max-width: 600px) {
-
-    body {
-        padding: 5px;
-    }
-
-    .card {
-        margin: 0 auto;
-        padding: 18px 14px 24px;
-        border-radius: 18px;
-    }
-
-    /* Logo */
-    .logo {
-        margin-bottom: 4px;
-    }
-
-    .logo img {
-        width: 165px;
-        max-width: 70%;
-    }
-
-    /* Título */
-    h1 {
-        margin: 4px 0;
-        font-size: 25px;
-        line-height: 1.2;
-    }
-
-    .card h1::after {
-        margin-top: 8px;
-    }
-
-    .sub {
-        margin: 0 auto 16px;
-        font-size: 13px;
-        line-height: 1.4;
-    }
-
-    /* Espaçamento dos campos */
-    label {
-        margin: 12px 0 5px;
-        font-size: 12px;
-    }
-
-    input,
-    select,
-    textarea {
-        padding: 11px 13px;
-        min-height: 46px;
-        border-radius: 11px;
-    }
-
-    textarea {
-        min-height: 80px;
-    }
-
-    /* Botão */
-    button,
-    .button {
-        min-height: 48px;
-        margin-top: 18px;
-        padding: 11px 15px;
-    }
-
-    /* Resumo */
-    .summary {
-        margin: 18px 0;
-        padding: 15px;
-    }
-
-    /* Mensagens */
-    .alert {
-        margin: 10px 0;
-        padding: 11px 13px;
-    }
-}
-/* =========================================================
-   CORREÇÃO DOS ÍCONES NOS CAMPOS - CELULAR
-   ========================================================= */
-
-@media (max-width: 600px) {
-
-    /* Remove os ícones decorativos que estavam sobrepondo o texto */
-    .field-icon {
-        display: none !important;
-    }
-
-    /* Deixa o texto dos campos começar normalmente */
-    .input-wrap input,
-    .input-wrap select,
-    .input-wrap textarea {
-        padding-left: 13px !important;
-    }
-
-    /* Mantém o select com espaço adequado para a seta nativa */
-    .input-wrap select {
-        padding-right: 42px !important;
-    }
-
-    /* Campo de observação */
-    .textarea-wrap textarea {
-        padding-left: 13px !important;
-    }
-
-    /* Ajuda abaixo dos campos */
-    .field-help {
-        display: block;
-        margin: 6px 3px 0;
-        font-size: 12px;
-        line-height: 1.4;
-    }
-}
-/* =========================================================
-   PÁGINA DE CONFIRMAÇÃO
-   ========================================================= */
-
-.confirmation-page {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 30px 18px;
-    background:
-        radial-gradient(circle at top, rgba(255,255,255,.95), transparent 45%),
-        linear-gradient(145deg, #f8efed, #f4e5e3);
-}
-
-.confirmation-card {
-    width: 100%;
-    max-width: 620px;
-    background: rgba(255, 252, 251, .97);
-    border: 1px solid rgba(177, 123, 105, .20);
-    border-radius: 30px;
-    padding: 46px 42px 38px;
-    text-align: center;
-    box-shadow:
-        0 25px 70px rgba(92, 55, 62, .14),
-        0 4px 15px rgba(92, 55, 62, .06);
-}
-
-.confirmation-icon {
-    width: 82px;
-    height: 82px;
-    margin: 0 auto 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: linear-gradient(145deg, #eaf7ef, #dff1e7);
-    border: 1px solid #cde6d7;
-
-    color: #4b8b68;
-    font-size: 42px;
-    font-weight: 500;
-
-    box-shadow:
-        0 12px 30px rgba(76, 132, 99, .12);
-}
-
-.confirmation-brand {
-    margin-bottom: 18px;
-
-    color: #8f5d68;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 4px;
-}
-
-.confirmation-brand span {
-    display: block;
-    margin-top: 5px;
-
-    color: #a97867;
-    font-size: 9px;
-    letter-spacing: 3px;
-    font-weight: 600;
-}
-
-.confirmation-card h1 {
-    margin: 0 0 14px;
-
-    color: #30272b;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(32px, 6vw, 44px);
-    font-weight: 400;
-    line-height: 1.12;
-}
-
-.confirmation-welcome {
-    margin: 0 0 7px;
-
-    color: #4d4145;
-    font-size: 18px;
-}
-
-.confirmation-text {
-    max-width: 450px;
-    margin: 0 auto 30px;
-
-    color: #85777b;
-    font-size: 15px;
-    line-height: 1.6;
-}
-
-/* RESUMO DO AGENDAMENTO */
-
-.confirmation-summary {
-    width: 100%;
-    margin: 0 auto 24px;
-    padding: 8px 24px;
-
-    background: linear-gradient(145deg, #fff8f6, #fdf1ef);
-
-    border: 1px solid #ead6d3;
-    border-radius: 20px;
-
-    text-align: left;
-}
-
-.confirmation-item {
-    padding: 18px 4px;
-
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.confirmation-label {
-    color: #a97867;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2px;
-}
-
-.confirmation-item strong {
-    color: #392e32;
-    font-size: 17px;
-    font-weight: 600;
-}
-
-.confirmation-divider {
-    height: 1px;
-    background: #eadbd8;
-}
-
-/* MENSAGEM */
-
-.confirmation-message {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-
-    margin: 0 0 26px;
-    padding: 16px 20px;
-
-    background: #faf3f1;
-    border-radius: 16px;
-
-    text-align: left;
-}
-
-.confirmation-message > span {
-    flex: 0 0 auto;
-
-    color: #a97867;
-    font-size: 27px;
-}
-
-.confirmation-message p {
-    margin: 0;
-
-    color: #75676b;
-    font-size: 14px;
-    line-height: 1.5;
-}
-
-/* BOTÃO */
-
-.confirmation-button {
-    width: 100%;
-    min-height: 58px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 18px;
-
-    padding: 16px 22px;
-
-    border-radius: 17px;
-
-    background: linear-gradient(135deg, #754d58, #95636c);
-
-    color: #fff;
-    text-decoration: none;
-
-    font-size: 16px;
-    font-weight: 700;
-
-    box-shadow:
-        0 12px 25px rgba(117, 77, 88, .22);
-
-    transition:
-        transform .2s ease,
-        box-shadow .2s ease;
-}
-
-.confirmation-button span {
-    font-size: 25px;
-    font-weight: 300;
-    line-height: 1;
-}
-
-.confirmation-button:hover {
-    transform: translateY(-2px);
-
-    box-shadow:
-        0 16px 30px rgba(117, 77, 88, .28);
-}
-
-.confirmation-button:active {
-    transform: translateY(0);
-}
-
-/* RODAPÉ */
-
-.confirmation-footer {
-    margin: 22px 0 0;
-
-    color: #a09295;
-    font-size: 12px;
-}
-
-/* CELULAR */
-
-@media (max-width: 650px) {
-
-    .confirmation-page {
-        min-height: 100svh;
-        padding: 16px 10px;
-        align-items: center;
-    }
-
-    .confirmation-card {
-        max-width: 100%;
-        padding: 34px 22px 28px;
-        border-radius: 26px;
-    }
-
-    .confirmation-icon {
-        width: 72px;
-        height: 72px;
-        margin-bottom: 20px;
-        font-size: 36px;
-    }
-
-    .confirmation-brand {
-        font-size: 11px;
-        letter-spacing: 3px;
-    }
-
-    .confirmation-card h1 {
-        font-size: 31px;
-    }
-
-    .confirmation-welcome {
-        font-size: 16px;
-    }
-
-    .confirmation-text {
-        font-size: 14px;
-        margin-bottom: 24px;
-    }
-
-    .confirmation-summary {
-        padding: 5px 18px;
-        border-radius: 18px;
-    }
-
-    .confirmation-item {
-        padding: 15px 2px;
-    }
-
-    .confirmation-item strong {
-        font-size: 16px;
-    }
-
-    .confirmation-message {
-        padding: 14px 16px;
-        margin-bottom: 22px;
-    }
-
-    .confirmation-button {
-        min-height: 56px;
         font-size: 15px;
     }
 
-    .confirmation-footer {
-        font-size: 11px;
-        margin-top: 18px;
+    .success {
+        width: 68px;
+        height: 68px;
+
+        font-size: 34px;
+    }
+
+    .summary {
+        padding: 16px;
+    }
+
+    .summary p {
+        font-size: 15px;
+    }
+
+    .admin-title h1 {
+        font-size: 26px;
     }
 }
