@@ -45,16 +45,18 @@ def init_db():
     con.commit()
     con.close()
 
-def slots_for(day):
+def slots_for(day, service=None):
     # Segunda a sexta:
-    # Manhã: 07:30 às 11:00
-    # Tarde: 13:30 às 20:00
+    # 07:30 às 11:00
+    # 13:30 às 20:00
     #
     # Sábado:
     # 09:00 às 16:00
     #
     # Domingo: fechado
-    # Horários de 30 em 30 minutos.
+    #
+    # O último atendimento pode ultrapassar o fechamento
+    # em no máximo 30 minutos.
 
     d = datetime.strptime(day, "%Y-%m-%d").date()
 
@@ -62,50 +64,59 @@ def slots_for(day):
     if d.weekday() == 6:
         return []
 
+    # Descobre a duração do serviço
+    duration = 30
+
+    if service:
+        for name, minutes, price in SERVICES:
+            if name == service:
+                duration = minutes
+                break
+
     slots = []
 
-    # Segunda a sexta
+    # Define os períodos de atendimento
     if d.weekday() <= 4:
-
-        # Manhã
-        cur = datetime.combine(d, datetime.min.time()).replace(
-            hour=7, minute=30
-        )
-
-        end_morning = datetime.combine(d, datetime.min.time()).replace(
-            hour=11, minute=0
-        )
-
-        while cur <= end_morning:
-            slots.append(cur.strftime("%H:%M"))
-            cur += timedelta(minutes=30)
-
-        # Tarde
-        cur = datetime.combine(d, datetime.min.time()).replace(
-            hour=13, minute=30
-        )
-
-        end_afternoon = datetime.combine(d, datetime.min.time()).replace(
-            hour=20, minute=0
-        )
-
-        while cur <= end_afternoon:
-            slots.append(cur.strftime("%H:%M"))
-            cur += timedelta(minutes=30)
-
-    # Sábado
+        periods = [
+            (7, 30, 11, 0),
+            (13, 30, 20, 0)
+        ]
     else:
+        periods = [
+            (9, 0, 16, 0)
+        ]
 
-        cur = datetime.combine(d, datetime.min.time()).replace(
-            hour=9, minute=0
+    for start_hour, start_minute, end_hour, end_minute in periods:
+
+        period_start = datetime.combine(
+            d,
+            datetime.min.time()
+        ).replace(
+            hour=start_hour,
+            minute=start_minute
         )
 
-        end_saturday = datetime.combine(d, datetime.min.time()).replace(
-            hour=16, minute=0
+        period_end = datetime.combine(
+            d,
+            datetime.min.time()
+        ).replace(
+            hour=end_hour,
+            minute=end_minute
         )
 
-        while cur <= end_saturday:
-            slots.append(cur.strftime("%H:%M"))
+        cur = period_start
+
+        while cur <= period_end:
+
+            appointment_end = cur + timedelta(minutes=duration)
+
+            # Permite ultrapassar somente o fechamento
+            # em no máximo 30 minutos.
+            allowed_end = period_end + timedelta(minutes=30)
+
+            if appointment_end <= allowed_end:
+                slots.append(cur.strftime("%H:%M"))
+
             cur += timedelta(minutes=30)
 
     return slots
@@ -121,14 +132,71 @@ def index():
 @app.route("/horarios")
 def horarios():
     day = request.args.get("date", "")
+    service = request.args.get("service", "")
+
     if not day:
         return {"slots": []}
+
     con = db()
-    taken = {r["appointment_time"] for r in con.execute(
-        "SELECT appointment_time FROM appointments WHERE appointment_date = ?", (day,)
-    )}
+
+    appointments = con.execute(
+        """
+        SELECT appointment_time, service
+        FROM appointments
+        WHERE appointment_date = ?
+        """,
+        (day,)
+    ).fetchall()
+
     con.close()
-    available = [s for s in slots_for(day) if s not in taken]
+
+    # Duração do serviço escolhido
+    duration = 30
+
+    for name, minutes, price in SERVICES:
+        if name == service:
+            duration = minutes
+            break
+
+    available = []
+
+    for slot in slots_for(day, service):
+
+        slot_start = datetime.strptime(
+            f"{day} {slot}",
+            "%Y-%m-%d %H:%M"
+        )
+
+        slot_end = slot_start + timedelta(minutes=duration)
+
+        conflict = False
+
+        for appointment in appointments:
+
+            existing_start = datetime.strptime(
+                f"{day} {appointment['appointment_time']}",
+                "%Y-%m-%d %H:%M"
+            )
+
+            existing_duration = 30
+
+            for name, minutes, price in SERVICES:
+                if name == appointment["service"]:
+                    existing_duration = minutes
+                    break
+
+            existing_end = existing_start + timedelta(
+                minutes=existing_duration
+            )
+
+            # Verifica se os horários se sobrepõem
+            if slot_start < existing_end and slot_end > existing_start:
+                conflict = True
+                break
+
+        if not conflict:
+            available.append(slot)
+
     return {"slots": available}
 
 @app.route("/agendar", methods=["POST"])
