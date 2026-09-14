@@ -1,22 +1,86 @@
 <!doctype html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Agendamento confirmado</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Agendamento confirmado | Rayssa Lima</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-<main class="card center">
-  <div class="success">✓</div>
-  <h1>Agendamento confirmado!</h1>
-  <p>Olá, <strong>{{ name }}</strong>. Seu horário foi reservado.</p>
-  <div class="summary">
-    <p><strong>Serviço:</strong> {{ service }}</p>
-    <p><strong>Data:</strong> {{ day }}</p>
-    <p><strong>Horário:</strong> {{ time }}</p>
-  </div>
-  <a class="button" href="{{ url_for('index') }}">Fazer outro agendamento</a>
-</main>
+
+<body class="confirmation-page">
+
+    <main class="confirmation-card">
+
+        <!-- Ícone de sucesso -->
+        <div class="confirmation-icon">
+            ✓
+        </div>
+
+        <!-- Marca -->
+        <div class="confirmation-brand">
+            RAYSSA LIMA
+            <span>NAIL DESIGNER</span>
+        </div>
+
+        <!-- Título -->
+        <h1>Agendamento confirmado!</h1>
+
+        <p class="confirmation-welcome">
+            Obrigada por escolher a <strong>Rayssa Lima</strong>.
+        </p>
+
+        <p class="confirmation-text">
+            Seu horário foi reservado com sucesso.
+            Confira os detalhes do seu atendimento:
+        </p>
+
+        <!-- Resumo -->
+        <section class="confirmation-summary">
+
+            <div class="confirmation-item">
+                <span class="confirmation-label">SERVIÇO</span>
+                <strong>{{ service }}</strong>
+            </div>
+
+            <div class="confirmation-divider"></div>
+
+            <div class="confirmation-item">
+                <span class="confirmation-label">DATA</span>
+                <strong>{{ day }}</strong>
+            </div>
+
+            <div class="confirmation-divider"></div>
+
+            <div class="confirmation-item">
+                <span class="confirmation-label">HORÁRIO</span>
+                <strong>{{ time }}</strong>
+            </div>
+
+        </section>
+
+        <!-- Mensagem -->
+        <div class="confirmation-message">
+            <span>♡</span>
+            <p>
+                Olá, <strong>{{ name }}</strong>!<br>
+                Estamos esperando por você.
+            </p>
+        </div>
+
+        <!-- Botão -->
+        <a class="confirmation-button" href="{{ url_for('index') }}">
+            Fazer outro agendamento
+            <span>→</span>
+        </a>
+
+        <p class="confirmation-footer">
+            Seu horário foi reservado especialmente para você.
+        </p>
+
+    </main>
+
 </body>
 </html>
