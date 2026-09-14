@@ -24,14 +24,32 @@ SERVICES = [
 ]
 
 
-def db():
-    if not DATABASE_URL:
-        raise RuntimeError("DATABASE_URL não configurada.")
+class Database:
+    def __init__(self):
+        if not DATABASE_URL:
+            raise RuntimeError("DATABASE_URL não configurada.")
 
-    return psycopg2.connect(
-        DATABASE_URL,
-        cursor_factory=RealDictCursor
-    )
+        self.con = psycopg2.connect(DATABASE_URL)
+
+    def execute(self, sql, params=None):
+        cursor = self.con.cursor(
+            cursor_factory=RealDictCursor
+        )
+        cursor.execute(sql, params)
+        return cursor
+
+    def commit(self):
+        self.con.commit()
+
+    def rollback(self):
+        self.con.rollback()
+
+    def close(self):
+        self.con.close()
+
+
+def db():
+    return Database()
 
 
 def init_db():
