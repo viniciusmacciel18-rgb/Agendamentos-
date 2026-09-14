@@ -1,6 +1,6 @@
 /* =========================================================
-   RAYSSA LIMA • NAIL DESIGNER
-   ESTILO GERAL
+   RAYSSA LIMA NAIL DESIGNER
+   ESTILO GERAL DO SITE
    ========================================================= */
 
 * {
@@ -9,29 +9,19 @@
 
 :root {
     --fundo: #f7eeee;
-    --fundo-claro: #fffaf9;
+    --fundo-claro: #fffafa;
     --branco: #ffffff;
-
     --texto: #302629;
-    --texto-suave: #806e73;
-
-    --rosa: #8b5964;
-    --rosa-escuro: #70434f;
-    --rosa-claro: #f8e9eb;
-
-    --borda: #ead5d9;
-
-    --verde: #4d8b68;
-    --verde-claro: #e8f5ed;
-
-    --vermelho: #a93448;
-
-    --sombra:
-        0 20px 60px rgba(91, 54, 63, 0.10);
-
-    --raio: 24px;
+    --texto-suave: #78666c;
+    --rose: #8b5965;
+    --rose-escuro: #704550;
+    --cobre: #a96f55;
+    --borda: #ead5d8;
+    --verde: #4f8a68;
+    --verde-claro: #e9f6ed;
+    --vermelho: #a83245;
+    --sombra: 0 20px 60px rgba(85, 50, 58, 0.12);
 }
-
 
 /* =========================================================
    BODY
@@ -40,17 +30,18 @@
 body {
     margin: 0;
     min-height: 100vh;
+    padding: 24px;
 
     background:
         radial-gradient(
-            circle at top left,
-            rgba(235, 204, 211, 0.45),
-            transparent 35%
+            circle at 10% 10%,
+            rgba(225, 185, 193, 0.35),
+            transparent 30%
         ),
         radial-gradient(
-            circle at bottom right,
-            rgba(224, 191, 199, 0.35),
-            transparent 35%
+            circle at 90% 80%,
+            rgba(220, 180, 170, 0.25),
+            transparent 30%
         ),
         var(--fundo);
 
@@ -62,34 +53,41 @@ body {
         "Segoe UI",
         Arial,
         sans-serif;
-
-    padding: 30px;
 }
 
-
 /* =========================================================
-   PÁGINA PRINCIPAL
+   PÁGINAS PRINCIPAIS
    ========================================================= */
 
 .card {
     width: 100%;
-    max-width: 680px;
+    max-width: 650px;
+    margin: 35px auto;
 
-    margin: 25px auto;
+    background: rgba(255, 255, 255, 0.96);
 
-    background: rgba(255, 255, 255, 0.94);
-
-    border: 1px solid rgba(234, 213, 217, 0.9);
-
-    border-radius: var(--raio);
+    border: 1px solid rgba(234, 213, 216, 0.9);
+    border-radius: 28px;
 
     padding: 42px;
 
     box-shadow: var(--sombra);
-
-    backdrop-filter: blur(8px);
 }
 
+.wide {
+    width: 100%;
+    max-width: 1250px;
+    margin: 30px auto;
+
+    background: rgba(255, 255, 255, 0.96);
+
+    border: 1px solid var(--borda);
+    border-radius: 28px;
+
+    padding: 38px;
+
+    box-shadow: var(--sombra);
+}
 
 /* =========================================================
    LOGO
@@ -97,38 +95,37 @@ body {
 
 .logo {
     text-align: center;
-    margin-bottom: 18px;
+    margin-bottom: 12px;
 }
 
 .logo img {
     width: 240px;
     max-width: 75%;
     height: auto;
-
     display: block;
     margin: 0 auto;
-
-    border-radius: 16px;
 }
-
 
 /* =========================================================
    TÍTULOS
    ========================================================= */
 
 h1 {
-    margin: 8px 0 8px;
+    margin: 12px 0 8px;
 
     text-align: center;
 
     color: var(--texto);
 
     font-family: Georgia, "Times New Roman", serif;
-
     font-size: 38px;
     font-weight: 500;
-
     letter-spacing: -0.5px;
+}
+
+h2,
+h3 {
+    color: var(--texto);
 }
 
 .sub {
@@ -144,26 +141,19 @@ h1 {
     line-height: 1.6;
 }
 
-
 /* =========================================================
    FORMULÁRIO
    ========================================================= */
 
-form {
-    width: 100%;
-}
-
 label {
     display: block;
 
-    margin: 20px 0 8px;
+    margin: 18px 0 8px;
 
-    color: var(--rosa-escuro);
+    color: var(--rose-escuro);
 
     font-size: 14px;
     font-weight: 700;
-
-    letter-spacing: 0.2px;
 }
 
 input,
@@ -174,10 +164,9 @@ textarea {
     padding: 15px 16px;
 
     border: 1px solid var(--borda);
-
     border-radius: 15px;
 
-    background: #fffdfd;
+    background: #fff;
 
     color: var(--texto);
 
@@ -189,33 +178,24 @@ textarea {
     transition:
         border-color 0.2s ease,
         box-shadow 0.2s ease,
-        background 0.2s ease;
-}
-
-input::placeholder,
-textarea::placeholder {
-    color: #b6a6aa;
+        transform 0.2s ease;
 }
 
 input:focus,
 select:focus,
 textarea:focus {
-    border-color: #c48d99;
-
-    background: #ffffff;
+    border-color: var(--cobre);
 
     box-shadow:
-        0 0 0 4px rgba(196, 141, 153, 0.12);
+        0 0 0 4px rgba(169, 111, 85, 0.10);
+
+    transform: translateY(-1px);
 }
 
 textarea {
-    min-height: 130px;
-
+    min-height: 100px;
     resize: vertical;
-
-    line-height: 1.5;
 }
-
 
 /* =========================================================
    BOTÕES
@@ -230,21 +210,20 @@ button,
 
     width: 100%;
 
-    min-height: 54px;
+    min-height: 52px;
 
     margin-top: 24px;
 
-    padding: 15px 20px;
+    padding: 14px 20px;
 
     border: 0;
-
-    border-radius: 16px;
+    border-radius: 15px;
 
     background:
         linear-gradient(
             135deg,
-            var(--rosa-escuro),
-            var(--rosa)
+            var(--rose),
+            var(--rose-escuro)
         );
 
     color: white;
@@ -259,7 +238,7 @@ button,
     cursor: pointer;
 
     box-shadow:
-        0 10px 25px rgba(112, 67, 79, 0.18);
+        0 10px 24px rgba(112, 69, 80, 0.20);
 
     transition:
         transform 0.2s ease,
@@ -272,7 +251,7 @@ button:hover,
     transform: translateY(-2px);
 
     box-shadow:
-        0 14px 30px rgba(112, 67, 79, 0.24);
+        0 14px 30px rgba(112, 69, 80, 0.25);
 
     filter: brightness(1.04);
 }
@@ -282,9 +261,8 @@ button:active,
     transform: translateY(0);
 }
 
-
 /* =========================================================
-   MENSAGENS
+   ALERTAS
    ========================================================= */
 
 .alert {
@@ -292,20 +270,20 @@ button:active,
 
     margin: 18px 0;
 
-    border-radius: 14px;
+    border-radius: 13px;
 
-    background: var(--rosa-claro);
+    background: #fff2f4;
 
-    color: var(--rosa-escuro);
+    border: 1px solid #efd5da;
 
-    border: 1px solid var(--borda);
+    color: var(--rose-escuro);
 }
 
 .success {
-    width: 74px;
-    height: 74px;
+    width: 76px;
+    height: 76px;
 
-    margin: 0 auto 25px;
+    margin: 0 auto 24px;
 
     display: grid;
     place-items: center;
@@ -316,528 +294,305 @@ button:active,
 
     color: var(--verde);
 
-    font-size: 38px;
-    font-weight: 700;
+    font-size: 42px;
+    font-weight: 500;
 
     box-shadow:
-        0 10px 30px rgba(77, 139, 104, 0.12);
+        0 10px 25px rgba(79, 138, 104, 0.12);
 }
 
 .center {
     text-align: center;
 }
 
-
 /* =========================================================
-   RESUMO DA CONFIRMAÇÃO
+   RESUMO
    ========================================================= */
 
 .summary {
-    margin: 25px 0;
+    margin: 28px 0;
 
-    padding: 20px;
+    padding: 22px;
 
+    border: 1px solid var(--borda);
     border-radius: 18px;
 
     background:
         linear-gradient(
             135deg,
-            #fff8f7,
-            #fdf1f3
+            #fffafa,
+            #fff5f3
         );
 
-    border: 1px solid var(--borda);
+    text-align: center;
+
+    box-shadow:
+        0 8px 25px rgba(85, 50, 58, 0.06);
 }
 
 .summary p {
     margin: 10px 0;
 
     font-size: 17px;
-    line-height: 1.5;
 }
 
 .summary strong {
-    color: var(--rosa-escuro);
+    color: var(--rose-escuro);
 }
-
-
-/* =========================================================
-   PAINEL ADMINISTRATIVO
-   ========================================================= */
-
-.admin-page {
-    padding: 35px;
-}
-
-.admin-container {
-    width: 100%;
-    max-width: 1250px;
-
-    margin: 0 auto;
-}
-
-
-/* Cabeçalho */
-
-.admin-header {
-    display: grid;
-
-    grid-template-columns: 180px 1fr;
-
-    align-items: center;
-
-    gap: 30px;
-
-    margin-bottom: 25px;
-
-    padding: 28px;
-
-    background: rgba(255, 255, 255, 0.88);
-
-    border: 1px solid var(--borda);
-
-    border-radius: var(--raio);
-
-    box-shadow: var(--sombra);
-}
-
-.admin-brand img {
-    width: 160px;
-    max-width: 100%;
-
-    display: block;
-
-    margin: 0 auto;
-
-    border-radius: 14px;
-}
-
-.admin-title {
-    text-align: left;
-}
-
-.admin-eyebrow {
-    display: block;
-
-    margin-bottom: 7px;
-
-    color: var(--rosa);
-
-    font-size: 11px;
-    font-weight: 800;
-
-    letter-spacing: 2px;
-}
-
-.admin-title h1 {
-    margin: 0 0 6px;
-
-    text-align: left;
-
-    font-size: 34px;
-}
-
-.admin-title p {
-    margin: 0;
-
-    color: var(--texto-suave);
-
-    font-size: 15px;
-}
-
-
-/* =========================================================
-   RESUMO DO ADMIN
-   ========================================================= */
-
-.admin-summary {
-    display: flex;
-
-    align-items: center;
-
-    gap: 16px;
-
-    margin-bottom: 22px;
-
-    padding: 18px 22px;
-
-    background: rgba(255, 255, 255, 0.88);
-
-    border: 1px solid var(--borda);
-
-    border-radius: 18px;
-
-    box-shadow: 0 10px 30px rgba(91, 54, 63, 0.06);
-}
-
-.summary-icon {
-    width: 48px;
-    height: 48px;
-
-    display: grid;
-    place-items: center;
-
-    flex-shrink: 0;
-
-    border-radius: 50%;
-
-    background: var(--rosa-claro);
-
-    color: var(--rosa);
-
-    font-size: 23px;
-}
-
-.summary-label {
-    display: block;
-
-    color: var(--texto-suave);
-
-    font-size: 10px;
-    font-weight: 800;
-
-    letter-spacing: 1.5px;
-}
-
-.admin-summary strong {
-    display: block;
-
-    margin-top: 2px;
-
-    color: var(--rosa-escuro);
-
-    font-family: Georgia, "Times New Roman", serif;
-
-    font-size: 28px;
-    font-weight: 500;
-}
-
-.summary-text {
-    margin-left: auto;
-
-    color: var(--texto-suave);
-
-    font-size: 14px;
-}
-
-
-/* =========================================================
-   CARD DA AGENDA
-   ========================================================= */
-
-.appointments-card {
-    overflow: hidden;
-
-    background: rgba(255, 255, 255, 0.94);
-
-    border: 1px solid var(--borda);
-
-    border-radius: var(--raio);
-
-    box-shadow: var(--sombra);
-}
-
-.appointments-header {
-    display: flex;
-
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 20px;
-
-    padding: 25px 28px;
-
-    border-bottom: 1px solid var(--borda);
-}
-
-.appointments-header h2 {
-    margin: 0;
-
-    color: var(--texto);
-
-    font-family: Georgia, "Times New Roman", serif;
-
-    font-size: 25px;
-    font-weight: 500;
-}
-
-.back-button {
-    display: inline-flex;
-
-    align-items: center;
-    justify-content: center;
-
-    padding: 11px 17px;
-
-    border-radius: 12px;
-
-    background: var(--rosa-claro);
-
-    color: var(--rosa-escuro);
-
-    font-size: 14px;
-    font-weight: 700;
-
-    text-decoration: none;
-
-    white-space: nowrap;
-
-    transition: 0.2s ease;
-}
-
-.back-button:hover {
-    background: #f1dde1;
-
-    transform: translateY(-1px);
-}
-
-
-/* =========================================================
-   TABELA
-   ========================================================= */
-
-.table-wrap {
-    width: 100%;
-
-    overflow-x: auto;
-}
-
-table {
-    width: 100%;
-
-    min-width: 950px;
-
-    border-collapse: collapse;
-}
-
-th {
-    padding: 15px 16px;
-
-    background: #fdf4f5;
-
-    color: var(--rosa-escuro);
-
-    font-size: 12px;
-    font-weight: 800;
-
-    text-align: left;
-
-    letter-spacing: 0.4px;
-
-    white-space: nowrap;
-}
-
-td {
-    padding: 17px 16px;
-
-    border-top: 1px solid #f0e3e5;
-
-    color: var(--texto);
-
-    font-size: 14px;
-
-    vertical-align: middle;
-}
-
-tbody tr {
-    transition: background 0.2s ease;
-}
-
-tbody tr:hover {
-    background: #fffafa;
-}
-
-
-/* =========================================================
-   BADGES DA TABELA
-   ========================================================= */
-
-.time-badge {
-    display: inline-flex;
-
-    align-items: center;
-
-    padding: 7px 11px;
-
-    border-radius: 10px;
-
-    background: var(--rosa-claro);
-
-    color: var(--rosa-escuro);
-
-    font-weight: 800;
-}
-
-.service-badge {
-    display: inline-block;
-
-    padding: 7px 10px;
-
-    border-radius: 9px;
-
-    background: #faf0f1;
-
-    color: var(--rosa-escuro);
-
-    font-size: 13px;
-}
-
-.notes-cell {
-    max-width: 220px;
-
-    color: var(--texto-suave);
-
-    line-height: 1.4;
-}
-
-.no-notes {
-    color: #c0b2b5;
-}
-
-
-/* =========================================================
-   BOTÃO CANCELAR
-   ========================================================= */
-
-button.danger {
-    width: auto;
-
-    min-height: auto;
-
-    margin: 0;
-
-    padding: 9px 14px;
-
-    border-radius: 10px;
-
-    background: #a93448;
-
-    box-shadow: none;
-
-    font-size: 13px;
-}
-
-button.danger:hover {
-    background: #8f293b;
-
-    box-shadow: none;
-
-    transform: translateY(-1px);
-}
-
-
-/* =========================================================
-   NENHUM AGENDAMENTO
-   ========================================================= */
-
-.empty-state {
-    padding: 55px 25px !important;
-
-    text-align: center;
-}
-
-.empty-icon {
-    margin-bottom: 10px;
-
-    color: #c4939d;
-
-    font-size: 34px;
-}
-
-.empty-state strong {
-    display: block;
-
-    margin-bottom: 7px;
-
-    color: var(--texto);
-
-    font-size: 16px;
-}
-
-.empty-state span {
-    display: block;
-
-    color: var(--texto-suave);
-
-    font-size: 14px;
-}
-
-
-/* =========================================================
-   RODAPÉ DO ADMIN
-   ========================================================= */
-
-.admin-footer {
-    display: flex;
-
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 20px;
-
-    padding: 20px 5px;
-
-    color: var(--texto-suave);
-
-    font-size: 13px;
-}
-
-.admin-footer a {
-    color: var(--rosa-escuro);
-
-    font-weight: 700;
-
-    text-decoration: none;
-}
-
-.admin-footer a:hover {
-    text-decoration: underline;
-}
-
 
 /* =========================================================
    LINKS
    ========================================================= */
 
 a {
-    color: var(--rosa-escuro);
+    color: var(--rose-escuro);
+
+    font-weight: 600;
+
+    transition: color 0.2s ease;
 }
 
+a:hover {
+    color: var(--cobre);
+}
 
 /* =========================================================
-   WIDE — COMPATIBILIDADE COM PÁGINAS ANTIGAS
+   TABELA / ADMIN
    ========================================================= */
 
-.wide {
+.table-wrap {
     width: 100%;
-    max-width: 1100px;
+    overflow-x: auto;
 
-    margin: 30px auto;
-
-    padding: 32px;
+    border: 1px solid var(--borda);
+    border-radius: 18px;
 
     background: white;
-
-    border-radius: var(--raio);
-
-    box-shadow: var(--sombra);
 }
 
+table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    min-width: 850px;
+}
+
+th,
+td {
+    padding: 16px;
+
+    border-bottom: 1px solid #f0e1e3;
+
+    text-align: left;
+
+    font-size: 14px;
+}
+
+th {
+    background: #fcf3f4;
+
+    color: var(--rose-escuro);
+
+    font-weight: 700;
+}
+
+tbody tr:hover {
+    background: #fffafa;
+}
+
+tbody tr:last-child td {
+    border-bottom: 0;
+}
 
 /* =========================================================
-   RESPONSIVO — CELULAR
+   BOTÃO CANCELAR
+   ========================================================= */
+
+.danger {
+    width: auto;
+
+    min-height: auto;
+
+    margin: 0;
+
+    padding: 9px 15px;
+
+    border-radius: 10px;
+
+    background: var(--vermelho);
+
+    box-shadow: none;
+
+    font-size: 14px;
+}
+
+.danger:hover {
+    background: #8f2939;
+
+    box-shadow: none;
+}
+
+/* =========================================================
+   ADMIN - CASO SEU ADMIN USE ESSAS CLASSES
+   ========================================================= */
+
+.admin-page {
+    min-height: 100vh;
+}
+
+.admin-container {
+    width: 100%;
+    max-width: 1250px;
+    margin: 0 auto;
+}
+
+.admin-header {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 28px;
+
+    padding: 22px 26px;
+
+    background: rgba(255, 255, 255, 0.92);
+
+    border: 1px solid var(--borda);
+    border-radius: 22px;
+
+    box-shadow:
+        0 10px 30px rgba(85, 50, 58, 0.08);
+}
+
+.admin-brand {
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+}
+
+.admin-brand img {
+    width: 75px;
+    height: 75px;
+
+    object-fit: contain;
+
+    border-radius: 14px;
+}
+
+.admin-brand h1 {
+    margin: 0;
+
+    text-align: left;
+
+    font-size: 28px;
+}
+
+/* =========================================================
+   CONFIRMAÇÃO - CARTÃO
+   ========================================================= */
+
+/*
+   Estas regras deixam a página de confirmação
+   bonita mesmo que o HTML tenha classes diferentes.
+*/
+
+body.confirmacao,
+.confirmacao-page {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.confirmacao-container {
+    width: 100%;
+    max-width: 650px;
+    margin: 30px auto;
+
+    padding: 45px;
+
+    background: rgba(255, 255, 255, 0.97);
+
+    border: 1px solid var(--borda);
+    border-radius: 30px;
+
+    box-shadow: var(--sombra);
+
+    text-align: center;
+}
+
+/* =========================================================
+   RODAPÉ
+   ========================================================= */
+
+footer {
+    text-align: center;
+
+    margin: 28px auto 5px;
+
+    color: var(--texto-suave);
+
+    font-size: 13px;
+}
+
+/* =========================================================
+   RESPONSIVO
    ========================================================= */
 
 @media (max-width: 800px) {
 
     body {
-        padding: 15px;
+        padding: 12px;
     }
 
-    .card {
-        margin: 10px auto;
+    .card,
+    .wide,
+    .confirmacao-container {
+        margin: 12px auto;
 
         padding: 28px 20px;
+
+        border-radius: 23px;
+    }
+
+    h1 {
+        font-size: 31px;
+    }
+
+    .admin-header {
+        flex-direction: column;
+
+        text-align: center;
+    }
+
+    .admin-brand {
+        flex-direction: column;
+    }
+
+    .admin-brand h1 {
+        text-align: center;
+    }
+
+    table {
+        min-width: 800px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    body {
+        padding: 8px;
+    }
+
+    .card,
+    .wide,
+    .confirmacao-container {
+        padding: 24px 16px;
 
         border-radius: 20px;
     }
@@ -847,108 +602,24 @@ a {
     }
 
     h1 {
-        font-size: 32px;
+        font-size: 28px;
     }
 
     .sub {
-        font-size: 15px;
-    }
-
-    .admin-page {
-        padding: 10px;
-    }
-
-    .admin-header {
-        grid-template-columns: 1fr;
-
-        text-align: center;
-
-        padding: 24px 18px;
-
-        gap: 15px;
-    }
-
-    .admin-brand img {
-        width: 140px;
-    }
-
-    .admin-title {
-        text-align: center;
-    }
-
-    .admin-title h1 {
-        text-align: center;
-
-        font-size: 29px;
-    }
-
-    .admin-summary {
-        padding: 16px;
-    }
-
-    .summary-text {
-        display: none;
-    }
-
-    .appointments-header {
-        align-items: flex-start;
-
-        flex-direction: column;
-
-        padding: 22px 18px;
-    }
-
-    .back-button {
-        width: 100%;
-    }
-
-    .admin-footer {
-        flex-direction: column;
-
-        text-align: center;
-    }
-
-    .wide {
-        margin: 10px auto;
-
-        padding: 22px 16px;
-    }
-}
-
-
-/* =========================================================
-   CELULARES PEQUENOS
-   ========================================================= */
-
-@media (max-width: 480px) {
-
-    body {
-        padding: 8px;
-    }
-
-    .card {
-        padding: 24px 16px;
-
-        border-radius: 18px;
-    }
-
-    .logo img {
-        width: 190px;
-    }
-
-    h1 {
-        font-size: 28px;
+        font-size: 14px;
     }
 
     input,
     select,
     textarea {
         padding: 14px;
+
+        font-size: 15px;
     }
 
     button,
     .button {
-        min-height: 52px;
+        min-height: 50px;
 
         font-size: 15px;
     }
@@ -957,18 +628,14 @@ a {
         width: 68px;
         height: 68px;
 
-        font-size: 34px;
+        font-size: 36px;
     }
 
     .summary {
-        padding: 16px;
+        padding: 18px 12px;
     }
 
     .summary p {
-        font-size: 15px;
-    }
-
-    .admin-title h1 {
-        font-size: 26px;
+        font-size: 16px;
     }
 }
