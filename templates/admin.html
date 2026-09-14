@@ -1,56 +1,218 @@
 <!doctype html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Painel | Agendamentos</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Agendamentos | Rayssa Lima</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-<main class="wide">
-  <h1>Agendamentos</h1>
-  <p><a href="{{ url_for('index') }}">← Página de agendamento</a></p>
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-      <div class="alert {{ category }}">{{ message }}</div>
-    {% endfor %}
-  {% endwith %}
-  <div class="table-wrap">
-  <table>
-    <thead>
-<tr>
-    <th>Data</th>
-    <th>Hora</th>
-    <th>Cliente</th>
-    <th>WhatsApp</th>
-    <th>Serviço</th>
-    <th>Observação</th>
-    <th>Ação</th>
-</tr>
-</thead>
-    <tbody>
-    {% for a in appointments %}
-      <tr>
-        <td>{{ a.appointment_date }}</td>
-        <td>{{ a.appointment_time }}</td>
-        <td>{{ a.name }}</td>
-        <td>{{ a.phone }}</td>
-        <td>{{ a.service }}</td>
-<td>
-    {{ a.notes if a.notes else "—" }}
-</td>
-<td>
-          <form method="post" action="{{ url_for('cancelar', appointment_id=a.id) }}" onsubmit="return confirm('Cancelar este agendamento?')">
-            <button class="danger" type="submit">Cancelar</button>
-          </form>
-        </td>
-      </tr>
-    {% else %}
-      <tr><td colspan="7">Nenhum agendamento ainda.</td></tr>
-    {% endfor %}
-    </tbody>
-  </table>
-  </div>
-</main>
+
+<body class="admin-page">
+
+    <main class="admin-container">
+
+        <!-- CABEÇALHO -->
+        <header class="admin-header">
+
+            <div class="admin-brand">
+
+                <img
+                    src="{{ url_for('static', filename='logo.png') }}"
+                    alt="Rayssa Lima Nail Designer"
+                >
+
+            </div>
+
+            <div class="admin-user">
+                <span class="admin-user-icon">♙</span>
+                <span>Olá, Rayssa</span>
+            </div>
+
+        </header>
+
+
+        <!-- TÍTULO -->
+
+        <section class="admin-title">
+
+            <div class="admin-title-icon">
+                ♡
+            </div>
+
+            <h1>Agendamentos</h1>
+
+            <p>
+                Aqui você acompanha todos os seus atendimentos
+            </p>
+
+            <div class="admin-decoration">
+                <span></span>
+                ♡
+                <span></span>
+            </div>
+
+        </section>
+
+
+        <!-- PAINEL -->
+
+        <section class="admin-panel">
+
+            <div class="admin-panel-top">
+
+                <a href="{{ url_for('index') }}" class="admin-back">
+                    ← Página de agendamento
+                </a>
+
+            </div>
+
+
+            <!-- TABELA -->
+
+            <div class="admin-table-wrapper">
+
+                <table class="admin-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Data</th>
+                            <th>Hora</th>
+                            <th>Cliente</th>
+                            <th>WhatsApp</th>
+                            <th>Serviço</th>
+                            <th>Observação</th>
+                            <th>Ação</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for a in appointments %}
+
+                        <tr>
+
+                            <td>
+                                <div class="admin-date">
+                                    <strong>{{ a.appointment_date }}</strong>
+                                </div>
+                            </td>
+
+
+                            <td>
+                                <span class="admin-time">
+                                    ◷ {{ a.appointment_time }}
+                                </span>
+                            </td>
+
+
+                            <td>
+                                <div class="admin-client">
+                                    <span>♡</span>
+                                    {{ a.name }}
+                                </div>
+                            </td>
+
+
+                            <td>
+                                <a
+                                    class="admin-whatsapp"
+                                    href="https://wa.me/{{ a.phone }}"
+                                    target="_blank"
+                                >
+                                    {{ a.phone }}
+                                </a>
+                            </td>
+
+
+                            <td>
+                                <span class="admin-service">
+                                    {{ a.service }}
+                                </span>
+                            </td>
+
+
+                            <td>
+                                <span class="admin-notes">
+                                    {{ a.notes if a.notes else "—" }}
+                                </span>
+                            </td>
+
+
+                            <td>
+
+                                <form
+                                    method="post"
+                                    action="{{ url_for('cancelar', appointment_id=a.id) }}"
+                                    onsubmit="return confirm('Cancelar este agendamento?')"
+                                >
+
+                                    <button
+                                        class="admin-cancel"
+                                        type="submit"
+                                    >
+                                        Cancelar
+                                    </button>
+
+                                </form>
+
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+
+                            <td colspan="7" class="admin-empty">
+
+                                <div class="admin-empty-icon">
+                                    ♡
+                                </div>
+
+                                <strong>
+                                    Nenhum agendamento ainda
+                                </strong>
+
+                                <span>
+                                    Os novos horários aparecerão aqui.
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- RODAPÉ -->
+
+        <footer class="admin-footer">
+
+            <span>♡</span>
+
+            Seus dados estão seguros
+
+            <span>♡</span>
+
+        </footer>
+
+    </main>
+
 </body>
+
 </html>
