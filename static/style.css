@@ -953,3 +953,260 @@ footer {
         letter-spacing: 2px;
     }
 }
+/* =========================================================
+   AJUSTE RESPONSIVO — PAINEL DE AGENDAMENTOS NO CELULAR
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    /* Evita qualquer conteúdo ultrapassar a tela */
+    html,
+    body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    body {
+        padding: 12px;
+    }
+
+    /* Cartão principal */
+    .card {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Título */
+    h1 {
+        font-size: 38px;
+        line-height: 1.1;
+        margin-top: 12px;
+    }
+
+    /* Texto abaixo do título */
+    .sub {
+        font-size: 14px;
+        line-height: 1.5;
+        padding: 0 8px;
+    }
+
+    /* =====================================================
+       PAINEL ADMINISTRATIVO
+       ===================================================== */
+
+    /* Área que contém a tabela */
+    .admin-card,
+    .appointments-card,
+    .table-container {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    /* Tabela */
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    /* Esconde o cabeçalho da tabela no celular */
+    table thead {
+        display: none;
+    }
+
+    /* Cada linha vira um cartão */
+    table tbody,
+    table tr {
+        display: block;
+        width: 100%;
+    }
+
+    table tr {
+        box-sizing: border-box;
+        margin: 0 0 16px 0;
+        padding: 16px;
+        background: rgba(255, 250, 250, 0.95);
+        border: 1px solid rgba(143, 95, 103, 0.15);
+        border-radius: 18px;
+        box-shadow: 0 6px 18px rgba(90, 55, 60, 0.08);
+    }
+
+    /* Cada célula ocupa uma linha */
+    table td {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        padding: 9px 0;
+        border: none;
+        text-align: right;
+        font-size: 14px;
+        line-height: 1.4;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+    }
+
+    /* Linha separadora suave */
+    table td + td {
+        border-top: 1px solid rgba(143, 95, 103, 0.08);
+    }
+
+    /* Nomes dos campos */
+    table td::before {
+        flex: 0 0 92px;
+        text-align: left;
+        font-weight: 700;
+        color: #8f5f67;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Data */
+    table td:nth-child(1)::before {
+        content: "Data";
+    }
+
+    /* Hora */
+    table td:nth-child(2)::before {
+        content: "Hora";
+    }
+
+    /* Cliente */
+    table td:nth-child(3)::before {
+        content: "Cliente";
+    }
+
+    /* WhatsApp */
+    table td:nth-child(4)::before {
+        content: "WhatsApp";
+    }
+
+    /* Serviço */
+    table td:nth-child(5)::before {
+        content: "Serviço";
+    }
+
+    /* Observação */
+    table td:nth-child(6)::before {
+        content: "Observação";
+    }
+
+    /* Ação */
+    table td:nth-child(7)::before {
+        content: "Ação";
+    }
+
+    /* Texto das células */
+    table td {
+        color: #3f3436;
+    }
+
+    /* Serviço pode ocupar mais espaço */
+    table td:nth-child(5) {
+        align-items: flex-start;
+    }
+
+    /* Observação */
+    table td:nth-child(6) {
+        align-items: flex-start;
+    }
+
+    /* Botão cancelar */
+    table td:nth-child(7) {
+        display: flex;
+        justify-content: center;
+        padding-top: 14px;
+        margin-top: 4px;
+    }
+
+    table td:nth-child(7)::before {
+        display: none;
+    }
+
+    table td:nth-child(7) form {
+        width: 100%;
+    }
+
+    table td:nth-child(7) button,
+    table td:nth-child(7) input[type="submit"] {
+        width: 100%;
+        min-height: 44px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    /* =====================================================
+       LINK "PÁGINA DE AGENDAMENTO"
+       ===================================================== */
+
+    a {
+        max-width: 100%;
+    }
+
+    /* =====================================================
+       LOGO / CABEÇALHO
+       ===================================================== */
+
+    .logo img {
+        max-width: 145px;
+        height: auto;
+    }
+
+    /* =====================================================
+       MENSAGEM QUANDO NÃO HÁ AGENDAMENTOS
+       ===================================================== */
+
+    .empty,
+    .no-appointments {
+        width: 100%;
+        box-sizing: border-box;
+        text-align: center;
+        padding: 28px 16px;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+}
+
+
+/* =========================================================
+   CELULARES PEQUENOS
+   ========================================================= */
+
+@media (max-width: 390px) {
+
+    body {
+        padding: 8px;
+    }
+
+    h1 {
+        font-size: 34px;
+    }
+
+    .logo img {
+        max-width: 125px;
+    }
+
+    table tr {
+        padding: 13px;
+        border-radius: 16px;
+    }
+
+    table td {
+        font-size: 13px;
+    }
+
+    table td::before {
+        flex-basis: 82px;
+        font-size: 11px;
+    }
+}
