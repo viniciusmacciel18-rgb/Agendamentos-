@@ -17,7 +17,17 @@
   {% endwith %}
   <div class="table-wrap">
   <table>
-    <thead><tr><th>Data</th><th>Hora</th><th>Cliente</th><th>WhatsApp</th><th>Serviço</th><th>Ação</th></tr></thead>
+    <thead>
+<tr>
+    <th>Data</th>
+    <th>Hora</th>
+    <th>Cliente</th>
+    <th>WhatsApp</th>
+    <th>Serviço</th>
+    <th>Observação</th>
+    <th>Ação</th>
+</tr>
+</thead>
     <tbody>
     {% for a in appointments %}
       <tr>
@@ -26,14 +36,17 @@
         <td>{{ a.name }}</td>
         <td>{{ a.phone }}</td>
         <td>{{ a.service }}</td>
-        <td>
+<td>
+    {{ a.notes if a.notes else "—" }}
+</td>
+<td>
           <form method="post" action="{{ url_for('cancelar', appointment_id=a.id) }}" onsubmit="return confirm('Cancelar este agendamento?')">
             <button class="danger" type="submit">Cancelar</button>
           </form>
         </td>
       </tr>
     {% else %}
-      <tr><td colspan="6">Nenhum agendamento ainda.</td></tr>
+      <tr><td colspan="7">Nenhum agendamento ainda.</td></tr>
     {% endfor %}
     </tbody>
   </table>
