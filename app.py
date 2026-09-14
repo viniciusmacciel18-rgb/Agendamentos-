@@ -1,15 +1,17 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, Response
-import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from psycopg2 import IntegrityError
 from datetime import datetime, date, timedelta
-from pathlib import Path
 import os
 from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = "troque-esta-chave-em-producao"
+
 ADMIN_USERNAME = "Rayssa"
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
-DB = Path(__file__).with_name("agendamentos.db")
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 SERVICES = [
     ("Esmaltação simples", 30, 30.00),
@@ -19,19 +21,25 @@ SERVICES = [
     ("Manicure + Pedicure", 60, 50.00),
     ("Alongamento de unhas", 120, 60.00),
     ("Plano mensao", 90, 150.00)
-    
 ]
 
+
 def db():
-    con = sqlite3.connect(DB)
-    con.row_factory = sqlite3.Row
-    return con
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL não configurada.")
+
+    return psycopg2.connect(
+        DATABASE_URL,
+        cursor_factory=RealDictCursor
+    )
+
 
 def init_db():
     con = db()
+
     con.execute("""
         CREATE TABLE IF NOT EXISTS appointments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
             phone TEXT NOT NULL,
             service TEXT NOT NULL,
@@ -42,8 +50,10 @@ def init_db():
             UNIQUE(appointment_date, appointment_time)
         )
     """)
+
     con.commit()
     con.close()
+
 
 def slots_for(day, service=None):
     # Segunda a sexta:
@@ -121,13 +131,16 @@ def slots_for(day, service=None):
 
     return slots
 
+
 @app.context_processor
 def inject_today():
     return {"now": date.today().isoformat()}
 
+
 @app.route("/")
 def index():
     return render_template("index.html", services=SERVICES)
+
 
 @app.route("/horarios")
 def horarios():
@@ -143,7 +156,7 @@ def horarios():
         """
         SELECT appointment_time, service
         FROM appointments
-        WHERE appointment_date = ?
+        WHERE appointment_date = %s
         """,
         (day,)
     ).fetchall()
@@ -199,6 +212,7 @@ def horarios():
 
     return {"slots": available}
 
+
 @app.route("/agendar", methods=["POST"])
 def agendar():
     name = request.form.get("name", "").strip()
@@ -209,6 +223,7 @@ def agendar():
     notes = request.form.get("notes", "").strip()
 
     valid_services = {s[0] for s in SERVICES}
+
     if not all([name, phone, service, day, time]) or service not in valid_services:
         flash("Preencha todos os campos obrigatórios.", "error")
         return redirect(url_for("index"))
@@ -219,25 +234,47 @@ def agendar():
         flash("Data inválida.", "error")
         return redirect(url_for("index"))
 
-    if chosen < date.today() or time not in slots_for(day):
+    if chosen < date.today() or time not in slots_for(day, service):
         flash("Data ou horário inválido.", "error")
         return redirect(url_for("index"))
 
     con = db()
+
     try:
         con.execute("""
             INSERT INTO appointments
             (name, phone, service, appointment_date, appointment_time, notes, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (name, phone, service, day, time, notes, datetime.now().isoformat(timespec="seconds")))
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (
+            name,
+            phone,
+            service,
+            day,
+            time,
+            notes,
+            datetime.now().isoformat(timespec="seconds")
+        ))
+
         con.commit()
-    except sqlite3.IntegrityError:
+
+    except IntegrityError:
+        con.rollback()
         con.close()
+
         flash("Esse horário acabou de ser reservado. Escolha outro.", "error")
         return redirect(url_for("index"))
+
     con.close()
 
-    return render_template("confirmacao.html", name=name, service=service, day=day, time=time)
+    return render_template(
+        "confirmacao.html",
+        name=name,
+        service=service,
+        day=day,
+        time=time
+    )
+
+
 def proteger_admin(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -253,28 +290,48 @@ def proteger_admin(func):
         return func(*args, **kwargs)
 
     return wrapper
+
+
 @app.route("/admin")
 @proteger_admin
 def admin():
     con = db()
+
     appointments = con.execute("""
-        SELECT * FROM appointments
+        SELECT *
+        FROM appointments
         ORDER BY appointment_date, appointment_time
     """).fetchall()
+
     con.close()
-    return render_template("admin.html", appointments=appointments)
+
+    return render_template(
+        "admin.html",
+        appointments=appointments
+    )
+
 
 @app.post("/admin/cancelar/<int:appointment_id>")
 @proteger_admin
 def cancelar(appointment_id):
     con = db()
-    con.execute("DELETE FROM appointments WHERE id = ?", (appointment_id,))
+
+    con.execute(
+        "DELETE FROM appointments WHERE id = %s",
+        (appointment_id,)
+    )
+
     con.commit()
     con.close()
+
     flash("Agendamento cancelado.", "ok")
+
     return redirect(url_for("admin"))
+
 
 init_db()
 
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
