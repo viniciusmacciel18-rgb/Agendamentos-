@@ -954,58 +954,78 @@ footer {
     }
 }
 /* =========================================================
-   PAINEL ADMIN — CELULAR
-   AJUSTE RESPONSIVO
+   PAINEL ADMINISTRATIVO — CELULAR
+   VERSÃO FINAL
    ========================================================= */
 
-@media screen and (max-width: 700px) {
+@media only screen and (max-width: 700px) {
 
+    /* TELA */
     html,
     body {
-        width: 100%;
-        max-width: 100%;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
         overflow-x: hidden !important;
     }
 
-    body {
-        margin: 0;
-        padding: 10px;
-        box-sizing: border-box;
-    }
-
-    /* ---------- CABEÇALHO ---------- */
-
-    h1 {
-        font-size: 38px !important;
-        line-height: 1.15 !important;
-        margin: 15px 0 12px !important;
-        text-align: center;
-        max-width: 100%;
-    }
-
-    .sub {
-        font-size: 15px !important;
-        line-height: 1.45 !important;
-        text-align: center;
-        margin: 0 auto 18px !important;
-        padding: 0 5px !important;
-    }
-
-    /* ---------- LINK VOLTAR ---------- */
-
-    a {
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-
-    /* ---------- ÁREA DA TABELA ---------- */
-
-    table {
+    /* CONTAINER PRINCIPAL */
+    main,
+    .card {
         width: 100% !important;
         max-width: 100% !important;
-        border-collapse: separate !important;
-        border-spacing: 0 !important;
-        box-sizing: border-box;
+        box-sizing: border-box !important;
+    }
+
+    /* TÍTULO */
+    h1 {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        text-align: center !important;
+        font-size: 38px !important;
+        line-height: 1.15 !important;
+        margin: 20px 0 12px !important;
+    }
+
+    /* SUBTÍTULO */
+    .sub {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        text-align: center !important;
+        font-size: 15px !important;
+        line-height: 1.5 !important;
+        padding: 0 15px !important;
+    }
+
+    /* LINK VOLTAR */
+    a {
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+
+    /* =====================================================
+       TABELA
+       ===================================================== */
+
+    table {
+        display: block !important;
+
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        border-collapse: collapse !important;
+
+        table-layout: fixed !important;
+
+        overflow: hidden !important;
+
+        box-sizing: border-box !important;
     }
 
     table thead {
@@ -1014,67 +1034,117 @@ footer {
 
     table tbody {
         display: block !important;
+
         width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+
+        box-sizing: border-box !important;
     }
 
-    /* ---------- CADA AGENDAMENTO ---------- */
+
+    /* =====================================================
+       CARTÃO DO AGENDAMENTO
+       ===================================================== */
 
     table tbody tr {
         display: block !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
 
-        margin: 0 0 18px !important;
+        width: calc(100% - 32px) !important;
+        max-width: calc(100% - 32px) !important;
+        min-width: 0 !important;
+
+        margin: 0 16px 20px !important;
         padding: 14px 16px !important;
 
+        box-sizing: border-box !important;
+
         background: #fffafa !important;
-        border: 1px solid rgba(143, 95, 103, 0.16) !important;
+
+        border: 1px solid rgba(143, 95, 103, 0.15) !important;
         border-radius: 20px !important;
 
-        box-shadow: 0 6px 18px rgba(80, 50, 55, 0.08) !important;
+        box-shadow: 0 5px 16px rgba(80, 50, 55, 0.08) !important;
 
         overflow: hidden !important;
     }
 
-    /* ---------- CÉLULAS ---------- */
+
+    /* =====================================================
+       CÉLULAS
+       ===================================================== */
 
     table tbody tr td {
         display: grid !important;
-        grid-template-columns: 92px minmax(0, 1fr) !important;
+
+        grid-template-columns: 90px minmax(0, 1fr) !important;
 
         width: 100% !important;
-        min-width: 0 !important;
         max-width: 100% !important;
+        min-width: 0 !important;
+
+        height: auto !important;
+        min-height: 45px !important;
+
+        margin: 0 !important;
+        padding: 10px 0 !important;
 
         box-sizing: border-box !important;
 
-        padding: 11px 0 !important;
-        margin: 0 !important;
+        background: transparent !important;
 
         border: 0 !important;
 
+        /*
+         * ESTA PARTE É IMPORTANTE:
+         * força os valores dos agendamentos
+         * a ficarem visíveis.
+         */
         color: #3f3436 !important;
+
         font-size: 14px !important;
+        font-weight: 500 !important;
+
         line-height: 1.4 !important;
 
         text-align: right !important;
 
-        overflow: visible !important;
+        white-space: normal !important;
         word-break: normal !important;
         overflow-wrap: anywhere !important;
 
         visibility: visible !important;
         opacity: 1 !important;
+
+        overflow: visible !important;
     }
 
-    /* Separadores entre informações */
+
+    /* LINHAS SEPARADORAS */
 
     table tbody tr td + td {
         border-top: 1px solid rgba(143, 95, 103, 0.09) !important;
     }
 
-    /* ---------- RÓTULOS ---------- */
+
+    /* =====================================================
+       VALORES — FORÇA A VISIBILIDADE
+       ===================================================== */
+
+    table tbody tr td,
+    table tbody tr td * {
+        color: #3f3436 !important;
+
+        -webkit-text-fill-color: #3f3436 !important;
+
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+
+    /* =====================================================
+       NOMES DOS CAMPOS
+       ===================================================== */
 
     table tbody tr td::before {
         display: block !important;
@@ -1082,93 +1152,84 @@ footer {
         width: auto !important;
         min-width: 0 !important;
 
-        flex: none !important;
-
-        text-align: left !important;
+        margin: 0 !important;
+        padding: 0 !important;
 
         color: #8f5f67 !important;
 
         font-size: 11px !important;
         font-weight: 700 !important;
 
+        text-align: left !important;
+
         text-transform: uppercase !important;
-        letter-spacing: 0.7px !important;
 
-        align-self: center !important;
+        letter-spacing: 0.6px !important;
 
         visibility: visible !important;
         opacity: 1 !important;
     }
 
-    /* ---------- VALORES ---------- */
 
-    table tbody tr td > * {
-        display: block !important;
-
-        min-width: 0 !important;
-        max-width: 100% !important;
-
-        color: #3f3436 !important;
-
-        visibility: visible !important;
-        opacity: 1 !important;
-
-        overflow-wrap: anywhere !important;
-        word-break: normal !important;
-    }
-
-    /* Data */
+    /* DATA */
 
     table tbody tr td:nth-child(1)::before {
-        content: "Data";
+        content: "Data" !important;
     }
 
-    /* Hora */
+
+    /* HORA */
 
     table tbody tr td:nth-child(2)::before {
-        content: "Hora";
+        content: "Hora" !important;
     }
 
-    /* Cliente */
+
+    /* CLIENTE */
 
     table tbody tr td:nth-child(3)::before {
-        content: "Cliente";
+        content: "Cliente" !important;
     }
 
-    /* WhatsApp */
+
+    /* WHATSAPP */
 
     table tbody tr td:nth-child(4)::before {
-        content: "WhatsApp";
+        content: "WhatsApp" !important;
     }
 
-    /* Serviço */
+
+    /* SERVIÇO */
 
     table tbody tr td:nth-child(5)::before {
-        content: "Serviço";
+        content: "Serviço" !important;
     }
 
-    /* Observação */
+
+    /* OBSERVAÇÃO */
 
     table tbody tr td:nth-child(6)::before {
-        content: "Observação";
+        content: "Observação" !important;
     }
 
-    /* Ação */
 
-    table tbody tr td:nth-child(7)::before {
-        display: none !important;
-        content: "";
-    }
-
-    /* ---------- BOTÃO CANCELAR ---------- */
+    /* =====================================================
+       BOTÃO CANCELAR
+       ===================================================== */
 
     table tbody tr td:nth-child(7) {
         display: block !important;
 
         width: 100% !important;
         max-width: 100% !important;
+        min-width: 0 !important;
 
-        padding: 15px 0 2px !important;
+        height: auto !important;
+
+        margin: 8px 0 0 !important;
+        padding: 14px 0 2px !important;
+
+        box-sizing: border-box !important;
 
         text-align: center !important;
 
@@ -1177,19 +1238,31 @@ footer {
         overflow: hidden !important;
     }
 
+    table tbody tr td:nth-child(7)::before {
+        display: none !important;
+        content: "" !important;
+    }
+
+
+    /* FORMULÁRIO DO BOTÃO */
+
     table tbody tr td:nth-child(7) form {
         display: block !important;
 
         width: 100% !important;
         max-width: 100% !important;
-
         min-width: 0 !important;
 
         margin: 0 !important;
         padding: 0 !important;
 
         box-sizing: border-box !important;
+
+        overflow: hidden !important;
     }
+
+
+    /* BOTÃO */
 
     table tbody tr td:nth-child(7) button,
     table tbody tr td:nth-child(7) input[type="submit"] {
@@ -1197,13 +1270,14 @@ footer {
 
         width: 100% !important;
         max-width: 100% !important;
-
         min-width: 0 !important;
+
+        height: 46px !important;
         min-height: 46px !important;
 
         margin: 0 !important;
 
-        padding: 10px 18px !important;
+        padding: 0 18px !important;
 
         box-sizing: border-box !important;
 
@@ -1212,50 +1286,42 @@ footer {
         font-size: 14px !important;
         font-weight: 600 !important;
 
+        text-align: center !important;
+
         white-space: nowrap !important;
 
         overflow: hidden !important;
-    }
 
-    /* ---------- QUANDO NÃO HÁ AGENDAMENTOS ---------- */
+        color: #ffffff !important;
 
-    table tbody tr td[colspan] {
-        display: block !important;
-
-        width: 100% !important;
-
-        padding: 28px 10px !important;
-
-        text-align: center !important;
-    }
-
-    table tbody tr td[colspan]::before {
-        display: none !important;
+        -webkit-text-fill-color: #ffffff !important;
     }
 }
 
 
 /* =========================================================
-   CELULARES MUITO PEQUENOS
+   CELULARES PEQUENOS
    ========================================================= */
 
-@media screen and (max-width: 390px) {
-
-    body {
-        padding: 7px;
-    }
+@media only screen and (max-width: 390px) {
 
     h1 {
         font-size: 34px !important;
     }
 
     table tbody tr {
+        width: calc(100% - 24px) !important;
+        max-width: calc(100% - 24px) !important;
+
+        margin-left: 12px !important;
+        margin-right: 12px !important;
+
         padding: 12px !important;
-        border-radius: 17px !important;
     }
 
     table tbody tr td {
-        grid-template-columns: 82px minmax(0, 1fr) !important;
+        grid-template-columns: 80px minmax(0, 1fr) !important;
+
         font-size: 13px !important;
     }
 
