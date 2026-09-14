@@ -954,259 +954,312 @@ footer {
     }
 }
 /* =========================================================
-   AJUSTE RESPONSIVO — PAINEL DE AGENDAMENTOS NO CELULAR
+   PAINEL ADMIN — CELULAR
+   AJUSTE RESPONSIVO
    ========================================================= */
 
-@media (max-width: 700px) {
+@media screen and (max-width: 700px) {
 
-    /* Evita qualquer conteúdo ultrapassar a tela */
     html,
     body {
         width: 100%;
         max-width: 100%;
-        overflow-x: hidden;
+        overflow-x: hidden !important;
     }
 
     body {
-        padding: 12px;
-    }
-
-    /* Cartão principal */
-    .card {
-        width: 100%;
-        max-width: 100%;
+        margin: 0;
+        padding: 10px;
         box-sizing: border-box;
     }
 
-    /* Título */
+    /* ---------- CABEÇALHO ---------- */
+
     h1 {
-        font-size: 38px;
-        line-height: 1.1;
-        margin-top: 12px;
+        font-size: 38px !important;
+        line-height: 1.15 !important;
+        margin: 15px 0 12px !important;
+        text-align: center;
+        max-width: 100%;
     }
 
-    /* Texto abaixo do título */
     .sub {
-        font-size: 14px;
-        line-height: 1.5;
-        padding: 0 8px;
+        font-size: 15px !important;
+        line-height: 1.45 !important;
+        text-align: center;
+        margin: 0 auto 18px !important;
+        padding: 0 5px !important;
     }
 
-    /* =====================================================
-       PAINEL ADMINISTRATIVO
-       ===================================================== */
+    /* ---------- LINK VOLTAR ---------- */
 
-    /* Área que contém a tabela */
-    .admin-card,
-    .appointments-card,
-    .table-container {
-        width: 100%;
+    a {
         max-width: 100%;
         box-sizing: border-box;
-        overflow: hidden;
     }
 
-    /* Tabela */
+    /* ---------- ÁREA DA TABELA ---------- */
+
     table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
+        width: 100% !important;
+        max-width: 100% !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        box-sizing: border-box;
     }
 
-    /* Esconde o cabeçalho da tabela no celular */
     table thead {
-        display: none;
+        display: none !important;
     }
 
-    /* Cada linha vira um cartão */
-    table tbody,
-    table tr {
-        display: block;
-        width: 100%;
+    table tbody {
+        display: block !important;
+        width: 100% !important;
     }
 
-    table tr {
-        box-sizing: border-box;
-        margin: 0 0 16px 0;
-        padding: 16px;
-        background: rgba(255, 250, 250, 0.95);
-        border: 1px solid rgba(143, 95, 103, 0.15);
-        border-radius: 18px;
-        box-shadow: 0 6px 18px rgba(90, 55, 60, 0.08);
+    /* ---------- CADA AGENDAMENTO ---------- */
+
+    table tbody tr {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+
+        margin: 0 0 18px !important;
+        padding: 14px 16px !important;
+
+        background: #fffafa !important;
+        border: 1px solid rgba(143, 95, 103, 0.16) !important;
+        border-radius: 20px !important;
+
+        box-shadow: 0 6px 18px rgba(80, 50, 55, 0.08) !important;
+
+        overflow: hidden !important;
     }
 
-    /* Cada célula ocupa uma linha */
-    table td {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 12px;
-        width: 100%;
-        min-width: 0;
-        box-sizing: border-box;
-        padding: 9px 0;
-        border: none;
-        text-align: right;
-        font-size: 14px;
-        line-height: 1.4;
-        word-break: break-word;
-        overflow-wrap: anywhere;
+    /* ---------- CÉLULAS ---------- */
+
+    table tbody tr td {
+        display: grid !important;
+        grid-template-columns: 92px minmax(0, 1fr) !important;
+
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+
+        box-sizing: border-box !important;
+
+        padding: 11px 0 !important;
+        margin: 0 !important;
+
+        border: 0 !important;
+
+        color: #3f3436 !important;
+        font-size: 14px !important;
+        line-height: 1.4 !important;
+
+        text-align: right !important;
+
+        overflow: visible !important;
+        word-break: normal !important;
+        overflow-wrap: anywhere !important;
+
+        visibility: visible !important;
+        opacity: 1 !important;
     }
 
-    /* Linha separadora suave */
-    table td + td {
-        border-top: 1px solid rgba(143, 95, 103, 0.08);
+    /* Separadores entre informações */
+
+    table tbody tr td + td {
+        border-top: 1px solid rgba(143, 95, 103, 0.09) !important;
     }
 
-    /* Nomes dos campos */
-    table td::before {
-        flex: 0 0 92px;
-        text-align: left;
-        font-weight: 700;
-        color: #8f5f67;
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+    /* ---------- RÓTULOS ---------- */
+
+    table tbody tr td::before {
+        display: block !important;
+
+        width: auto !important;
+        min-width: 0 !important;
+
+        flex: none !important;
+
+        text-align: left !important;
+
+        color: #8f5f67 !important;
+
+        font-size: 11px !important;
+        font-weight: 700 !important;
+
+        text-transform: uppercase !important;
+        letter-spacing: 0.7px !important;
+
+        align-self: center !important;
+
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    /* ---------- VALORES ---------- */
+
+    table tbody tr td > * {
+        display: block !important;
+
+        min-width: 0 !important;
+        max-width: 100% !important;
+
+        color: #3f3436 !important;
+
+        visibility: visible !important;
+        opacity: 1 !important;
+
+        overflow-wrap: anywhere !important;
+        word-break: normal !important;
     }
 
     /* Data */
-    table td:nth-child(1)::before {
+
+    table tbody tr td:nth-child(1)::before {
         content: "Data";
     }
 
     /* Hora */
-    table td:nth-child(2)::before {
+
+    table tbody tr td:nth-child(2)::before {
         content: "Hora";
     }
 
     /* Cliente */
-    table td:nth-child(3)::before {
+
+    table tbody tr td:nth-child(3)::before {
         content: "Cliente";
     }
 
     /* WhatsApp */
-    table td:nth-child(4)::before {
+
+    table tbody tr td:nth-child(4)::before {
         content: "WhatsApp";
     }
 
     /* Serviço */
-    table td:nth-child(5)::before {
+
+    table tbody tr td:nth-child(5)::before {
         content: "Serviço";
     }
 
     /* Observação */
-    table td:nth-child(6)::before {
+
+    table tbody tr td:nth-child(6)::before {
         content: "Observação";
     }
 
     /* Ação */
-    table td:nth-child(7)::before {
-        content: "Ação";
+
+    table tbody tr td:nth-child(7)::before {
+        display: none !important;
+        content: "";
     }
 
-    /* Texto das células */
-    table td {
-        color: #3f3436;
+    /* ---------- BOTÃO CANCELAR ---------- */
+
+    table tbody tr td:nth-child(7) {
+        display: block !important;
+
+        width: 100% !important;
+        max-width: 100% !important;
+
+        padding: 15px 0 2px !important;
+
+        text-align: center !important;
+
+        border-top: 1px solid rgba(143, 95, 103, 0.09) !important;
+
+        overflow: hidden !important;
     }
 
-    /* Serviço pode ocupar mais espaço */
-    table td:nth-child(5) {
-        align-items: flex-start;
+    table tbody tr td:nth-child(7) form {
+        display: block !important;
+
+        width: 100% !important;
+        max-width: 100% !important;
+
+        min-width: 0 !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        box-sizing: border-box !important;
     }
 
-    /* Observação */
-    table td:nth-child(6) {
-        align-items: flex-start;
+    table tbody tr td:nth-child(7) button,
+    table tbody tr td:nth-child(7) input[type="submit"] {
+        display: block !important;
+
+        width: 100% !important;
+        max-width: 100% !important;
+
+        min-width: 0 !important;
+        min-height: 46px !important;
+
+        margin: 0 !important;
+
+        padding: 10px 18px !important;
+
+        box-sizing: border-box !important;
+
+        border-radius: 999px !important;
+
+        font-size: 14px !important;
+        font-weight: 600 !important;
+
+        white-space: nowrap !important;
+
+        overflow: hidden !important;
     }
 
-    /* Botão cancelar */
-    table td:nth-child(7) {
-        display: flex;
-        justify-content: center;
-        padding-top: 14px;
-        margin-top: 4px;
+    /* ---------- QUANDO NÃO HÁ AGENDAMENTOS ---------- */
+
+    table tbody tr td[colspan] {
+        display: block !important;
+
+        width: 100% !important;
+
+        padding: 28px 10px !important;
+
+        text-align: center !important;
     }
 
-    table td:nth-child(7)::before {
-        display: none;
-    }
-
-    table td:nth-child(7) form {
-        width: 100%;
-    }
-
-    table td:nth-child(7) button,
-    table td:nth-child(7) input[type="submit"] {
-        width: 100%;
-        min-height: 44px;
-        border-radius: 999px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-    }
-
-    /* =====================================================
-       LINK "PÁGINA DE AGENDAMENTO"
-       ===================================================== */
-
-    a {
-        max-width: 100%;
-    }
-
-    /* =====================================================
-       LOGO / CABEÇALHO
-       ===================================================== */
-
-    .logo img {
-        max-width: 145px;
-        height: auto;
-    }
-
-    /* =====================================================
-       MENSAGEM QUANDO NÃO HÁ AGENDAMENTOS
-       ===================================================== */
-
-    .empty,
-    .no-appointments {
-        width: 100%;
-        box-sizing: border-box;
-        text-align: center;
-        padding: 28px 16px;
-        font-size: 15px;
-        line-height: 1.5;
+    table tbody tr td[colspan]::before {
+        display: none !important;
     }
 }
 
 
 /* =========================================================
-   CELULARES PEQUENOS
+   CELULARES MUITO PEQUENOS
    ========================================================= */
 
-@media (max-width: 390px) {
+@media screen and (max-width: 390px) {
 
     body {
-        padding: 8px;
+        padding: 7px;
     }
 
     h1 {
-        font-size: 34px;
+        font-size: 34px !important;
     }
 
-    .logo img {
-        max-width: 125px;
+    table tbody tr {
+        padding: 12px !important;
+        border-radius: 17px !important;
     }
 
-    table tr {
-        padding: 13px;
-        border-radius: 16px;
+    table tbody tr td {
+        grid-template-columns: 82px minmax(0, 1fr) !important;
+        font-size: 13px !important;
     }
 
-    table td {
-        font-size: 13px;
-    }
-
-    table td::before {
-        flex-basis: 82px;
-        font-size: 11px;
+    table tbody tr td::before {
+        font-size: 10px !important;
     }
 }
