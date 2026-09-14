@@ -5,51 +5,68 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
 
-    <title>Agendamento confirmado</title>
+    <title>Agendamento confirmado | Rayssa Lima</title>
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
 </head>
 
-<body>
+<body class="confirmation-page">
 
-    <main class="card center">
+    <main class="confirmation-card">
 
-        <div class="success">✓</div>
+        <div class="confirmation-logo">
+            <img src="{{ url_for('static', filename='logo.png') }}"
+                 alt="Rayssa Lima Nail Designer">
+        </div>
+
+        <div class="confirmation-check">
+            ✓
+        </div>
 
         <h1>Agendamento confirmado!</h1>
 
-        <p>
+        <p class="confirmation-client">
             Olá, <strong>{{ name }}</strong>!
         </p>
 
-        <p class="sub">
-            Seu horário foi reservado com sucesso.
+        <p class="confirmation-text">
+            Seu horário foi reservado com sucesso.<br>
             Confira os detalhes do seu atendimento:
         </p>
 
-        <div class="summary">
+        <div class="confirmation-details">
 
-            <p>
-                <strong>Serviço:</strong><br>
-                {{ service }}
-            </p>
+            <div class="confirmation-detail">
+                <span class="detail-icon">✂</span>
+                <span class="detail-label">SERVIÇO</span>
+                <strong>{{ service }}</strong>
+            </div>
 
-            <p>
-                <strong>Data:</strong><br>
-                {{ day }}
-            </p>
+            <div class="confirmation-detail">
+                <span class="detail-icon">▣</span>
+                <span class="detail-label">DATA</span>
+                <strong>{{ day }}</strong>
+            </div>
 
-            <p>
-                <strong>Horário:</strong><br>
-                {{ time }}
-            </p>
+            <div class="confirmation-detail">
+                <span class="detail-icon">◷</span>
+                <span class="detail-label">HORÁRIO</span>
+                <strong>{{ time }}</strong>
+            </div>
 
         </div>
 
-        <a class="button" href="{{ url_for('index') }}">
+        <a class="confirmation-button"
+           href="{{ url_for('index') }}">
             Fazer outro agendamento
+            <span>→</span>
         </a>
+
+        <div class="confirmation-footer">
+            ♡
+            <p>CUIDAR DE VOCÊ É A NOSSA ESPECIALIDADE</p>
+        </div>
 
     </main>
 
