@@ -192,13 +192,14 @@ def horarios():
     con = db()
 
     appointments = con.execute(
-        """
-        SELECT appointment_time, service
-        FROM appointments
-        WHERE appointment_date = %s
-        """,
-        (day,)
-    ).fetchall()
+    """
+    SELECT appointment_time, service
+    FROM appointments
+    WHERE appointment_date = %s
+      AND status <> 'Cancelado'
+    """,
+    (day,)
+).fetchall()
 
     con.close()
 
@@ -348,7 +349,343 @@ def admin():
         "admin.html",
         appointments=appointments
     )
+# ==========================================================
+# MEUS AGENDAMENTOS - CLIENTE
+# ==========================================================
 
+def service_duration(service):
+    for name, minutes, price in SERVICES:
+        if name == service:
+            return minutes
+    return 30
+
+
+def appointment_conflict(con, day, time, duration, ignore_id=None):
+    appointments = con.execute(
+        """
+        SELECT id, appointment_time, service
+        FROM appointments
+        WHERE appointment_date = %s
+          AND status <> 'Cancelado'
+        """,
+        (day,)
+    ).fetchall()
+
+    new_start = datetime.strptime(
+        f"{day} {time}",
+        "%Y-%m-%d %H:%M"
+    )
+
+    new_end = new_start + timedelta(minutes=duration)
+
+    for appointment in appointments:
+
+        if ignore_id and appointment["id"] == ignore_id:
+            continue
+
+        existing_start = datetime.strptime(
+            f"{day} {appointment['appointment_time']}",
+            "%Y-%m-%d %H:%M"
+        )
+
+        existing_duration = service_duration(
+            appointment["service"]
+        )
+
+        existing_end = existing_start + timedelta(
+            minutes=existing_duration
+        )
+
+        if new_start < existing_end and new_end > existing_start:
+            return True
+
+    return False
+
+
+@app.get("/meus-agendamentos")
+def meus_agendamentos():
+
+    phone = request.args.get("phone", "").strip()
+
+    if not phone:
+        return {
+            "success": False,
+            "appointments": []
+        }
+
+    con = db()
+
+    appointments = con.execute(
+        """
+        SELECT
+            id,
+            name,
+            phone,
+            service,
+            appointment_date,
+            appointment_time,
+            notes,
+            status
+        FROM appointments
+        WHERE regexp_replace(phone, '[^0-9]', '', 'g')
+              =
+              regexp_replace(%s, '[^0-9]', '', 'g')
+        ORDER BY appointment_date, appointment_time
+        """,
+        (phone,)
+    ).fetchall()
+
+    con.close()
+
+    result = []
+
+    for appointment in appointments:
+
+        result.append({
+            "id": appointment["id"],
+            "name": appointment["name"],
+            "service": appointment["service"],
+            "date": appointment["appointment_date"],
+            "time": appointment["appointment_time"],
+            "notes": appointment["notes"] or "",
+            "status": appointment["status"]
+        })
+
+    return {
+        "success": True,
+        "appointments": result
+    }
+
+
+@app.post("/meus-agendamentos/<int:appointment_id>/alterar-servico")
+def alterar_servico_cliente(appointment_id):
+
+    data = request.get_json() or {}
+
+    phone = data.get("phone", "").strip()
+    service = data.get("service", "").strip()
+
+    valid_services = {s[0] for s in SERVICES}
+
+    if not phone or service not in valid_services:
+        return {
+            "success": False,
+            "message": "Dados inválidos."
+        }, 400
+
+    con = db()
+
+    appointment = con.execute(
+        """
+        SELECT *
+        FROM appointments
+        WHERE id = %s
+          AND regexp_replace(phone, '[^0-9]', '', 'g')
+              =
+              regexp_replace(%s, '[^0-9]', '', 'g')
+          AND status <> 'Cancelado'
+        """,
+        (appointment_id, phone)
+    ).fetchone()
+
+    if not appointment:
+        con.close()
+
+        return {
+            "success": False,
+            "message": "Agendamento não encontrado."
+        }, 404
+
+    duration = service_duration(service)
+
+    if appointment_conflict(
+        con,
+        appointment["appointment_date"],
+        appointment["appointment_time"],
+        duration,
+        appointment_id
+    ):
+        con.close()
+
+        return {
+            "success": False,
+            "message": "Esse horário não comporta o novo serviço."
+        }, 409
+
+    con.execute(
+        """
+        UPDATE appointments
+        SET service = %s
+        WHERE id = %s
+        """,
+        (service, appointment_id)
+    )
+
+    con.commit()
+    con.close()
+
+    return {
+        "success": True,
+        "message": "Serviço alterado com sucesso."
+    }
+
+
+@app.post("/meus-agendamentos/<int:appointment_id>/reagendar")
+def reagendar_cliente(appointment_id):
+
+    data = request.get_json() or {}
+
+    phone = data.get("phone", "").strip()
+    new_date = data.get("date", "").strip()
+    new_time = data.get("time", "").strip()
+
+    if not phone or not new_date or not new_time:
+        return {
+            "success": False,
+            "message": "Informe a nova data e horário."
+        }, 400
+
+    try:
+        chosen_date = datetime.strptime(
+            new_date,
+            "%Y-%m-%d"
+        ).date()
+    except ValueError:
+        return {
+            "success": False,
+            "message": "Data inválida."
+        }, 400
+
+    if chosen_date < date.today():
+        return {
+            "success": False,
+            "message": "Não é possível reagendar para uma data passada."
+        }, 400
+
+    con = db()
+
+    appointment = con.execute(
+        """
+        SELECT *
+        FROM appointments
+        WHERE id = %s
+          AND regexp_replace(phone, '[^0-9]', '', 'g')
+              =
+              regexp_replace(%s, '[^0-9]', '', 'g')
+          AND status <> 'Cancelado'
+        """,
+        (appointment_id, phone)
+    ).fetchone()
+
+    if not appointment:
+        con.close()
+
+        return {
+            "success": False,
+            "message": "Agendamento não encontrado."
+        }, 404
+
+    service = appointment["service"]
+
+    if new_time not in slots_for(new_date, service):
+        con.close()
+
+        return {
+            "success": False,
+            "message": "Esse horário não está disponível."
+        }, 409
+
+    duration = service_duration(service)
+
+    if appointment_conflict(
+        con,
+        new_date,
+        new_time,
+        duration,
+        appointment_id
+    ):
+        con.close()
+
+        return {
+            "success": False,
+            "message": "Esse horário já está ocupado."
+        }, 409
+
+    con.execute(
+        """
+        UPDATE appointments
+        SET appointment_date = %s,
+            appointment_time = %s
+        WHERE id = %s
+        """,
+        (
+            new_date,
+            new_time,
+            appointment_id
+        )
+    )
+
+    con.commit()
+    con.close()
+
+    return {
+        "success": True,
+        "message": "Agendamento reagendado com sucesso."
+    }
+
+
+@app.post("/meus-agendamentos/<int:appointment_id>/cancelar")
+def cancelar_cliente(appointment_id):
+
+    data = request.get_json() or {}
+
+    phone = data.get("phone", "").strip()
+
+    if not phone:
+        return {
+            "success": False,
+            "message": "WhatsApp não informado."
+        }, 400
+
+    con = db()
+
+    appointment = con.execute(
+        """
+        SELECT id
+        FROM appointments
+        WHERE id = %s
+          AND regexp_replace(phone, '[^0-9]', '', 'g')
+              =
+              regexp_replace(%s, '[^0-9]', '', 'g')
+          AND status <> 'Cancelado'
+        """,
+        (appointment_id, phone)
+    ).fetchone()
+
+    if not appointment:
+        con.close()
+
+        return {
+            "success": False,
+            "message": "Agendamento não encontrado."
+        }, 404
+
+    con.execute(
+        """
+        UPDATE appointments
+        SET status = 'Cancelado'
+        WHERE id = %s
+        """,
+        (appointment_id,)
+    )
+
+    con.commit()
+    con.close()
+
+    return {
+        "success": True,
+        "message": "Agendamento cancelado com sucesso."
+    }
 
 @app.post("/admin/cancelar/<int:appointment_id>")
 @proteger_admin
@@ -356,9 +693,13 @@ def cancelar(appointment_id):
     con = db()
 
     con.execute(
-        "DELETE FROM appointments WHERE id = %s",
-        (appointment_id,)
-    )
+    """
+    UPDATE appointments
+    SET status = 'Cancelado'
+    WHERE id = %s
+    """,
+    (appointment_id,)
+)
 
     con.commit()
     con.close()
