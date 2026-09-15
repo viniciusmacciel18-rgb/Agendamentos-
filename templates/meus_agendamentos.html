@@ -1,0 +1,655 @@
+<!doctype html>
+
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="theme-color"
+        content="#8f5f67"
+    >
+
+    <title>Meus agendamentos | Rayssa Lima</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+<div class="decor decor-top"></div>
+<div class="decor decor-bottom"></div>
+
+
+<main class="card booking-card">
+
+
+    <!-- LOGO -->
+
+    <div class="logo">
+
+        <img
+            src="{{ url_for('static', filename='logo.png') }}"
+            alt="Rayssa Lima Nail Designer"
+        >
+
+    </div>
+
+
+    <!-- DIVISOR -->
+
+    <div class="brand-divider">
+
+        <span></span>
+
+        <b>♡</b>
+
+        <span></span>
+
+    </div>
+
+
+    <!-- TÍTULO -->
+
+    <h1>Meus agendamentos</h1>
+
+    <p class="sub">
+        Consulte seus horários de forma rápida e segura.
+    </p>
+
+
+    <!-- BUSCA -->
+
+    <div class="my-appointments-page">
+
+        <div class="welcome">
+
+            <span class="welcome-icon">✦</span>
+
+            <div>
+
+                <strong>
+                    Consulte seu agendamento
+                </strong>
+
+                <small>
+                    Informe o WhatsApp utilizado na reserva.
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <div class="field">
+
+            <label for="appointmentPhone">
+                WhatsApp <span>*</span>
+            </label>
+
+            <div class="input-wrap">
+
+                <span class="field-icon">
+                    ◉
+                </span>
+
+                <input
+                    id="appointmentPhone"
+                    type="tel"
+                    placeholder="(47) 99999-9999"
+                    autocomplete="tel"
+                >
+
+            </div>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="booking-button"
+            onclick="buscarAgendamentos()"
+        >
+
+            <span>
+                Consultar agendamentos
+            </span>
+
+            <strong>→</strong>
+
+        </button>
+
+
+        <div id="appointmentsResult"></div>
+
+
+        <!-- VOLTAR -->
+
+        <a
+            href="{{ url_for('index') }}"
+            class="back-button"
+        >
+            ← Voltar para agendamento
+        </a>
+
+    </div>
+
+
+    <!-- RODAPÉ -->
+
+    <div class="footer-divider">
+
+        <span></span>
+
+        <b>♡</b>
+
+        <span></span>
+
+    </div>
+
+
+    <footer>
+
+        <strong>Rayssa Lima</strong>
+
+        <span>NAIL DESIGNER</span>
+
+        <small>
+            Atendimento com carinho e cuidado.
+        </small>
+
+    </footer>
+
+
+</main>
+
+
+<script>
+
+async function buscarAgendamentos() {
+
+    const phone = document
+        .getElementById("appointmentPhone")
+        .value
+        .trim();
+
+    const result =
+        document.getElementById("appointmentsResult");
+
+
+    if (!phone) {
+
+        result.innerHTML = `
+            <div class="alert error">
+                Digite seu número de WhatsApp.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    result.innerHTML = `
+        <div class="appointment-loading">
+            Consultando seus agendamentos...
+        </div>
+    `;
+
+
+    try {
+
+        const response = await fetch(
+            `/api/meus-agendamentos?phone=${encodeURIComponent(phone)}`
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Erro ao consultar agendamentos."
+            );
+
+        }
+
+
+        const data = await response.json();
+
+
+        if (
+            !data.success ||
+            !data.appointments ||
+            !data.appointments.length
+        ) {
+
+            result.innerHTML = `
+                <div class="appointment-empty">
+
+                    <strong>
+                        Nenhum agendamento encontrado
+                    </strong>
+
+                    <p>
+                        Verifique se o WhatsApp informado
+                        é o mesmo utilizado na reserva.
+                    </p>
+
+                </div>
+            `;
+
+            return;
+        }
+
+
+        result.innerHTML = `
+
+            <div class="appointments-list">
+
+                <h2>
+                    Seus agendamentos
+                </h2>
+
+                ${data.appointments.map(
+                    appointment => {
+
+                        const cancelado =
+                            appointment.status === "Cancelado";
+
+
+                        return `
+
+                            <div class="appointment-card">
+
+                                <div class="appointment-info">
+
+                                    <strong>
+                                        ${appointment.service}
+                                    </strong>
+
+                                    <span>
+                                        📅
+                                        ${formatarData(
+                                            appointment.date
+                                        )}
+                                    </span>
+
+                                    <span>
+                                        🕐
+                                        ${appointment.time}
+                                    </span>
+
+                                    <span class="${
+                                        cancelado
+                                        ? "status-cancelado"
+                                        : "status-confirmado"
+                                    }">
+
+                                        ${
+                                            appointment.status
+                                        }
+
+                                    </span>
+
+                                </div>
+
+
+                                ${
+                                    !cancelado
+                                    ?
+                                    `
+
+                                    <div class="appointment-actions">
+
+                                        <button
+                                            type="button"
+                                            onclick="alterarServico(${appointment.id})"
+                                        >
+                                            Alterar serviço
+                                        </button>
+
+
+                                        <button
+                                            type="button"
+                                            onclick="reagendar(${appointment.id})"
+                                        >
+                                            Reagendar
+                                        </button>
+
+
+                                        <button
+                                            type="button"
+                                            class="cancel-appointment"
+                                            onclick="cancelarAgendamento(${appointment.id})"
+                                        >
+                                            Cancelar
+                                        </button>
+
+                                    </div>
+
+                                    `
+                                    :
+                                    `
+
+                                    <div class="cancelled-label">
+                                        Este agendamento foi cancelado.
+                                    </div>
+
+                                    `
+                                }
+
+                            </div>
+
+                        `;
+
+                    }
+                ).join("")}
+
+            </div>
+
+        `;
+
+    } catch (error) {
+
+        console.error(error);
+
+        result.innerHTML = `
+            <div class="alert error">
+                Não foi possível consultar seus agendamentos.
+            </div>
+        `;
+
+    }
+
+}
+
+
+function formatarData(data) {
+
+    const partes = data.split("-");
+
+    if (partes.length !== 3) {
+        return data;
+    }
+
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+
+async function alterarServico(appointmentId) {
+
+    const phone = document
+        .getElementById("appointmentPhone")
+        .value
+        .trim();
+
+
+    const novoServico = prompt(
+        "Digite o nome do novo serviço:"
+    );
+
+
+    if (!novoServico) {
+        return;
+    }
+
+
+    try {
+
+        const response = await fetch(
+            `/meus-agendamentos/${appointmentId}/alterar-servico`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    phone: phone,
+                    service: novoServico
+                })
+            }
+        );
+
+
+        const data = await response.json();
+
+
+        if (!data.success) {
+
+            alert(data.message);
+
+            return;
+        }
+
+
+        alert(
+            "Serviço alterado com sucesso! 💅"
+        );
+
+
+        buscarAgendamentos();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Não foi possível alterar o serviço."
+        );
+
+    }
+
+}
+
+
+async function reagendar(appointmentId) {
+
+    const phone = document
+        .getElementById("appointmentPhone")
+        .value
+        .trim();
+
+
+    const novaData = prompt(
+        "Digite a nova data no formato AAAA-MM-DD.\n\nExemplo: 2026-10-15"
+    );
+
+
+    if (!novaData) {
+        return;
+    }
+
+
+    try {
+
+        const appointmentsResponse =
+            await fetch(
+                `/api/meus-agendamentos?phone=${encodeURIComponent(phone)}`
+            );
+
+
+        const appointmentsData =
+            await appointmentsResponse.json();
+
+
+        const appointment =
+            appointmentsData.appointments.find(
+                item => item.id === appointmentId
+            );
+
+
+        if (!appointment) {
+
+            alert(
+                "Agendamento não encontrado."
+            );
+
+            return;
+        }
+
+
+        const slotsResponse = await fetch(
+            `/horarios?date=${novaData}&service=${encodeURIComponent(appointment.service)}`
+        );
+
+
+        const slotsData =
+            await slotsResponse.json();
+
+
+        if (!slotsData.slots.length) {
+
+            alert(
+                "Não existem horários disponíveis nessa data."
+            );
+
+            return;
+        }
+
+
+        const novoHorario = prompt(
+            "Horários disponíveis:\n\n" +
+            slotsData.slots.join("\n") +
+            "\n\nDigite o horário desejado:"
+        );
+
+
+        if (!novoHorario) {
+            return;
+        }
+
+
+        const response = await fetch(
+            `/meus-agendamentos/${appointmentId}/reagendar`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    phone: phone,
+                    date: novaData,
+                    time: novoHorario
+                })
+            }
+        );
+
+
+        const data = await response.json();
+
+
+        if (!data.success) {
+
+            alert(data.message);
+
+            return;
+        }
+
+
+        alert(
+            "Agendamento reagendado com sucesso! 📅"
+        );
+
+
+        buscarAgendamentos();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Não foi possível reagendar."
+        );
+
+    }
+
+}
+
+
+async function cancelarAgendamento(appointmentId) {
+
+    const phone = document
+        .getElementById("appointmentPhone")
+        .value
+        .trim();
+
+
+    const confirmar = confirm(
+        "Tem certeza que deseja cancelar este agendamento?"
+    );
+
+
+    if (!confirmar) {
+        return;
+    }
+
+
+    try {
+
+        const response = await fetch(
+            `/meus-agendamentos/${appointmentId}/cancelar`,
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    phone: phone
+                })
+            }
+        );
+
+
+        const data = await response.json();
+
+
+        if (!data.success) {
+
+            alert(data.message);
+
+            return;
+        }
+
+
+        alert(
+            "Agendamento cancelado com sucesso."
+        );
+
+
+        buscarAgendamentos();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Não foi possível cancelar o agendamento."
+        );
+
+    }
+
+}
+
+</script>
+
+</body>
+
+</html>
