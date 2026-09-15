@@ -54,73 +54,6 @@
     <p class="sub">
         Escolha o serviço, a data e o melhor horário para você.
     </p>
-<!-- MEUS AGENDAMENTOS -->
-<div class="my-appointments">
-    <button
-        type="button"
-        class="my-appointments-button"
-        onclick="abrirMeusAgendamentos()"
-    >
-        <span>▣</span>
-        Meus agendamentos
-    </button>
-</div>
-
-<!-- MODAL MEUS AGENDAMENTOS -->
-<div id="appointmentsModal" class="appointments-modal">
-
-    <div class="appointments-box">
-
-        <button
-            type="button"
-            class="appointments-close"
-            onclick="fecharMeusAgendamentos()"
-        >
-            ×
-        </button>
-
-        <h2>Meus agendamentos</h2>
-
-        <p>
-            Informe o WhatsApp utilizado no agendamento.
-        </p>
-
-        <div class="appointment-search">
-
-            <input
-                type="tel"
-                id="appointmentPhone"
-                placeholder="(47) 99999-9999"
-            >
-
-            <button
-                type="button"
-                onclick="buscarAgendamentos()"
-            >
-                Buscar
-            </button>
-
-        </div>
-
-        <div id="appointmentsResult"></div>
-
-    </div>
-
-</div>
-
-    <div class="welcome">
-
-        <span class="welcome-icon">✦</span>
-
-        <div>
-            <strong>Seu momento de beleza</strong>
-            <small>
-                Reserve seu horário de forma rápida e segura.
-            </small>
-        </div>
-
-    </div>
-
 
     <!-- MENSAGENS DO SISTEMA -->
 
@@ -354,7 +287,19 @@
 
     </div>
 
+<!-- MEUS AGENDAMENTOS -->
 
+<div class="my-appointments-link">
+
+    <a
+        href="{{ url_for('meus_agendamentos') }}"
+        class="my-appointments-button"
+    >
+        <span>▣</span>
+        Meus agendamentos
+    </a>
+
+</div>
     <footer>
 
         <strong>Rayssa Lima</strong>
