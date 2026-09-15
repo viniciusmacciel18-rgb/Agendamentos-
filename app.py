@@ -65,8 +65,29 @@ def init_db():
             appointment_time TEXT NOT NULL,
             notes TEXT,
             created_at TEXT NOT NULL,
-            UNIQUE(appointment_date, appointment_time)
+            status TEXT NOT NULL DEFAULT 'Confirmado'
         )
+    """)
+
+    # Adiciona a coluna status caso a tabela antiga já exista
+    con.execute("""
+        ALTER TABLE appointments
+        ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'Confirmado'
+    """)
+
+    # Remove a antiga restrição de horário único, se existir
+    con.execute("""
+        ALTER TABLE appointments
+        DROP CONSTRAINT IF EXISTS appointments_appointment_date_appointment_time_key
+    """)
+
+    # Impede dois agendamentos ativos no mesmo horário,
+    # mas permite manter registros cancelados.
+    con.execute("""
+        CREATE UNIQUE INDEX IF NOT EXISTS
+        unique_active_appointment_slot
+        ON appointments (appointment_date, appointment_time)
+        WHERE status <> 'Cancelado'
     """)
 
     con.commit()
