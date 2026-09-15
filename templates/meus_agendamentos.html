@@ -1,601 +1,534 @@
-<!doctype html>
-
+<!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta charset="utf-8">
+    <title>Meus agendamentos | Rayssa Lima</title>
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 
-    <meta
-        name="theme-color"
-        content="#8f5f67"
-    >
+    <style>
+        /* ================================
+           PÁGINA MEUS AGENDAMENTOS
+        ================================= */
 
-    <meta
-        name="description"
-        content="Consulte seus agendamentos | Rayssa Lima Nail Designer"
-    >
+        .appointments-page {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 35px 20px 50px;
+            background:
+                radial-gradient(circle at top left,
+                    rgba(190, 135, 145, 0.16),
+                    transparent 35%),
+                radial-gradient(circle at bottom right,
+                    rgba(190, 135, 145, 0.13),
+                    transparent 35%),
+                #fdf8f8;
+        }
 
-    <title>
-        Meus agendamentos | Rayssa Lima Nail Designer
-    </title>
+        .appointments-container {
+            width: 100%;
+            max-width: 760px;
+            background: rgba(255,255,255,0.97);
+            border: 1px solid rgba(146, 83, 98, 0.12);
+            border-radius: 28px;
+            padding: 42px 46px 34px;
+            box-shadow:
+                0 25px 70px rgba(91, 54, 63, 0.12),
+                0 5px 20px rgba(91, 54, 63, 0.05);
+        }
 
+        /* LOGO */
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='style.css') }}"
-    >
+        .appointments-logo {
+            display: block;
+            width: 220px;
+            max-width: 70%;
+            margin: 0 auto 25px;
+        }
 
+        /* DETALHE */
+
+        .appointments-decoration {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .appointments-decoration::before,
+        .appointments-decoration::after {
+            content: "";
+            width: 55px;
+            height: 1px;
+            background: linear-gradient(
+                to right,
+                transparent,
+                #b47a86
+            );
+        }
+
+        .appointments-decoration::after {
+            background: linear-gradient(
+                to left,
+                transparent,
+                #b47a86
+            );
+        }
+
+        .appointments-decoration span {
+            color: #9a5d6c;
+            font-size: 15px;
+        }
+
+        /* TÍTULO */
+
+        .appointments-title {
+            margin: 0;
+            text-align: center;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(32px, 5vw, 46px);
+            font-weight: 500;
+            letter-spacing: -0.5px;
+            color: #2f2024;
+        }
+
+        .appointments-subtitle {
+            margin: 12px auto 38px;
+            max-width: 500px;
+            text-align: center;
+            color: #806c72;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        /* CARD DE CONSULTA */
+
+        .appointments-card {
+            background: linear-gradient(
+                145deg,
+                #fffafa,
+                #ffffff
+            );
+            border: 1px solid #ead9dc;
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 10px 30px rgba(91, 54, 63, 0.05);
+        }
+
+        .appointments-card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 25px;
+        }
+
+        .appointments-icon {
+            width: 42px;
+            height: 42px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #f4e4e7;
+            color: #925365;
+            font-size: 19px;
+        }
+
+        .appointments-card-header h2 {
+            margin: 0 0 5px;
+            color: #38272c;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .appointments-card-header p {
+            margin: 0;
+            color: #817177;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* LABEL */
+
+        .appointments-label {
+            display: block;
+            margin-bottom: 9px;
+            color: #68414c;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        /* INPUT */
+
+        .appointments-input {
+            width: 100%;
+            height: 58px;
+            box-sizing: border-box;
+            padding: 0 18px;
+            border: 1px solid #e6d1d5;
+            border-radius: 14px;
+            outline: none;
+            background: #fff;
+            color: #3c2d31;
+            font-size: 16px;
+            transition: all .25s ease;
+        }
+
+        .appointments-input::placeholder {
+            color: #b19ca2;
+        }
+
+        .appointments-input:hover {
+            border-color: #cfaab2;
+        }
+
+        .appointments-input:focus {
+            border-color: #9a5d6c;
+            box-shadow:
+                0 0 0 4px rgba(154, 93, 108, 0.10);
+        }
+
+        /* BOTÃO */
+
+        .appointments-button {
+            width: 100%;
+            height: 58px;
+            margin-top: 18px;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+
+            background: linear-gradient(
+                135deg,
+                #87505f,
+                #a56575
+            );
+
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: .2px;
+
+            box-shadow:
+                0 12px 25px rgba(135, 80, 95, 0.20);
+
+            transition:
+                transform .2s ease,
+                box-shadow .2s ease,
+                filter .2s ease;
+        }
+
+        .appointments-button:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                0 16px 30px rgba(135, 80, 95, 0.27);
+            filter: brightness(1.03);
+        }
+
+        .appointments-button:active {
+            transform: translateY(0);
+        }
+
+        /* RESULTADOS */
+
+        #appointmentsResult {
+            margin-top: 24px;
+        }
+
+        /* VOLTAR */
+
+        .appointments-back {
+            display: flex;
+            justify-content: center;
+            margin-top: 27px;
+        }
+
+        .appointments-back a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #83515f;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color .2s ease;
+        }
+
+        .appointments-back a:hover {
+            color: #55333e;
+            text-decoration: underline;
+        }
+
+        /* AVISO */
+
+        .appointments-info {
+            margin-top: 25px;
+            padding: 15px 18px;
+            border-radius: 14px;
+            background: #faf1f3;
+            border: 1px solid #efdde1;
+            color: #765963;
+            text-align: center;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* RODAPÉ */
+
+        .appointments-footer {
+            margin-top: 30px;
+            padding-top: 22px;
+            border-top: 1px solid #eee0e3;
+            text-align: center;
+            color: #9a858b;
+            font-size: 12px;
+        }
+
+        .appointments-footer strong {
+            color: #74505a;
+        }
+
+        /* MOBILE */
+
+        @media (max-width: 600px) {
+
+            .appointments-page {
+                padding: 18px 12px 30px;
+            }
+
+            .appointments-container {
+                padding: 30px 18px 25px;
+                border-radius: 22px;
+            }
+
+            .appointments-logo {
+                width: 185px;
+                margin-bottom: 20px;
+            }
+
+            .appointments-title {
+                font-size: 34px;
+            }
+
+            .appointments-subtitle {
+                font-size: 14px;
+                margin-bottom: 28px;
+            }
+
+            .appointments-card {
+                padding: 20px 17px;
+                border-radius: 17px;
+            }
+
+            .appointments-card-header {
+                gap: 11px;
+            }
+
+            .appointments-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 17px;
+            }
+
+            .appointments-card-header h2 {
+                font-size: 16px;
+            }
+
+            .appointments-input,
+            .appointments-button {
+                height: 55px;
+            }
+        }
+    </style>
 </head>
-
 
 <body>
 
+<div class="appointments-page">
 
-    <!-- DECORAÇÃO -->
-
-    <div class="decor decor-top"></div>
-
-    <div class="decor decor-bottom"></div>
-
-
-    <!-- CARD -->
-
-    <main class="card booking-card">
-
+    <main class="appointments-container">
 
         <!-- LOGO -->
+        <img
+            src="{{ url_for('static', filename='logo.png') }}"
+            alt="Rayssa Lima Nail Designer"
+            class="appointments-logo"
+        >
 
-        <div class="logo">
-
-            <img
-                src="{{ url_for('static', filename='logo.png') }}"
-                alt="Rayssa Lima Nail Designer"
-            >
-
+        <!-- DETALHE -->
+        <div class="appointments-decoration">
+            <span>♡</span>
         </div>
-
-
-        <!-- DIVISOR -->
-
-        <div class="brand-divider">
-
-            <span></span>
-
-            <b>♡</b>
-
-            <span></span>
-
-        </div>
-
 
         <!-- TÍTULO -->
-
-        <h1>
+        <h1 class="appointments-title">
             Meus agendamentos
         </h1>
 
-
-        <p class="sub">
-            Consulte seus horários de forma rápida e segura.
+        <p class="appointments-subtitle">
+            Consulte seus horários de forma rápida,
+            segura e prática.
         </p>
 
+        <!-- CARD -->
+        <section class="appointments-card">
 
-        <!-- ÁREA DE CONSULTA -->
+            <div class="appointments-card-header">
 
-        <div class="my-appointments-page">
-
-
-            <!-- AVISO -->
-
-            <div class="welcome">
-
-                <span class="welcome-icon">
-                    ✦
-                </span>
-
+                <div class="appointments-icon">
+                    ♡
+                </div>
 
                 <div>
-
-                    <strong>
+                    <h2>
                         Consulte seu agendamento
-                    </strong>
+                    </h2>
 
-                    <small>
-                        Informe o WhatsApp utilizado na reserva.
-                    </small>
-
+                    <p>
+                        Informe o WhatsApp utilizado
+                        na reserva para visualizar seus horários.
+                    </p>
                 </div>
 
             </div>
 
+            <label
+                for="appointmentPhone"
+                class="appointments-label"
+            >
+                WhatsApp
+            </label>
 
-            <!-- CAMPO WHATSAPP -->
-
-            <div class="field">
-
-                <label for="appointmentPhone">
-
-                    WhatsApp
-
-                    <span>*</span>
-
-                </label>
-
-
-                <div class="input-wrap">
-
-                    <span class="field-icon">
-                        ◉
-                    </span>
-
-
-                    <input
-                        id="appointmentPhone"
-                        type="tel"
-                        placeholder="(47) 99999-9999"
-                        autocomplete="tel"
-                    >
-
-                </div>
-
-            </div>
-
-
-            <!-- BOTÃO BUSCAR -->
+            <input
+                type="tel"
+                id="appointmentPhone"
+                class="appointments-input"
+                placeholder="(47) 99999-9999"
+                autocomplete="tel"
+            >
 
             <button
                 type="button"
-                class="booking-button"
-                onclick="buscarAgendamentos()"
+                id="searchAppointments"
+                class="appointments-button"
             >
-
-                <span>
-                    Buscar meus agendamentos
-                </span>
-
-                <strong>
-                    →
-                </strong>
-
+                Buscar meus agendamentos →
             </button>
-
-
-            <!-- RESULTADO -->
 
             <div id="appointmentsResult"></div>
 
+        </section>
 
-            <!-- VOLTAR -->
+        <!-- AVISO -->
+        <div class="appointments-info">
+            Para cancelar ou alterar seu horário,
+            entre em contato diretamente com a
+            <strong>Rayssa Lima</strong>.
+        </div>
 
-            <a
-                href="{{ url_for('index') }}"
-                class="back-button"
-            >
+        <!-- VOLTAR -->
+        <div class="appointments-back">
+            <a href="{{ url_for('index') }}">
                 ← Voltar para agendamento
             </a>
-
-
         </div>
-
-
-        <!-- DIVISOR -->
-
-        <div class="footer-divider">
-
-            <span></span>
-
-            <b>♡</b>
-
-            <span></span>
-
-        </div>
-
 
         <!-- RODAPÉ -->
-
-        <footer>
-
-            <strong>
-                Rayssa Lima
-            </strong>
-
-            <span>
-                NAIL DESIGNER
-            </span>
-
-            <small>
-                Atendimento com carinho e cuidado.
-            </small>
-
+        <footer class="appointments-footer">
+            <strong>Rayssa Lima</strong>
+            NAIL DESIGNER
+            <br>
+            Atendimento com carinho e cuidado.
         </footer>
-
 
     </main>
 
-
-    <!-- JAVASCRIPT -->
-
-    <script>
+</div>
 
 
-        async function buscarAgendamentos() {
+<script>
+    const button = document.getElementById("searchAppointments");
+    const phoneInput = document.getElementById("appointmentPhone");
+    const result = document.getElementById("appointmentsResult");
 
+    button.addEventListener("click", async () => {
 
-            /* Campo do telefone */
+        const phone = phoneInput.value.trim();
 
-            const phoneInput =
-                document.getElementById(
-                    "appointmentPhone"
-                );
+        if (!phone) {
+            result.innerHTML = `
+                <div class="appointments-info">
+                    Informe o número de WhatsApp utilizado no agendamento.
+                </div>
+            `;
+            phoneInput.focus();
+            return;
+        }
 
+        button.disabled = true;
+        button.innerText = "Consultando...";
 
-            /* Área onde aparecerá o resultado */
+        try {
 
-            const result =
-                document.getElementById(
-                    "appointmentsResult"
-                );
+            const response = await fetch(
+                `/api/meus-agendamentos?phone=${encodeURIComponent(phone)}`
+            );
 
+            const data = await response.json();
 
-            /* Remove espaços */
-
-            const phone =
-                phoneInput.value.trim();
-
-
-            /* Verifica se digitou o telefone */
-
-            if (!phone) {
+            if (!data || data.length === 0) {
 
                 result.innerHTML = `
-
-                    <div class="alert error">
-
-                        Digite seu número de WhatsApp.
-
+                    <div class="appointments-info">
+                        Nenhum agendamento encontrado
+                        para este WhatsApp.
                     </div>
-
                 `;
 
-                phoneInput.focus();
+            } else {
 
-                return;
-
+                result.innerHTML = data.map(item => `
+                    <div class="appointments-info">
+                        <strong>${item.service}</strong><br>
+                        ${item.appointment_date}
+                        às
+                        ${item.appointment_time}
+                    </div>
+                `).join("");
             }
 
-
-            /* Mensagem enquanto procura */
+        } catch (error) {
 
             result.innerHTML = `
-
-                <div class="appointment-loading">
-
-                    Consultando seus agendamentos...
-
+                <div class="appointments-info">
+                    Não foi possível consultar seus agendamentos.
+                    Tente novamente.
                 </div>
-
             `;
 
+        } finally {
 
-            try {
-
-
-                /*
-
-                    Envia o telefone para o Flask.
-
-                    Exemplo:
-
-                    /api/meus-agendamentos?phone=479977221504
-
-                */
-
-                const response = await fetch(
-
-                    `/api/meus-agendamentos?phone=${encodeURIComponent(phone)}`
-
-                );
-
-
-                /* Verifica resposta do servidor */
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        "Erro ao consultar agendamentos."
-                    );
-
-                }
-
-
-                /* Converte resposta para JSON */
-
-                const data =
-                    await response.json();
-
-
-                /*
-
-                    Se não encontrou agendamentos.
-
-                */
-
-                if (
-                    !data.success ||
-                    !data.appointments ||
-                    !data.appointments.length
-                ) {
-
-                    result.innerHTML = `
-
-                        <div class="appointment-empty">
-
-                            <strong>
-                                Nenhum agendamento encontrado
-                            </strong>
-
-                            <p>
-                                Verifique se o WhatsApp informado
-                                é o mesmo utilizado na reserva.
-                            </p>
-
-                        </div>
-
-                    `;
-
-                    return;
-
-                }
-
-
-                /*
-
-                    Cria a lista de agendamentos.
-
-                */
-
-                let html = `
-
-                    <div class="appointments-list">
-
-                        <h2>
-                            Seus agendamentos
-                        </h2>
-
-                `;
-
-
-                /* Percorre os agendamentos */
-
-                data.appointments.forEach(
-                    function(appointment) {
-
-
-                        /*
-
-                            Formata a data.
-
-                        */
-
-                        const dataFormatada =
-                            formatarData(
-                                appointment.date
-                            );
-
-
-                        /*
-
-                            Mostra o status.
-
-                        */
-
-                        const status =
-                            appointment.status ||
-                            "Confirmado";
-
-
-                        html += `
-
-                            <div class="appointment-card">
-
-                                <div class="appointment-info">
-
-
-                                    <strong>
-                                        ${escapeHtml(
-                                            appointment.service
-                                        )}
-                                    </strong>
-
-
-                                    <span>
-
-                                        📅
-
-                                        ${dataFormatada}
-
-                                    </span>
-
-
-                                    <span>
-
-                                        🕐
-
-                                        ${escapeHtml(
-                                            appointment.time
-                                        )}
-
-                                    </span>
-
-
-                                    <span class="status-confirmado">
-
-                                        ${escapeHtml(
-                                            status
-                                        )}
-
-                                    </span>
-
-
-                                </div>
-
-                            </div>
-
-                        `;
-
-                    }
-                );
-
-
-                html += `
-
-                    </div>
-
-                `;
-
-
-                /* Mostra os resultados */
-
-                result.innerHTML = html;
-
-
-            } catch (error) {
-
-
-                console.error(error);
-
-
-                result.innerHTML = `
-
-                    <div class="alert error">
-
-                        Não foi possível consultar
-                        seus agendamentos.
-
-                    </div>
-
-                `;
-
-            }
+            button.disabled = false;
+            button.innerText = "Buscar meus agendamentos →";
 
         }
 
+    });
 
-        /*
-
-            Converte:
-
-            2026-09-16
-
-            para:
-
-            16/09/2026
-
-        */
-
-        function formatarData(data) {
-
-
-            if (!data) {
-
-                return "";
-
-            }
-
-
-            const partes =
-                data.split("-");
-
-
-            if (partes.length !== 3) {
-
-                return data;
-
-            }
-
-
-            return (
-
-                partes[2] +
-                "/" +
-                partes[1] +
-                "/" +
-                partes[0]
-
-            );
-
+    /* Permite apertar ENTER no WhatsApp */
+    phoneInput.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+            button.click();
         }
-
-
-        /*
-
-            Proteção simples para que dados
-            vindos do banco não sejam
-            interpretados como HTML.
-
-        */
-
-        function escapeHtml(text) {
-
-
-            if (text === null ||
-                text === undefined) {
-
-                return "";
-
-            }
-
-
-            return String(text)
-
-                .replace(/&/g, "&amp;")
-
-                .replace(/</g, "&lt;")
-
-                .replace(/>/g, "&gt;")
-
-                .replace(/"/g, "&quot;")
-
-                .replace(/'/g, "&#039;");
-
-        }
-
-
-        /*
-
-            Permite apertar ENTER
-            dentro do campo WhatsApp
-            para fazer a busca.
-
-        */
-
-        document
-            .getElementById("appointmentPhone")
-            .addEventListener(
-                "keydown",
-                function(event) {
-
-                    if (event.key === "Enter") {
-
-                        event.preventDefault();
-
-                        buscarAgendamentos();
-
-                    }
-
-                }
-            );
-
-
-    </script>
-
+    });
+</script>
 
 </body>
-
 </html>
