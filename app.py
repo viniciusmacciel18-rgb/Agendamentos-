@@ -404,6 +404,11 @@ def appointment_conflict(con, day, time, duration, ignore_id=None):
 
 @app.get("/meus-agendamentos")
 def meus_agendamentos():
+    return render_template("meus_agendamentos.html")
+
+
+@app.get("/api/meus-agendamentos")
+def api_meus_agendamentos():
 
     phone = request.args.get("phone", "").strip()
 
@@ -412,6 +417,49 @@ def meus_agendamentos():
             "success": False,
             "appointments": []
         }
+
+    con = db()
+
+    appointments = con.execute(
+        """
+        SELECT
+            id,
+            name,
+            phone,
+            service,
+            appointment_date,
+            appointment_time,
+            notes,
+            status
+        FROM appointments
+        WHERE regexp_replace(phone, '[^0-9]', '', 'g')
+              =
+              regexp_replace(%s, '[^0-9]', '', 'g')
+        ORDER BY appointment_date, appointment_time
+        """,
+        (phone,)
+    ).fetchall()
+
+    con.close()
+
+    result = []
+
+    for appointment in appointments:
+
+        result.append({
+            "id": appointment["id"],
+            "name": appointment["name"],
+            "service": appointment["service"],
+            "date": appointment["appointment_date"],
+            "time": appointment["appointment_time"],
+            "notes": appointment["notes"] or "",
+            "status": appointment["status"]
+        })
+
+    return {
+        "success": True,
+        "appointments": result
+    }
 
     con = db()
 
