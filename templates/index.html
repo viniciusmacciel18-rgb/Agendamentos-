@@ -54,7 +54,59 @@
     <p class="sub">
         Escolha o serviço, a data e o melhor horário para você.
     </p>
+<!-- MEUS AGENDAMENTOS -->
+<div class="my-appointments">
+    <button
+        type="button"
+        class="my-appointments-button"
+        onclick="abrirMeusAgendamentos()"
+    >
+        <span>▣</span>
+        Meus agendamentos
+    </button>
+</div>
 
+<!-- MODAL MEUS AGENDAMENTOS -->
+<div id="appointmentsModal" class="appointments-modal">
+
+    <div class="appointments-box">
+
+        <button
+            type="button"
+            class="appointments-close"
+            onclick="fecharMeusAgendamentos()"
+        >
+            ×
+        </button>
+
+        <h2>Meus agendamentos</h2>
+
+        <p>
+            Informe o WhatsApp utilizado no agendamento.
+        </p>
+
+        <div class="appointment-search">
+
+            <input
+                type="tel"
+                id="appointmentPhone"
+                placeholder="(47) 99999-9999"
+            >
+
+            <button
+                type="button"
+                onclick="buscarAgendamentos()"
+            >
+                Buscar
+            </button>
+
+        </div>
+
+        <div id="appointmentsResult"></div>
+
+    </div>
+
+</div>
 
     <div class="welcome">
 
@@ -415,5 +467,104 @@ dateInput.addEventListener("change", carregarHorarios);
 /* Quando trocar o serviço */
 serviceSelect.addEventListener("change", carregarHorarios);
 
+function abrirMeusAgendamentos() {
+    document.getElementById("appointmentsModal").classList.add("active");
+}
 
+function fecharMeusAgendamentos() {
+    document.getElementById("appointmentsModal").classList.remove("active");
+}
+
+async function buscarAgendamentos() {
+
+    const phone = document
+        .getElementById("appointmentPhone")
+        .value
+        .trim();
+
+    const result = document.getElementById("appointmentsResult");
+
+    if (!phone) {
+        result.innerHTML =
+            "<p>Digite seu número de WhatsApp.</p>";
+        return;
+    }
+
+    result.innerHTML =
+        "<p>Buscando seus agendamentos...</p>";
+
+    try {
+
+        const response = await fetch(
+            `/meus-agendamentos?phone=${encodeURIComponent(phone)}`
+        );
+
+        const data = await response.json();
+
+        if (!data.success || !data.appointments.length) {
+
+            result.innerHTML =
+                "<p>Nenhum agendamento encontrado para este WhatsApp.</p>";
+
+            return;
+        }
+
+        result.innerHTML = data.appointments.map(appointment => `
+
+            <div class="appointment-card">
+
+                <div>
+                    <strong>${appointment.service}</strong>
+
+                    <span>
+                        📅 ${appointment.date}
+                    </span>
+
+                    <span>
+                        🕐 ${appointment.time}
+                    </span>
+
+                    <span>
+                        ${appointment.status}
+                    </span>
+                </div>
+
+                <div class="appointment-actions">
+
+                    <button
+                        type="button"
+                        onclick="alterarServico(${appointment.id})"
+                    >
+                        Alterar serviço
+                    </button>
+
+                    <button
+                        type="button"
+                        onclick="reagendar(${appointment.id})"
+                    >
+                        Reagendar
+                    </button>
+
+                    <button
+                        type="button"
+                        class="cancel-appointment"
+                        onclick="cancelarAgendamento(${appointment.id})"
+                    >
+                        Cancelar
+                    </button>
+
+                </div>
+
+            </div>
+
+        `).join("");
+
+    } catch (error) {
+
+        console.error(error);
+
+        result.innerHTML =
+            "<p>Não foi possível consultar seus agendamentos.</p>";
+    }
+}
 </script>
