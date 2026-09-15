@@ -313,7 +313,72 @@ def agendar():
         day=day,
         time=time
     )
+@app.route("/meus-agendamentos")
+def meus_agendamentos():
+    return render_template("meus_agendamentos.html")
 
+
+@app.route("/api/meus-agendamentos")
+def api_meus_agendamentos():
+
+    phone = request.args.get("phone", "").strip()
+
+    if not phone:
+        return {
+            "success": False,
+            "appointments": [],
+            "message": "Informe o WhatsApp."
+        }
+
+    # Mantém somente os números
+    phone_digits = "".join(
+        c for c in phone
+        if c.isdigit()
+    )
+
+    con = db()
+
+    appointments = con.execute("""
+        SELECT
+            id,
+            name,
+            phone,
+            service,
+            appointment_date,
+            appointment_time,
+            notes
+        FROM appointments
+        WHERE
+            REPLACE(
+                REPLACE(
+                    REPLACE(
+                        REPLACE(phone, '(', ''),
+                    ')', ''),
+                '-', ''),
+            ' ', '') = ?
+        ORDER BY appointment_date, appointment_time
+    """, (phone_digits,)).fetchall()
+
+    con.close()
+
+    result = []
+
+    for appointment in appointments:
+
+        result.append({
+            "id": appointment["id"],
+            "name": appointment["name"],
+            "service": appointment["service"],
+            "date": appointment["appointment_date"],
+            "time": appointment["appointment_time"],
+            "notes": appointment["notes"],
+            "status": "Confirmado"
+        })
+
+    return {
+        "success": True,
+        "appointments": result
+    }
 
 def proteger_admin(func):
     @wraps(func)
