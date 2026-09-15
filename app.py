@@ -84,7 +84,8 @@ def init_db():
 
     con = db()
 
-    con.execute("""
+    con.execute(
+        """
         CREATE TABLE IF NOT EXISTS appointments (
             id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
@@ -96,25 +97,27 @@ def init_db():
             created_at TEXT NOT NULL,
             status TEXT NOT NULL DEFAULT 'Confirmado'
         )
-    """)
+        """
+    )
 
-    # Caso a tabela antiga não tenha a coluna status
-    con.execute("""
+    con.execute(
+        """
         ALTER TABLE appointments
         ADD COLUMN IF NOT EXISTS
         status TEXT NOT NULL DEFAULT 'Confirmado'
-    """)
+        """
+    )
 
-    # Remove a antiga restrição de horário único
-    con.execute("""
+    con.execute(
+        """
         ALTER TABLE appointments
         DROP CONSTRAINT IF EXISTS
         appointments_appointment_date_appointment_time_key
-    """)
+        """
+    )
 
-    # Impede dois agendamentos ativos no mesmo horário.
-    # Cancelados não bloqueiam o horário.
-    con.execute("""
+    con.execute(
+        """
         CREATE UNIQUE INDEX IF NOT EXISTS
         unique_active_appointment_slot
         ON appointments (
@@ -122,10 +125,89 @@ def init_db():
             appointment_time
         )
         WHERE status <> 'Cancelado'
-    """)
+        """
+    )
 
     con.commit()
     con.close()
+
+
+# ==========================================================
+# FUNÇÕES AUXILIARES
+# ==========================================================
+
+def service_duration(service):
+
+    for name, minutes, price in SERVICES:
+
+        if name == service:
+            return minutes
+
+    return 30
+
+
+def appointment_conflict(
+    con,
+    day,
+    time,
+    duration,
+    ignore_id=None
+):
+
+    appointments = con.execute(
+        """
+        SELECT
+            id,
+            appointment_time,
+            service
+        FROM appointments
+        WHERE appointment_date = %s
+          AND status <> 'Cancelado'
+        """,
+        (day,)
+    ).fetchall()
+
+    new_start = datetime.strptime(
+        f"{day} {time}",
+        "%Y-%m-%d %H:%M"
+    )
+
+    new_end = (
+        new_start +
+        timedelta(minutes=duration)
+    )
+
+    for appointment in appointments:
+
+        if (
+            ignore_id
+            and
+            appointment["id"] == ignore_id
+        ):
+            continue
+
+        existing_start = datetime.strptime(
+            f"{day} {appointment['appointment_time']}",
+            "%Y-%m-%d %H:%M"
+        )
+
+        existing_duration = service_duration(
+            appointment["service"]
+        )
+
+        existing_end = (
+            existing_start +
+            timedelta(minutes=existing_duration)
+        )
+
+        if (
+            new_start < existing_end
+            and
+            new_end > existing_start
+        ):
+            return True
+
+    return False
 
 
 # ==========================================================
@@ -146,14 +228,12 @@ def slots_for(day, service=None):
     # Duração padrão
     duration = 30
 
-    # Descobre duração do serviço
+    # Duração do serviço escolhido
     if service:
 
-        for name, minutes, price in SERVICES:
-
-            if name == service:
-                duration = minutes
-                break
+        duration = service_duration(
+            service
+        )
 
     slots = []
 
@@ -172,7 +252,12 @@ def slots_for(day, service=None):
             (9, 0, 16, 0)
         ]
 
-    for start_hour, start_minute, end_hour, end_minute in periods:
+    for (
+        start_hour,
+        start_minute,
+        end_hour,
+        end_minute
+    ) in periods:
 
         period_start = datetime.combine(
             d,
@@ -192,18 +277,18 @@ def slots_for(day, service=None):
 
         current = period_start
 
+        # Permite ultrapassar o fechamento
+        # em no máximo 30 minutos.
+        allowed_end = (
+            period_end +
+            timedelta(minutes=30)
+        )
+
         while current <= period_end:
 
             appointment_end = (
                 current +
                 timedelta(minutes=duration)
-            )
-
-            # Permite ultrapassar o fechamento
-            # em no máximo 30 minutos.
-            allowed_end = (
-                period_end +
-                timedelta(minutes=30)
             )
 
             if appointment_end <= allowed_end:
@@ -260,6 +345,7 @@ def horarios():
     )
 
     if not day:
+
         return {
             "slots": []
         }
@@ -280,15 +366,9 @@ def horarios():
 
     con.close()
 
-    # Duração do serviço escolhido
-    duration = 30
-
-    for name, minutes, price in SERVICES:
-
-        if name == service:
-
-            duration = minutes
-            break
+    duration = service_duration(
+        service
+    )
 
     available = []
 
@@ -316,23 +396,15 @@ def horarios():
                 "%Y-%m-%d %H:%M"
             )
 
-            existing_duration = 30
-
-            for name, minutes, price in SERVICES:
-
-                if name == appointment["service"]:
-
-                    existing_duration = minutes
-                    break
+            existing_duration = service_duration(
+                appointment["service"]
+            )
 
             existing_end = (
                 existing_start +
-                timedelta(
-                    minutes=existing_duration
-                )
+                timedelta(minutes=existing_duration)
             )
 
-            # Verifica sobreposição
             if (
                 slot_start < existing_end
                 and
@@ -513,6 +585,7 @@ def agendar():
     return render_template(
         "confirmacao.html",
         name=name,
+        phone=phone,
         service=service,
         day=day,
         time=time
