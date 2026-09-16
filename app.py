@@ -238,18 +238,30 @@ def slots_for(day, service=None):
     slots = []
 
     # Segunda a sexta
-    if d.weekday() <= 4:
+if d.weekday() <= 4:
+
+    # Quarta-feira
+    if d.weekday() == 2:
+
+        periods = [
+            (7, 30, 11, 0),
+            (13, 30, 15, 0)
+        ]
+
+    # Segunda, terça, quinta e sexta
+    else:
 
         periods = [
             (7, 30, 11, 0),
             (13, 30, 20, 0)
         ]
 
-    # Sábado
-    else:
+# Sábado
+else:
 
-        periods = [
-            (9, 0, 16, 0)
+    periods = [
+        (9, 0, 16, 0)
+    ]
         ]
 
     for (
