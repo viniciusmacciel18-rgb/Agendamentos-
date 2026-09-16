@@ -28,7 +28,7 @@ SERVICES = [
     ("Pedicure", 45, 30.00),
     ("Manicure + Pedicure", 60, 50.00),
     ("Alongamento de unhas", 120, 60.00),
-    ("Plano mensao", 90, 150.00)
+    ("Plano mensal", 90, 150.00)
 ]
 
 
