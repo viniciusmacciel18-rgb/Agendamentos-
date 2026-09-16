@@ -1,15 +1,5 @@
 ```python
-from flask import (
-    Flask,
-    render_template,
-    request,
-    redirect,
-    url_for,
-    flash,
-    Response,
-    jsonify
-)
-
+from flask import (Flask,render_template,request,redirect,url_for,flash,Response,jsonify)
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from psycopg2 import IntegrityError
