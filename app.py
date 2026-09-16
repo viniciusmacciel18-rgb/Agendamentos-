@@ -801,6 +801,10 @@ def horarios():
 # AGENDAR
 # ==========================================================
 
+# ==========================================================
+# AGENDAR
+# ==========================================================
+
 @app.route(
     "/agendar",
     methods=["POST"]
@@ -912,41 +916,44 @@ def agendar():
         return redirect(
             url_for("index")
         )
-# ------------------------------------------------------
-# NÃO PERMITE AGENDAR HORÁRIO QUE JÁ PASSOU HOJE
-# ------------------------------------------------------
-
-if chosen == date.today():
-
-    try:
-
-        chosen_datetime = datetime.strptime(
-            f"{day} {time}",
-            "%Y-%m-%d %H:%M"
-        )
-
-    except ValueError:
-
-        flash(
-            "Horário inválido.",
-            "error"
-        )
-
-        return redirect(
-            url_for("index")
-        )
 
 
-    if chosen_datetime < datetime.now():
+    # ------------------------------------------------------
+    # NÃO PERMITE AGENDAR HORÁRIO QUE JÁ PASSOU HOJE
+    # ------------------------------------------------------
 
-        flash(
-            "Esse horário já passou. Escolha outro horário.",
-            "error"
-        )
+    if chosen == date.today():
 
-        return redirect(
-            url_for("index")
-        )
+        try:
+
+            chosen_datetime = datetime.strptime(
+                f"{day} {time}",
+                "%Y-%m-%d %H:%M"
+            )
+
+        except ValueError:
+
+            flash(
+                "Horário inválido.",
+                "error"
+            )
+
+            return redirect(
+                url_for("index")
+            )
+
+
+        if chosen_datetime < datetime.now():
+
+            flash(
+                "Esse horário já passou. Escolha outro horário.",
+                "error"
+            )
+
+            return redirect(
+                url_for("index")
+            )
+
 
     # ------------------------------------------------------
     # VALIDA HORÁRIO
@@ -1114,8 +1121,7 @@ if chosen == date.today():
         day=day,
         time=time
     )
-
-
+    
 # ==========================================================
 # MEUS AGENDAMENTOS
 # ==========================================================
