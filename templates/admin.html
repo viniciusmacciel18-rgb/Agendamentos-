@@ -403,45 +403,59 @@
              MENSAGENS
              ================================================= -->
 
-        {% with messages = get_flashed_messages(
-            with_categories=true
-        ) %}
+       {% with messages = get_flashed_messages(with_categories=true) %}
 
-            {% if messages %}
+    {% if messages %}
 
-                {% for category, message in messages %}
+        <div class="toast-container">
 
-                    <div
-                        class="admin-message {{ category }}"
-                        style="
-                            margin-bottom:20px;
-                            padding:14px;
-                            border-radius:10px;
-                            background:
-                                {% if category == 'error' %}
-                                    #fbeaea
-                                {% else %}
-                                    #eaf8ef
-                                {% endif %};
-                            color:
-                                {% if category == 'error' %}
-                                    #9b3333
-                                {% else %}
-                                    #287a47
-                                {% endif %};
-                        "
-                    >
+            {% for category, message in messages %}
 
-                        {{ message }}
+                <div class="toast-message {{ category }}">
+
+                    <div class="toast-icon">
+
+                        {% if category == "error" %}
+                            !
+                        {% else %}
+                            ✓
+                        {% endif %}
 
                     </div>
 
-                {% endfor %}
+                    <div class="toast-content">
 
-            {% endif %}
+                        <strong>
+                            {% if category == "error" %}
+                                Atenção
+                            {% else %}
+                                Tudo certo!
+                            {% endif %}
+                        </strong>
 
-        {% endwith %}
+                        <span>
+                            {{ message }}
+                        </span>
 
+                    </div>
+
+                    <button
+                        type="button"
+                        class="toast-close"
+                        onclick="fecharToast(this)"
+                    >
+                        ×
+                    </button>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+{% endwith %}
 
         <!-- =================================================
              PAINEL
