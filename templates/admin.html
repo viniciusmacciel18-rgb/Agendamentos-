@@ -939,226 +939,280 @@
 
 
         <!-- =================================================
-             BLOQUEAR HORÁRIOS
-             ================================================= -->
+     BLOQUEAR HORÁRIOS
+     ================================================= -->
 
-        <section class="admin-block-section">
+<section class="admin-block-section">
 
+    <h2 class="admin-block-title">
+        Calendário de bloqueio
+    </h2>
 
-            <h2 class="admin-block-title">
-
-                Calendário de bloqueio
-
-            </h2>
-
-
-            <p class="admin-block-description">
-
-                Escolha uma data e um horário para impedir
-                novos agendamentos naquele período.
-
-            </p>
+    <p class="admin-block-description">
+        Escolha uma data e defina se deseja bloquear
+        um horário específico, um período ou o dia inteiro.
+    </p>
 
 
-            <!-- FORMULÁRIO -->
+    <!-- =================================================
+         FORMULÁRIO
+         ================================================= -->
 
-            <form
-                method="post"
-                action="{{ url_for('bloquear_horario') }}"
-                class="admin-block-form"
+    <form
+        method="post"
+        action="{{ url_for('bloquear_horario') }}"
+        class="admin-block-form"
+        id="blockForm"
+    >
+
+
+        <!-- DATA -->
+
+        <div class="admin-field">
+
+            <label for="blocked_date">
+                Data
+            </label>
+
+            <input
+                type="date"
+                id="blocked_date"
+                name="blocked_date"
+                min="{{ now }}"
+                required
             >
 
+        </div>
 
-                <!-- DATA -->
 
-                <div class="admin-field">
+        <!-- TIPO DE BLOQUEIO -->
 
-                    <label for="blocked_date">
+        <div class="admin-field">
 
-                        Data
+            <label for="blocked_type">
+                Tipo de bloqueio
+            </label>
 
-                    </label>
+            <select
+                id="blocked_type"
+                name="blocked_type"
+                required
+            >
 
-                    <input
-                        type="date"
-                        id="blocked_date"
-                        name="blocked_date"
-                        min="{{ now }}"
-                        required
+                <option value="specific">
+                    Horário específico
+                </option>
+
+                <option value="period">
+                    Período
+                </option>
+
+                <option value="day">
+                    Dia inteiro
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- =================================================
+             HORÁRIO ESPECÍFICO
+             ================================================= -->
+
+        <div
+            class="admin-field"
+            id="specificTimeField"
+        >
+
+            <label for="blocked_time">
+                Horário
+            </label>
+
+            <select
+                id="blocked_time"
+                name="blocked_time"
+            >
+
+                <option value="">
+                    Escolha uma data primeiro
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- =================================================
+             HORÁRIO INICIAL
+             ================================================= -->
+
+        <div
+            class="admin-field"
+            id="startTimeField"
+            style="display: none;"
+        >
+
+            <label for="start_time">
+                Início
+            </label>
+
+            <input
+                type="time"
+                id="start_time"
+                name="start_time"
+            >
+
+        </div>
+
+
+        <!-- =================================================
+             HORÁRIO FINAL
+             ================================================= -->
+
+        <div
+            class="admin-field"
+            id="endTimeField"
+            style="display: none;"
+        >
+
+            <label for="end_time">
+                Fim
+            </label>
+
+            <input
+                type="time"
+                id="end_time"
+                name="end_time"
+            >
+
+        </div>
+
+
+        <!-- MOTIVO -->
+
+        <div class="admin-field">
+
+            <label for="reason">
+                Motivo
+            </label>
+
+            <input
+                type="text"
+                id="reason"
+                name="reason"
+                placeholder="Ex.: compromisso pessoal"
+                maxlength="150"
+            >
+
+        </div>
+
+
+        <!-- BOTÃO -->
+
+        <button
+            type="submit"
+            class="admin-block-button"
+            id="blockButton"
+        >
+
+            Bloquear horário
+
+        </button>
+
+
+    </form>
+
+
+    <!-- =================================================
+         HORÁRIOS BLOQUEADOS
+         ================================================= -->
+
+    <div class="admin-blocked-list">
+
+        <h3>
+            Horários bloqueados
+        </h3>
+
+
+        {% if blocked_slots %}
+
+            {% for block in blocked_slots %}
+
+                <div class="blocked-item">
+
+                    <div class="blocked-info">
+
+                        <span class="blocked-date">
+
+                            {{ block.blocked_date }}
+
+                            —
+
+                            {{ block.blocked_time }}
+
+                        </span>
+
+
+                        <span class="blocked-reason">
+
+                            {% if block.reason %}
+
+                                {{ block.reason }}
+
+                            {% else %}
+
+                                Horário bloqueado
+
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+
+                    <form
+                        method="post"
+                        action="{{
+                            url_for(
+                                'desbloquear_horario',
+                                block_id=block.id
+                            )
+                        }}"
+                        onsubmit="
+                            return confirm(
+                                'Desbloquear este horário?'
+                            )
+                        "
                     >
+
+                        <button
+                            type="submit"
+                            class="blocked-remove"
+                        >
+
+                            Desbloquear
+
+                        </button>
+
+                    </form>
 
                 </div>
 
+            {% endfor %}
 
-                <!-- HORÁRIO -->
 
-                <div class="admin-field">
+        {% else %}
 
-                    <label for="blocked_time">
+            <p>
+                Nenhum horário bloqueado.
+            </p>
 
-                        Horário
+        {% endif %}
 
-                    </label>
+    </div>
 
-                    <select
-                        id="blocked_time"
-                        name="blocked_time"
-                        required
-                    >
-
-                        <option value="">
-
-                            Escolha uma data primeiro
-
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <!-- MOTIVO -->
-
-                <div class="admin-field">
-
-                    <label for="reason">
-
-                        Motivo
-
-                    </label>
-
-                    <input
-                        type="text"
-                        id="reason"
-                        name="reason"
-                        placeholder="Ex.: compromisso pessoal"
-                        maxlength="150"
-                    >
-
-                </div>
-
-
-                <!-- BOTÃO -->
-
-                <button
-                    type="submit"
-                    class="admin-block-button"
-                >
-
-                    Bloquear horário
-
-                </button>
-
-
-            </form>
-
-
-            <!-- =================================================
-                 HORÁRIOS BLOQUEADOS
-                 ================================================= -->
-
-            <div class="admin-blocked-list">
-
-
-                <h3>
-
-                    Horários bloqueados
-
-                </h3>
-
-
-                {% if blocked_slots %}
-
-
-                    {% for block in blocked_slots %}
-
-
-                        <div class="blocked-item">
-
-
-                            <div class="blocked-info">
-
-
-                                <span class="blocked-date">
-
-                                    {{ block.blocked_date }}
-
-                                    —
-
-                                    {{ block.blocked_time }}
-
-                                </span>
-
-
-                                <span class="blocked-reason">
-
-                                    {% if block.reason %}
-
-                                        {{ block.reason }}
-
-                                    {% else %}
-
-                                        Horário bloqueado
-
-                                    {% endif %}
-
-                                </span>
-
-
-                            </div>
-
-
-                            <form
-                                method="post"
-                                action="{{
-                                    url_for(
-                                        'desbloquear_horario',
-                                        block_id=block.id
-                                    )
-                                }}"
-                                onsubmit="
-                                    return confirm(
-                                        'Desbloquear este horário?'
-                                    )
-                                "
-                            >
-
-                                <button
-                                    type="submit"
-                                    class="blocked-remove"
-                                >
-
-                                    Desbloquear
-
-                                </button>
-
-                            </form>
-
-
-                        </div>
-
-
-                    {% endfor %}
-
-
-                {% else %}
-
-
-                    <p>
-
-                        Nenhum horário bloqueado.
-
-                    </p>
-
-
-                {% endif %}
-
-
-            </div>
-
-
-        </section>
-
+</section>
 
         <!-- =================================================
              RODAPÉ
@@ -1185,254 +1239,376 @@
     <script>
 
 
-        const dateInput =
-            document.getElementById(
-                "blocked_date"
+        // ==================================================
+// ELEMENTOS DO BLOQUEIO
+// ==================================================
+
+const dateInput =
+    document.getElementById(
+        "blocked_date"
+    );
+
+
+const typeSelect =
+    document.getElementById(
+        "blocked_type"
+    );
+
+
+const timeSelect =
+    document.getElementById(
+        "blocked_time"
+    );
+
+
+const specificTimeField =
+    document.getElementById(
+        "specificTimeField"
+    );
+
+
+const startTimeField =
+    document.getElementById(
+        "startTimeField"
+    );
+
+
+const endTimeField =
+    document.getElementById(
+        "endTimeField"
+    );
+
+
+const startTimeInput =
+    document.getElementById(
+        "start_time"
+    );
+
+
+const endTimeInput =
+    document.getElementById(
+        "end_time"
+    );
+
+
+const blockButton =
+    document.getElementById(
+        "blockButton"
+    );
+
+
+// ==================================================
+// ALTERA O TIPO DE BLOQUEIO
+// ==================================================
+
+typeSelect.addEventListener(
+    "change",
+    atualizarTipoBloqueio
+);
+
+
+function atualizarTipoBloqueio() {
+
+    const type =
+        typeSelect.value;
+
+
+    // ==================================================
+    // HORÁRIO ESPECÍFICO
+    // ==================================================
+
+    if (type === "specific") {
+
+        specificTimeField.style.display =
+            "flex";
+
+        startTimeField.style.display =
+            "none";
+
+        endTimeField.style.display =
+            "none";
+
+
+        timeSelect.required =
+            true;
+
+        startTimeInput.required =
+            false;
+
+        endTimeInput.required =
+            false;
+
+
+        blockButton.textContent =
+            "Bloquear horário";
+
+    }
+
+
+    // ==================================================
+    // PERÍODO
+    // ==================================================
+
+    else if (type === "period") {
+
+        specificTimeField.style.display =
+            "none";
+
+        startTimeField.style.display =
+            "flex";
+
+        endTimeField.style.display =
+            "flex";
+
+
+        timeSelect.required =
+            false;
+
+        startTimeInput.required =
+            true;
+
+        endTimeInput.required =
+            true;
+
+
+        blockButton.textContent =
+            "Bloquear período";
+
+    }
+
+
+    // ==================================================
+    // DIA INTEIRO
+    // ==================================================
+
+    else if (type === "day") {
+
+        specificTimeField.style.display =
+            "none";
+
+        startTimeField.style.display =
+            "none";
+
+        endTimeField.style.display =
+            "none";
+
+
+        timeSelect.required =
+            false;
+
+        startTimeInput.required =
+            false;
+
+        endTimeInput.required =
+            false;
+
+
+        blockButton.textContent =
+            "Bloquear dia inteiro";
+
+    }
+
+}
+
+
+// ==================================================
+// CARREGAR HORÁRIOS DA DATA
+// ==================================================
+
+dateInput.addEventListener(
+    "change",
+    carregarHorarios
+);
+
+
+function carregarHorarios() {
+
+    const selectedDate =
+        dateInput.value;
+
+
+    timeSelect.innerHTML =
+        "";
+
+
+    if (!selectedDate) {
+
+        const option =
+            document.createElement(
+                "option"
             );
 
 
-        const timeSelect =
-            document.getElementById(
-                "blocked_time"
-            );
+        option.value =
+            "";
 
 
-        // ==================================================
-        // CARREGAR HORÁRIOS DA DATA
-        // ==================================================
+        option.textContent =
+            "Escolha uma data primeiro";
 
-        dateInput.addEventListener(
-            "change",
-            carregarHorarios
+
+        timeSelect.appendChild(
+            option
         );
 
 
-        function carregarHorarios() {
+        return;
 
-            const selectedDate =
-                dateInput.value;
-
-
-            timeSelect.innerHTML = "";
+    }
 
 
-            if (!selectedDate) {
+    fetch(
+        "/admin/horarios-bloqueio?date="
+        +
+        encodeURIComponent(
+            selectedDate
+        )
+    )
+
+    .then(
+        response => response.json()
+    )
+
+    .then(
+        data => {
+
+            timeSelect.innerHTML =
+                "";
+
+
+            if (!data.success) {
 
                 const option =
                     document.createElement(
                         "option"
                     );
 
-                option.value = "";
+
+                option.value =
+                    "";
+
 
                 option.textContent =
-                    "Escolha uma data primeiro";
+                    "Erro ao carregar";
+
 
                 timeSelect.appendChild(
                     option
                 );
+
 
                 return;
 
             }
 
 
-            fetch(
-                "/admin/horarios-bloqueio?date="
-                +
-                encodeURIComponent(
-                    selectedDate
-                )
-            )
+            // ==========================================
+            // HORÁRIOS BLOQUEADOS
+            // ==========================================
 
-            .then(
-                response => response.json()
-            )
-
-            .then(
-                data => {
-
-                    timeSelect.innerHTML =
-                        "";
+            const blockedTimes =
+                new Set(
+                    data.blocked.map(
+                        item => item.time
+                    )
+                );
 
 
-                    if (!data.success) {
+            // ==========================================
+            // HORÁRIOS COM AGENDAMENTO
+            // ==========================================
 
-                        const option =
-                            document.createElement(
-                                "option"
-                            );
-
-                        option.value = "";
-
-                        option.textContent =
-                            "Erro ao carregar";
-
-                        timeSelect.appendChild(
-                            option
-                        );
-
-                        return;
-
-                    }
+            const appointmentTimes =
+                new Set(
+                    data.appointments.map(
+                        item => item.time
+                    )
+                );
 
 
-                    // ======================================
-                    // HORÁRIOS BLOQUEADOS
-                    // ======================================
+            // ==========================================
+            // CRIAR OPÇÕES
+            // ==========================================
 
-                    const blockedTimes =
-                        new Set(
-                            data.blocked.map(
-                                item => item.time
-                            )
-                        );
-
-
-                    // ======================================
-                    // HORÁRIOS COM AGENDAMENTO
-                    // ======================================
-
-                    const appointmentTimes =
-                        new Set(
-                            data.appointments.map(
-                                item => item.time
-                            )
-                        );
-
-
-                    // ======================================
-                    // CRIAR OPÇÕES
-                    // ======================================
-
-                    data.slots.forEach(
-                        time => {
-
-                            const option =
-                                document.createElement(
-                                    "option"
-                                );
-
-
-                            option.value =
-                                time;
-
-
-                            // --------------------------------
-                            // BLOQUEADO
-                            // --------------------------------
-
-                            if (
-                                blockedTimes.has(
-                                    time
-                                )
-                            ) {
-
-                                option.textContent =
-                                    time
-                                    +
-                                    " — já bloqueado";
-
-                                option.disabled =
-                                    true;
-
-                            }
-
-
-                            // --------------------------------
-                            // JÁ TEM CLIENTE
-                            // --------------------------------
-
-                            else if (
-                                appointmentTimes.has(
-                                    time
-                                )
-                            ) {
-
-                                const appointment =
-                                    data.appointments.find(
-                                        item =>
-                                            item.time === time
-                                    );
-
-
-                                option.textContent =
-                                    time
-                                    +
-                                    " — agendado: "
-                                    +
-                                    appointment.name;
-
-                                option.disabled =
-                                    true;
-
-                            }
-
-
-                            // --------------------------------
-                            // DISPONÍVEL PARA BLOQUEAR
-                            // --------------------------------
-
-                            else {
-
-                                option.textContent =
-                                    time
-                                    +
-                                    " — disponível";
-
-                            }
-
-
-                            timeSelect.appendChild(
-                                option
-                            );
-
-                        }
-                    );
-
-
-                    if (
-                        data.slots.length === 0
-                    ) {
-
-                        const option =
-                            document.createElement(
-                                "option"
-                            );
-
-                        option.value = "";
-
-                        option.textContent =
-                            "Não há horários";
-
-                        timeSelect.appendChild(
-                            option
-                        );
-
-                    }
-
-                }
-            )
-
-            .catch(
-                error => {
-
-                    console.error(
-                        error
-                    );
-
-                    timeSelect.innerHTML =
-                        "";
+            data.slots.forEach(
+                time => {
 
                     const option =
                         document.createElement(
                             "option"
                         );
 
-                    option.value = "";
 
-                    option.textContent =
-                        "Erro ao carregar horários";
+                    option.value =
+                        time;
+
+
+                    // --------------------------------------
+                    // JÁ BLOQUEADO
+                    // --------------------------------------
+
+                    if (
+                        blockedTimes.has(
+                            time
+                        )
+                    ) {
+
+                        option.textContent =
+                            time
+                            +
+                            " — já bloqueado";
+
+
+                        option.disabled =
+                            true;
+
+                    }
+
+
+                    // --------------------------------------
+                    // JÁ TEM CLIENTE
+                    // --------------------------------------
+
+                    else if (
+                        appointmentTimes.has(
+                            time
+                        )
+                    ) {
+
+                        const appointment =
+                            data.appointments.find(
+                                item =>
+                                    item.time === time
+                            );
+
+
+                        option.textContent =
+                            time
+                            +
+                            " — agendado: "
+                            +
+                            appointment.name;
+
+
+                        option.disabled =
+                            true;
+
+                    }
+
+
+                    // --------------------------------------
+                    // DISPONÍVEL
+                    // --------------------------------------
+
+                    else {
+
+                        option.textContent =
+                            time
+                            +
+                            " — disponível";
+
+                    }
+
 
                     timeSelect.appendChild(
                         option
@@ -1441,7 +1617,75 @@
                 }
             );
 
+
+            if (
+                data.slots.length === 0
+            ) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    "";
+
+
+                option.textContent =
+                    "Não há horários";
+
+
+                timeSelect.appendChild(
+                    option
+                );
+
+            }
+
         }
+    )
+
+    .catch(
+        error => {
+
+            console.error(
+                error
+            );
+
+
+            timeSelect.innerHTML =
+                "";
+
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+
+            option.value =
+                "";
+
+
+            option.textContent =
+                "Erro ao carregar horários";
+
+
+            timeSelect.appendChild(
+                option
+            );
+
+        }
+    );
+
+}
+
+
+// ==================================================
+// INICIA O FORMULÁRIO
+// ==================================================
+
+atualizarTipoBloqueio();
 // ==================================================
 // NOTIFICAÇÕES TOAST
 // ==================================================
