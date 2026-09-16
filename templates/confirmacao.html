@@ -9,6 +9,60 @@
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        /* ==================================================
+           AVISO SOBRE CANCELAMENTO
+           ================================================== */
+
+        .confirmation-warning {
+            margin: 22px 0;
+            padding: 16px 18px;
+            background: #fff8f3;
+            border: 1px solid #f0d8c8;
+            border-radius: 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            text-align: left;
+        }
+
+        .warning-icon {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            border-radius: 50%;
+            background: #f3dfd2;
+            color: #9b6248;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .warning-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .warning-content strong {
+            color: #754936;
+            font-size: 14px;
+        }
+
+        .warning-content p {
+            margin: 0;
+            color: #806d64;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .warning-content b {
+            color: #754936;
+        }
+    </style>
 </head>
 
 <body class="confirmation-page">
@@ -53,6 +107,29 @@
                 <span class="detail-icon">◷</span>
                 <span class="detail-label">HORÁRIO</span>
                 <strong>{{ time }}</strong>
+            </div>
+
+        </div>
+
+        <!-- ==================================================
+             AVISO DE CANCELAMENTO
+             ================================================== -->
+
+        <div class="confirmation-warning">
+
+            <div class="warning-icon">
+                !
+            </div>
+
+            <div class="warning-content">
+
+                <strong>Importante sobre cancelamentos</strong>
+
+                <p>
+                    Caso precise cancelar ou alterar seu agendamento,
+                    entre em contato com <b>pelo menos 3 horas de antecedência</b>.
+                </p>
+
             </div>
 
         </div>
