@@ -2043,7 +2043,6 @@ def bloquear_horario():
     return redirect(
         url_for("admin")
     )
-    )
 
 
 # ==========================================================
