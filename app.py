@@ -539,6 +539,32 @@ def slots_for(day, service=None):
             current += timedelta(minutes=30)
 
 
+    # ======================================================
+    # NÃO MOSTRA HORÁRIOS QUE JÁ PASSARAM HOJE
+    # ======================================================
+
+    today = date.today()
+
+
+    if d == today:
+
+        current_datetime = datetime.now()
+
+
+        slots = [
+
+            slot
+
+            for slot in slots
+
+            if datetime.strptime(
+                f"{day} {slot}",
+                "%Y-%m-%d %H:%M"
+            ) >= current_datetime
+
+        ]
+
+
     return slots
 
 
@@ -886,7 +912,41 @@ def agendar():
         return redirect(
             url_for("index")
         )
+# ------------------------------------------------------
+# NÃO PERMITE AGENDAR HORÁRIO QUE JÁ PASSOU HOJE
+# ------------------------------------------------------
 
+if chosen == date.today():
+
+    try:
+
+        chosen_datetime = datetime.strptime(
+            f"{day} {time}",
+            "%Y-%m-%d %H:%M"
+        )
+
+    except ValueError:
+
+        flash(
+            "Horário inválido.",
+            "error"
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+
+    if chosen_datetime < datetime.now():
+
+        flash(
+            "Esse horário já passou. Escolha outro horário.",
+            "error"
+        )
+
+        return redirect(
+            url_for("index")
+        )
 
     # ------------------------------------------------------
     # VALIDA HORÁRIO
