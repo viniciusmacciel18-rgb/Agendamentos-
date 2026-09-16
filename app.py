@@ -1578,12 +1578,25 @@ def bloquear_horario():
         ""
     ).strip()
 
+    blocked_type = request.form.get(
+        "blocked_type",
+        "specific"
+    ).strip()
 
     blocked_time = request.form.get(
         "blocked_time",
         ""
     ).strip()
 
+    start_time = request.form.get(
+        "start_time",
+        ""
+    ).strip()
+
+    end_time = request.form.get(
+        "end_time",
+        ""
+    ).strip()
 
     reason = request.form.get(
         "reason",
@@ -1601,7 +1614,6 @@ def bloquear_horario():
             blocked_date,
             "%Y-%m-%d"
         ).date()
-
 
     except ValueError:
 
@@ -1632,7 +1644,7 @@ def bloquear_horario():
 
 
     # ------------------------------------------------------
-    # VALIDA HORÁRIO
+    # DEFINE OS HORÁRIOS QUE SERÃO BLOQUEADOS
     # ------------------------------------------------------
 
     available_slots = slots_for(
@@ -1640,10 +1652,153 @@ def bloquear_horario():
     )
 
 
-    if blocked_time not in available_slots:
+    # ======================================================
+    # 1 - HORÁRIO ESPECÍFICO
+    # ======================================================
+
+    if blocked_type == "specific":
+
+        if blocked_time not in available_slots:
+
+            flash(
+                "Horário inválido para essa data.",
+                "error"
+            )
+
+            return redirect(
+                url_for("admin")
+            )
+
+        slots_to_block = [
+            blocked_time
+        ]
+
+
+    # ======================================================
+    # 2 - PERÍODO
+    # ======================================================
+
+    elif blocked_type == "period":
+
+        if not start_time or not end_time:
+
+            flash(
+                "Informe o horário inicial e final do período.",
+                "error"
+            )
+
+            return redirect(
+                url_for("admin")
+            )
+
+
+        try:
+
+            start = datetime.strptime(
+                start_time,
+                "%H:%M"
+            )
+
+            end = datetime.strptime(
+                end_time,
+                "%H:%M"
+            )
+
+        except ValueError:
+
+            flash(
+                "Horário do período inválido.",
+                "error"
+            )
+
+            return redirect(
+                url_for("admin")
+            )
+
+
+        if end <= start:
+
+            flash(
+                "O horário final deve ser maior que o horário inicial.",
+                "error"
+            )
+
+            return redirect(
+                url_for("admin")
+            )
+
+
+        # --------------------------------------------------
+        # GERA OS BLOCOS DE 30 MINUTOS
+        # --------------------------------------------------
+
+        slots_to_block = []
+
+        current = start
+
+
+        while current < end:
+
+            current_time = current.strftime(
+                "%H:%M"
+            )
+
+
+            if current_time in available_slots:
+
+                slots_to_block.append(
+                    current_time
+                )
+
+
+            current += timedelta(
+                minutes=30
+            )
+
+
+        if not slots_to_block:
+
+            flash(
+                "Nenhum horário válido foi encontrado nesse período.",
+                "error"
+            )
+
+            return redirect(
+                url_for("admin")
+            )
+
+
+    # ======================================================
+    # 3 - DIA INTEIRO
+    # ======================================================
+
+    elif blocked_type == "day":
+
+        slots_to_block = list(
+            available_slots
+        )
+
+
+        if not slots_to_block:
+
+            flash(
+                "Não existem horários disponíveis nessa data.",
+                "error"
+            )
+
+            return redirect(
+                url_for("admin")
+            )
+
+
+    # ======================================================
+    # TIPO INVÁLIDO
+    # ======================================================
+
+    else:
 
         flash(
-            "Horário inválido para essa data.",
+            "Tipo de bloqueio inválido.",
             "error"
         )
 
@@ -1658,107 +1813,202 @@ def bloquear_horario():
     try:
 
         # --------------------------------------------------
-        # VERIFICA SE JÁ EXISTE AGENDAMENTO
+        # VERIFICA TODOS OS HORÁRIOS ANTES DE BLOQUEAR
         # --------------------------------------------------
 
-        appointment = con.execute(
-            """
-            SELECT
-                id,
-                name,
-                service
+        for slot in slots_to_block:
 
-            FROM appointments
+            # ----------------------------------------------
+            # VERIFICA CONFLITO COM AGENDAMENTO
+            # ----------------------------------------------
 
-            WHERE appointment_date = %s
+            appointment = con.execute(
+                """
+                SELECT
+                    id,
+                    name,
+                    service
 
-            AND appointment_time = %s
+                FROM appointments
 
-            AND status <> 'Cancelado'
+                WHERE appointment_date = %s
 
-            LIMIT 1
-            """,
-            (
+                AND appointment_time = %s
+
+                AND status <> 'Cancelado'
+
+                LIMIT 1
+                """,
+                (
+                    blocked_date,
+                    slot
+                )
+            ).fetchone()
+
+
+            if appointment:
+
+                flash(
+                    f"O horário {slot} já possui um agendamento "
+                    f"e não pode ser bloqueado.",
+                    "error"
+                )
+
+                return redirect(
+                    url_for("admin")
+                )
+
+
+            # ----------------------------------------------
+            # VERIFICA CONFLITO COM SERVIÇOS MAIS LONGOS
+            # ----------------------------------------------
+
+            if appointment_conflict(
+                con,
                 blocked_date,
-                blocked_time
-            )
-        ).fetchone()
+                slot,
+                30
+            ):
 
+                flash(
+                    f"O horário {slot} está dentro do período "
+                    f"de um agendamento existente.",
+                    "error"
+                )
 
-        if appointment:
-
-            flash(
-                "Esse horário já possui um agendamento "
-                "e não pode ser bloqueado.",
-                "error"
-            )
-
-            return redirect(
-                url_for("admin")
-            )
+                return redirect(
+                    url_for("admin")
+                )
 
 
         # --------------------------------------------------
-        # VERIFICA CONFLITO COM OUTROS AGENDAMENTOS
+        # INSERE OS BLOQUEIOS
         # --------------------------------------------------
 
-        if appointment_conflict(
-            con,
-            blocked_date,
-            blocked_time,
-            30
-        ):
-
-            flash(
-                "Esse horário está dentro do período "
-                "de um agendamento existente.",
-                "error"
-            )
-
-            return redirect(
-                url_for("admin")
-            )
+        bloqueados = 0
 
 
-        # --------------------------------------------------
-        # INSERE BLOQUEIO
-        # --------------------------------------------------
+        for slot in slots_to_block:
 
-        con.execute(
-            """
-            INSERT INTO blocked_slots
-            (
-                blocked_date,
-                blocked_time,
-                reason,
-                created_at
-            )
+            # ----------------------------------------------
+            # NÃO DUPLICA BLOQUEIOS JÁ EXISTENTES
+            # ----------------------------------------------
 
-            VALUES (
-                %s,
-                %s,
-                %s,
-                %s
-            )
-            """,
-            (
-                blocked_date,
-                blocked_time,
-                reason,
-                datetime.now().isoformat(
-                    timespec="seconds"
+            existing = con.execute(
+                """
+                SELECT id
+
+                FROM blocked_slots
+
+                WHERE blocked_date = %s
+
+                AND blocked_time = %s
+
+                LIMIT 1
+                """,
+                (
+                    blocked_date,
+                    slot
+                )
+            ).fetchone()
+
+
+            if existing:
+
+                continue
+
+
+            con.execute(
+                """
+                INSERT INTO blocked_slots
+                (
+                    blocked_date,
+                    blocked_time,
+                    reason,
+                    created_at
+                )
+
+                VALUES (
+                    %s,
+                    %s,
+                    %s,
+                    %s
+                )
+                """,
+                (
+                    blocked_date,
+                    slot,
+                    reason,
+                    datetime.now().isoformat(
+                        timespec="seconds"
+                    )
                 )
             )
-        )
+
+
+            bloqueados += 1
 
 
         con.commit()
 
 
-        flash(
-            "Horário bloqueado com sucesso.",
-            "success"
-        )
+        # --------------------------------------------------
+        # MENSAGEM FINAL
+        # --------------------------------------------------
+
+        if blocked_type == "specific":
+
+            if bloqueados:
+
+                flash(
+                    f"Horário {slots_to_block[0]} "
+                    f"bloqueado com sucesso.",
+                    "success"
+                )
+
+            else:
+
+                flash(
+                    "Esse horário já estava bloqueado.",
+                    "error"
+                )
+
+
+        elif blocked_type == "period":
+
+            if bloqueados:
+
+                flash(
+                    f"Período bloqueado com sucesso: "
+                    f"{start_time} às {end_time}.",
+                    "success"
+                )
+
+            else:
+
+                flash(
+                    "Todos os horários desse período "
+                    "já estavam bloqueados.",
+                    "error"
+                )
+
+
+        elif blocked_type == "day":
+
+            if bloqueados:
+
+                flash(
+                    "Dia inteiro bloqueado com sucesso.",
+                    "success"
+                )
+
+            else:
+
+                flash(
+                    "Todos os horários desse dia "
+                    "já estavam bloqueados.",
+                    "error"
+                )
 
 
     except IntegrityError:
@@ -1766,7 +2016,7 @@ def bloquear_horario():
         con.rollback()
 
         flash(
-            "Esse horário já está bloqueado.",
+            "Não foi possível concluir o bloqueio.",
             "error"
         )
 
@@ -1792,6 +2042,7 @@ def bloquear_horario():
 
     return redirect(
         url_for("admin")
+    )
     )
 
 
