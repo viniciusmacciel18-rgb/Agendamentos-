@@ -1282,7 +1282,6 @@ def admin():
 
     con = db()
 
-
     try:
 
         # --------------------------------------------------
@@ -1338,10 +1337,57 @@ def admin():
         con.close()
 
 
+    # --------------------------------------------------
+    # AGRUPAR HORÁRIOS BLOQUEADOS
+    # --------------------------------------------------
+
+    from collections import defaultdict
+    from datetime import datetime, timedelta
+
+    blocks_by_date_reason = defaultdict(list)
+
+    for block in blocked_slots:
+
+        key = (
+            block["blocked_date"],
+            block["reason"] or ""
+        )
+
+        blocks_by_date_reason[key].append(block)
+
+
+    grouped_blocks = []
+
+    for (date_block, reason), items in blocks_by_date_reason.items():
+
+        items.sort(
+            key=lambda x: x["blocked_time"]
+        )
+
+        inicio = items[0]["blocked_time"]
+
+        fim = items[-1]["blocked_time"]
+
+        fim_datetime = datetime.strptime(
+            fim,
+            "%H:%M"
+        ) + timedelta(minutes=30)
+
+
+        grouped_blocks.append({
+            "id": items[0]["id"],
+            "date": date_block,
+            "start": inicio,
+            "end": fim_datetime.strftime("%H:%M"),
+            "reason": reason,
+            "count": len(items)
+        })
+
+
     return render_template(
         "admin.html",
         appointments=appointments,
-        blocked_slots=blocked_slots,
+        blocked_slots=grouped_blocks,
         now=date.today().isoformat()
     )
 
