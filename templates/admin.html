@@ -327,13 +327,8 @@
 
                         <td>
 
-                            <form
-                                method="POST"
-                                action="{{ url_for(
-                                    'cancelar_agendamento',
-                                    appointment_id=appointment.id
-                                ) }}"
-                            >
+                            <form method="POST"
+      action="{{ url_for('cancelar_agendamento', appointment_id=appointment.id) }}">
 
                                 <button
                                     type="submit"
@@ -601,13 +596,8 @@
 
                 <!-- DESBLOQUEAR -->
 
-                <form
-                    method="POST"
-                    action="{{ url_for(
-                        'desbloquear_horario',
-                        block_id=block.id
-                    ) }}"
-                >
+                <form method="POST"
+      action="{{ url_for('desbloquear_horario', block_id=block.id) }}">
 
                     <button
                         type="submit"
