@@ -999,11 +999,11 @@ def admin():
         # --------------------------------------------------
 
         cur.execute("""
-            SELECT *
-            FROM appointments
-            WHERE status = 'active'
-            ORDER BY date, time
-        """)
+    SELECT *
+    FROM appointments
+    WHERE status <> 'Cancelado'
+    ORDER BY appointment_date, appointment_time
+""")
 
         appointments = cur.fetchall()
 
@@ -1241,7 +1241,7 @@ def cancelar_agendamento(
 
         cur.execute("""
             UPDATE appointments
-            SET status = 'cancelled'
+            SET status = 'Cancelado'
             WHERE id = %s
         """, (
             appointment_id,
