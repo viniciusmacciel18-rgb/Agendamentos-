@@ -1311,7 +1311,7 @@ def admin():
 
 
         # --------------------------------------------------
-        # HORÁRIOS BLOQUEADOS
+        # TODOS OS HORÁRIOS BLOQUEADOS
         # --------------------------------------------------
 
         blocked_slots = con.execute(
@@ -1337,51 +1337,168 @@ def admin():
         con.close()
 
 
-    # --------------------------------------------------
-    # AGRUPAR HORÁRIOS BLOQUEADOS
-    # --------------------------------------------------
-
-    from collections import defaultdict
-    from datetime import datetime, timedelta
-
-    blocks_by_date_reason = defaultdict(list)
-
-    for block in blocked_slots:
-
-        key = (
-            block["blocked_date"],
-            block["reason"] or ""
-        )
-
-        blocks_by_date_reason[key].append(block)
-
+    # ======================================================
+    # AGRUPA OS BLOQUEIOS EM PERÍODOS
+    # ======================================================
 
     grouped_blocks = []
 
-    for (date_block, reason), items in blocks_by_date_reason.items():
+    current_group = None
 
-        items.sort(
-            key=lambda x: x["blocked_time"]
+
+    for block in blocked_slots:
+
+        block_date = block["blocked_date"]
+
+        block_time = block["blocked_time"]
+
+        block_reason = block["reason"] or ""
+
+
+        # --------------------------------------------------
+        # PRIMEIRO BLOQUEIO
+        # --------------------------------------------------
+
+        if current_group is None:
+
+            current_group = {
+                "id": block["id"],
+                "date": block_date,
+                "start": block_time,
+                "end": block_time,
+                "reason": block_reason,
+                "count": 1
+            }
+
+            continue
+
+
+        # --------------------------------------------------
+        # VERIFICA SE É CONTÍNUO
+        # --------------------------------------------------
+
+        same_date = (
+            current_group["date"] == block_date
         )
 
-        inicio = items[0]["blocked_time"]
-
-        fim = items[-1]["blocked_time"]
-
-        fim_datetime = datetime.strptime(
-            fim,
-            "%H:%M"
-        ) + timedelta(minutes=30)
+        same_reason = (
+            current_group["reason"] == block_reason
+        )
 
 
-        grouped_blocks.append({
-            "id": items[0]["id"],
-            "date": date_block,
-            "start": inicio,
-            "end": fim_datetime.strftime("%H:%M"),
-            "reason": reason,
-            "count": len(items)
-        })
+        try:
+
+            previous_time = datetime.strptime(
+                current_group["end"],
+                "%H:%M"
+            )
+
+            new_time = datetime.strptime(
+                block_time,
+                "%H:%M"
+            )
+
+            difference = (
+                new_time - previous_time
+            ).total_seconds() / 60
+
+
+        except ValueError:
+
+            difference = 999
+
+
+        is_continuous = (
+            difference == 30
+        )
+
+
+        # --------------------------------------------------
+        # CONTINUA NO MESMO PERÍODO
+        # --------------------------------------------------
+
+        if (
+            same_date
+            and same_reason
+            and is_continuous
+        ):
+
+            current_group["end"] = block_time
+
+            current_group["count"] += 1
+
+            continue
+
+
+        # --------------------------------------------------
+        # TERMINOU O PERÍODO ANTERIOR
+        # --------------------------------------------------
+
+        grouped_blocks.append(
+            current_group
+        )
+
+
+        # --------------------------------------------------
+        # COMEÇA NOVO PERÍODO
+        # --------------------------------------------------
+
+        current_group = {
+
+            "id": block["id"],
+
+            "date": block_date,
+
+            "start": block_time,
+
+            "end": block_time,
+
+            "reason": block_reason,
+
+            "count": 1
+
+        }
+
+
+    # ------------------------------------------------------
+    # ADICIONA O ÚLTIMO GRUPO
+    # ------------------------------------------------------
+
+    if current_group is not None:
+
+        grouped_blocks.append(
+            current_group
+        )
+
+
+    # ======================================================
+    # IDENTIFICA DIA INTEIRO
+    # ======================================================
+
+    for group in grouped_blocks:
+
+        try:
+
+            normal_slots = slots_for(
+                group["date"]
+            )
+
+
+            if (
+                len(normal_slots) > 0
+                and group["count"] == len(normal_slots)
+            ):
+
+                group["day_full"] = True
+
+            else:
+
+                group["day_full"] = False
+
+
+        except Exception:
+
+            group["day_full"] = False
 
 
     return render_template(
@@ -1390,7 +1507,6 @@ def admin():
         blocked_slots=grouped_blocks,
         now=date.today().isoformat()
     )
-
 
 # ==========================================================
 # CANCELAR AGENDAMENTO
@@ -2107,12 +2223,17 @@ def desbloquear_horario(block_id):
 
     try:
 
+        # --------------------------------------------------
+        # LOCALIZA O BLOQUEIO CLICADO
+        # --------------------------------------------------
+
         block = con.execute(
             """
             SELECT
                 id,
                 blocked_date,
-                blocked_time
+                blocked_time,
+                reason
 
             FROM blocked_slots
 
@@ -2134,27 +2255,195 @@ def desbloquear_horario(block_id):
             )
 
 
+        blocked_date = block["blocked_date"]
+
+        blocked_time = block["blocked_time"]
+
+        reason = block["reason"] or ""
+
+
         # --------------------------------------------------
-        # REMOVE BLOQUEIO
+        # BUSCA TODOS OS BLOQUEIOS DO MESMO DIA E MOTIVO
+        # --------------------------------------------------
+
+        blocks = con.execute(
+            """
+            SELECT
+                id,
+                blocked_time
+
+            FROM blocked_slots
+
+            WHERE blocked_date = %s
+
+            AND COALESCE(reason, '') = %s
+
+            ORDER BY blocked_time
+            """,
+            (
+                blocked_date,
+                reason
+            )
+        ).fetchall()
+
+
+        # --------------------------------------------------
+        # ENCONTRA O PERÍODO CONTÍNUO
+        # --------------------------------------------------
+
+        target_index = None
+
+
+        for index, item in enumerate(blocks):
+
+            if item["id"] == block_id:
+
+                target_index = index
+
+                break
+
+
+        if target_index is None:
+
+            flash(
+                "Período bloqueado não encontrado.",
+                "error"
+            )
+
+            return redirect(
+                url_for("admin")
+            )
+
+
+        # --------------------------------------------------
+        # DEFINE OS BLOQUEIOS QUE SERÃO REMOVIDOS
+        # --------------------------------------------------
+
+        ids_to_delete = [
+            block_id
+        ]
+
+
+        # --------------------------------------------------
+        # CAMINHA PARA TRÁS
+        # --------------------------------------------------
+
+        previous_time = datetime.strptime(
+            blocked_time,
+            "%H:%M"
+        )
+
+
+        index = target_index - 1
+
+
+        while index >= 0:
+
+            current_time = datetime.strptime(
+                blocks[index]["blocked_time"],
+                "%H:%M"
+            )
+
+
+            difference = (
+                previous_time - current_time
+            ).total_seconds() / 60
+
+
+            if difference != 30:
+
+                break
+
+
+            ids_to_delete.insert(
+                0,
+                blocks[index]["id"]
+            )
+
+
+            previous_time = current_time
+
+            index -= 1
+
+
+        # --------------------------------------------------
+        # CAMINHA PARA FRENTE
+        # --------------------------------------------------
+
+        next_time = datetime.strptime(
+            blocked_time,
+            "%H:%M"
+        )
+
+
+        index = target_index + 1
+
+
+        while index < len(blocks):
+
+            current_time = datetime.strptime(
+                blocks[index]["blocked_time"],
+                "%H:%M"
+            )
+
+
+            difference = (
+                current_time - next_time
+            ).total_seconds() / 60
+
+
+            if difference != 30:
+
+                break
+
+
+            ids_to_delete.append(
+                blocks[index]["id"]
+            )
+
+
+            next_time = current_time
+
+            index += 1
+
+
+        # --------------------------------------------------
+        # APAGA TODO O PERÍODO
         # --------------------------------------------------
 
         con.execute(
             """
             DELETE FROM blocked_slots
 
-            WHERE id = %s
+            WHERE id = ANY(%s)
             """,
-            (block_id,)
+            (
+                ids_to_delete,
+            )
         )
 
 
         con.commit()
 
 
-        flash(
-            "Horário desbloqueado com sucesso.",
-            "success"
-        )
+        # --------------------------------------------------
+        # MENSAGEM
+        # --------------------------------------------------
+
+        if len(ids_to_delete) == 1:
+
+            flash(
+                f"Horário {blocked_time} "
+                "desbloqueado com sucesso.",
+                "success"
+            )
+
+        else:
+
+            flash(
+                "Período desbloqueado com sucesso.",
+                "success"
+            )
 
 
     except Exception as e:
@@ -2179,7 +2468,6 @@ def desbloquear_horario(block_id):
     return redirect(
         url_for("admin")
     )
-
 
 # ==========================================================
 # API DO CALENDÁRIO DE BLOQUEIO
