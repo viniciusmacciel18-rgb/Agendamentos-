@@ -27,7 +27,7 @@ app = Flask(__name__)
 
 app.secret_key = os.environ.get(
     "SECRET_KEY",
-    "troque-esta-chave-em-producao"
+    "troque-esta-chave"
 )
 
 
@@ -38,12 +38,11 @@ app.secret_key = os.environ.get(
 ADMIN_USERNAME = "Rayssa"
 
 ADMIN_PASSWORD = os.environ.get(
-    "ADMIN_PASSWORD"
+    "ADMIN_PASSWORD",
+    "123456"
 )
 
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL"
-)
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 
 # ==========================================================
@@ -62,60 +61,19 @@ SERVICES = [
 
 
 # ==========================================================
-# BANCO DE DADOS
+# CONEXÃO COM BANCO
 # ==========================================================
 
-class Database:
-
-    def __init__(self):
-
-        if not DATABASE_URL:
-
-            raise RuntimeError(
-                "DATABASE_URL não configurada no ambiente."
-            )
-
-        self.con = psycopg2.connect(
-            DATABASE_URL
+def get_db():
+    if not DATABASE_URL:
+        raise RuntimeError(
+            "DATABASE_URL não foi configurada."
         )
 
-
-    def execute(
-        self,
-        sql,
-        params=None
-    ):
-
-        cursor = self.con.cursor(
-            cursor_factory=RealDictCursor
-        )
-
-        cursor.execute(
-            sql,
-            params
-        )
-
-        return cursor
-
-
-    def commit(self):
-
-        self.con.commit()
-
-
-    def rollback(self):
-
-        self.con.rollback()
-
-
-    def close(self):
-
-        self.con.close()
-
-
-def db():
-
-    return Database()
+    return psycopg2.connect(
+        DATABASE_URL,
+        sslmode="require"
+    )
 
 
 # ==========================================================
@@ -124,18 +82,8 @@ def db():
 
 def init_db():
 
-    if not DATABASE_URL:
-
-        print(
-            "DATABASE_URL ausente. "
-            "Pulo na inicialização do DB."
-        )
-
-        return
-
-
-    con = db()
-
+    con = get_db()
+    cur = con.cursor()
 
     try:
 
@@ -143,477 +91,441 @@ def init_db():
         # TABELA DE AGENDAMENTOS
         # --------------------------------------------------
 
-        con.execute(
-            """
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS appointments (
-
                 id SERIAL PRIMARY KEY,
-
                 name TEXT NOT NULL,
-
                 phone TEXT NOT NULL,
-
                 service TEXT NOT NULL,
-
-                appointment_date TEXT NOT NULL,
-
-                appointment_time TEXT NOT NULL,
-
-                notes TEXT,
-
+                date TEXT NOT NULL,
+                time TEXT NOT NULL,
                 created_at TEXT NOT NULL,
-
-                status TEXT NOT NULL
-                    DEFAULT 'Confirmado'
+                status TEXT DEFAULT 'active'
             )
-            """
-        )
-
+        """)
 
         # --------------------------------------------------
-        # GARANTE COLUNA STATUS
+        # TABELA DE BLOQUEIOS
         # --------------------------------------------------
 
-        con.execute(
-            """
-            ALTER TABLE appointments
-
-            ADD COLUMN IF NOT EXISTS
-            status TEXT NOT NULL
-            DEFAULT 'Confirmado'
-            """
-        )
-
-
-        # --------------------------------------------------
-        # REMOVE CONSTRAINT ANTIGA
-        # --------------------------------------------------
-
-        con.execute(
-            """
-            ALTER TABLE appointments
-
-            DROP CONSTRAINT IF EXISTS
-            appointments_appointment_date_appointment_time_key
-            """
-        )
-
-
-        # --------------------------------------------------
-        # IMPEDE DOIS AGENDAMENTOS ATIVOS
-        # NO MESMO HORÁRIO
-        # --------------------------------------------------
-
-        con.execute(
-            """
-            CREATE UNIQUE INDEX IF NOT EXISTS
-            unique_active_appointment_slot
-
-            ON appointments (
-                appointment_date,
-                appointment_time
-            )
-
-            WHERE status <> 'Cancelado'
-            """
-        )
-
-
-        # --------------------------------------------------
-        # TABELA DE HORÁRIOS BLOQUEADOS
-        # --------------------------------------------------
-
-        con.execute(
-            """
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS blocked_slots (
-
                 id SERIAL PRIMARY KEY,
-
                 blocked_date TEXT NOT NULL,
-
                 blocked_time TEXT NOT NULL,
-
                 reason TEXT,
-
                 created_at TEXT NOT NULL
             )
-            """
-        )
-
+        """)
 
         # --------------------------------------------------
-        # IMPEDE BLOQUEIO DUPLICADO
+        # EVITA DUPLICIDADE DE BLOQUEIO
         # --------------------------------------------------
 
-        con.execute(
-            """
+        cur.execute("""
             CREATE UNIQUE INDEX IF NOT EXISTS
-            unique_blocked_slot
-
+            blocked_slots_date_time_unique
             ON blocked_slots (
                 blocked_date,
                 blocked_time
             )
-            """
-        )
-
+        """)
 
         con.commit()
 
-
-    except Exception as e:
-
-        con.rollback()
-
-        print(
-            f"Erro ao inicializar o banco de dados: {e}"
-        )
-
-
     finally:
 
+        cur.close()
         con.close()
 
 
 # ==========================================================
-# FUNÇÕES AUXILIARES
+# SERVIÇOS AUXILIARES
 # ==========================================================
 
-def service_duration(service):
+def service_duration(service_name):
 
-    for name, minutes, price in SERVICES:
+    for name, duration, price in SERVICES:
 
-        if name == service:
-
-            return minutes
+        if name == service_name:
+            return duration
 
     return 30
 
 
-# ==========================================================
-# CONFLITO COM AGENDAMENTO
-# ==========================================================
+def service_price(service_name):
 
-def appointment_conflict(
-    con,
-    day,
-    time,
-    duration,
-    ignore_id=None
-):
+    for name, duration, price in SERVICES:
 
-    appointments = con.execute(
-        """
-        SELECT
-            id,
-            appointment_time,
-            service
+        if name == service_name:
+            return price
 
-        FROM appointments
-
-        WHERE appointment_date = %s
-
-        AND status <> 'Cancelado'
-        """,
-        (day,)
-    ).fetchall()
-
-
-    new_start = datetime.strptime(
-        f"{day} {time}",
-        "%Y-%m-%d %H:%M"
-    )
-
-
-    new_end = (
-        new_start +
-        timedelta(minutes=duration)
-    )
-
-
-    for appointment in appointments:
-
-        if (
-            ignore_id is not None
-            and appointment["id"] == ignore_id
-        ):
-
-            continue
-
-
-        existing_start = datetime.strptime(
-            f"{day} "
-            f"{appointment['appointment_time']}",
-            "%Y-%m-%d %H:%M"
-        )
-
-
-        existing_duration = service_duration(
-            appointment["service"]
-        )
-
-
-        existing_end = (
-            existing_start +
-            timedelta(minutes=existing_duration)
-        )
-
-
-        if (
-            new_start < existing_end
-            and new_end > existing_start
-        ):
-
-            return True
-
-
-    return False
+    return 0.00
 
 
 # ==========================================================
-# CONFLITO COM HORÁRIO BLOQUEADO
+# GERA HORÁRIOS DISPONÍVEIS DO DIA
 # ==========================================================
 
-def blocked_slot_conflict(
-    con,
-    day,
-    start_time,
-    duration
-):
+def slots_for(day, service=None):
 
-    blocked = con.execute(
-        """
-        SELECT
-            blocked_time
+    weekday = day.weekday()
 
-        FROM blocked_slots
-
-        WHERE blocked_date = %s
-        """,
-        (day,)
-    ).fetchall()
-
-
-    new_start = datetime.strptime(
-        f"{day} {start_time}",
-        "%Y-%m-%d %H:%M"
-    )
-
-
-    new_end = (
-        new_start +
-        timedelta(minutes=duration)
-    )
-
-
-    for item in blocked:
-
-        blocked_start = datetime.strptime(
-            f"{day} "
-            f"{item['blocked_time']}",
-            "%Y-%m-%d %H:%M"
-        )
-
-
-        blocked_end = (
-            blocked_start +
-            timedelta(minutes=30)
-        )
-
-
-        if (
-            new_start < blocked_end
-            and new_end > blocked_start
-        ):
-
-            return True
-
-
-    return False
-
-
-# ==========================================================
-# GERA HORÁRIOS DISPONÍVEIS
-# ==========================================================
-
-def slots_for(
-    day,
-    service=None
-):
-
-    d = datetime.strptime(
-        day,
-        "%Y-%m-%d"
-    ).date()
-
-
-    # ------------------------------------------------------
-    # DOMINGO FECHADO
-    # ------------------------------------------------------
-
-    if d.weekday() == 6:
-
+    # Domingo fechado
+    if weekday == 6:
         return []
 
+    periods = []
 
-    duration = (
-        service_duration(service)
-        if service
-        else 30
-    )
+    # Segunda, terça, quinta e sexta
+    if weekday in [0, 1, 3, 4]:
 
+        periods = [
+            ("07:30", "11:00"),
+            ("13:30", "20:00")
+        ]
+
+    # Quarta-feira
+    elif weekday == 2:
+
+        periods = [
+            ("07:30", "11:00"),
+            ("13:30", "15:00")
+        ]
+
+    # Sábado
+    elif weekday == 5:
+
+        periods = [
+            ("09:00", "16:00")
+        ]
 
     slots = []
 
+    for start, end in periods:
 
-    # ======================================================
-    # SEGUNDA A SEXTA
-    # ======================================================
-
-    if d.weekday() <= 4:
-
-        # --------------------------------------------------
-        # QUARTA-FEIRA
-        # --------------------------------------------------
-
-        if d.weekday() == 2:
-
-            periods = [
-                (7, 30, 11, 0),
-                (13, 30, 15, 0)
-            ]
-
-
-        # --------------------------------------------------
-        # SEGUNDA, TERÇA, QUINTA E SEXTA
-        # --------------------------------------------------
-
-        else:
-
-            periods = [
-                (7, 30, 11, 0),
-                (13, 30, 20, 0)
-            ]
-
-
-    # ======================================================
-    # SÁBADO
-    # ======================================================
-
-    else:
-
-        periods = [
-            (9, 0, 16, 0)
-        ]
-
-
-    # ======================================================
-    # CRIA HORÁRIOS DE 30 EM 30 MINUTOS
-    # ======================================================
-
-    for (
-        start_hour,
-        start_minute,
-        end_hour,
-        end_minute
-    ) in periods:
-
-        period_start = (
-            datetime.combine(
-                d,
-                datetime.min.time()
-            )
-            .replace(
-                hour=start_hour,
-                minute=start_minute
-            )
+        current = datetime.strptime(
+            start,
+            "%H:%M"
         )
 
-
-        period_end = (
-            datetime.combine(
-                d,
-                datetime.min.time()
-            )
-            .replace(
-                hour=end_hour,
-                minute=end_minute
-            )
+        period_end = datetime.strptime(
+            end,
+            "%H:%M"
         )
 
-
-        current = period_start
-
-
-        allowed_end = (
-            period_end +
-            timedelta(minutes=30)
+        # Permite o último horário de início
+        allowed_end = period_end + timedelta(
+            minutes=30
         )
 
+        while current < allowed_end:
 
-        while current <= period_end:
+            slot = current.strftime("%H:%M")
 
-            appointment_end = (
-                current +
-                timedelta(minutes=duration)
-            )
+            # --------------------------------------------------
+            # NÃO MOSTRA HORÁRIOS PASSADOS NO DIA ATUAL
+            # --------------------------------------------------
 
+            if day == date.today():
 
-            if appointment_end <= allowed_end:
+                now = datetime.now()
 
-                slots.append(
-                    current.strftime("%H:%M")
+                slot_datetime = datetime.combine(
+                    day,
+                    current.time()
                 )
 
+                if slot_datetime <= now:
+                    current += timedelta(minutes=30)
+                    continue
 
-            current += timedelta(
-                minutes=30
-            )
+            # --------------------------------------------------
+            # SE EXISTIR SERVIÇO, VERIFICA SE ELE CABE NO HORÁRIO
+            # --------------------------------------------------
 
+            if service:
 
-    # ======================================================
-    # NÃO MOSTRA HORÁRIOS QUE JÁ PASSARAM HOJE
-    # ======================================================
+                duration = service_duration(
+                    service
+                )
 
-    today = date.today()
+                service_end = current + timedelta(
+                    minutes=duration
+                )
 
+                if service_end > allowed_end:
+                    current += timedelta(minutes=30)
+                    continue
 
-    if d == today:
+            slots.append(slot)
 
-        current_datetime = datetime.now()
-
-
-        slots = [
-
-            slot
-
-            for slot in slots
-
-            if datetime.strptime(
-                f"{day} {slot}",
-                "%Y-%m-%d %H:%M"
-            ) >= current_datetime
-
-        ]
-
+            current += timedelta(minutes=30)
 
     return slots
 
 
 # ==========================================================
-# CONTEXTO GLOBAL
+# VERIFICA CONFLITO COM AGENDAMENTOS
 # ==========================================================
 
-@app.context_processor
-def inject_today():
+def appointment_conflict(
+    con,
+    appointment_date,
+    appointment_time,
+    service,
+    ignore_id=None
+):
 
-    return {
-        "now": date.today().isoformat()
+    duration = service_duration(service)
+
+    new_start = datetime.strptime(
+        f"{appointment_date} {appointment_time}",
+        "%Y-%m-%d %H:%M"
+    )
+
+    new_end = new_start + timedelta(
+        minutes=duration
+    )
+
+    cur = con.cursor(
+        cursor_factory=RealDictCursor
+    )
+
+    query = """
+        SELECT *
+        FROM appointments
+        WHERE date = %s
+        AND status = 'active'
+    """
+
+    params = [appointment_date]
+
+    cur.execute(
+        query,
+        params
+    )
+
+    appointments = cur.fetchall()
+
+    cur.close()
+
+    for appt in appointments:
+
+        if ignore_id is not None:
+            if appt["id"] == ignore_id:
+                continue
+
+        appt_start = datetime.strptime(
+            f"{appt['date']} {appt['time']}",
+            "%Y-%m-%d %H:%M"
+        )
+
+        appt_duration = service_duration(
+            appt["service"]
+        )
+
+        appt_end = appt_start + timedelta(
+            minutes=appt_duration
+        )
+
+        # Verifica sobreposição
+        if (
+            new_start < appt_end
+            and new_end > appt_start
+        ):
+            return True
+
+    return False
+
+
+# ==========================================================
+# VERIFICA CONFLITO COM BLOQUEIOS
+# ==========================================================
+
+def blocked_slot_conflict(
+    con,
+    appointment_date,
+    appointment_time,
+    service
+):
+
+    duration = service_duration(service)
+
+    start = datetime.strptime(
+        f"{appointment_date} {appointment_time}",
+        "%Y-%m-%d %H:%M"
+    )
+
+    end = start + timedelta(
+        minutes=duration
+    )
+
+    cur = con.cursor()
+
+    cur.execute("""
+        SELECT blocked_time
+        FROM blocked_slots
+        WHERE blocked_date = %s
+    """, (
+        appointment_date,
+    ))
+
+    blocked = cur.fetchall()
+
+    cur.close()
+
+    for row in blocked:
+
+        blocked_start = datetime.strptime(
+            f"{appointment_date} {row[0]}",
+            "%Y-%m-%d %H:%M"
+        )
+
+        blocked_end = blocked_start + timedelta(
+            minutes=30
+        )
+
+        if (
+            start < blocked_end
+            and end > blocked_start
+        ):
+            return True
+
+    return False
+
+
+# ==========================================================
+# HORÁRIOS PÚBLICOS
+# ==========================================================
+
+@app.route("/horarios")
+def horarios():
+
+    date_str = request.args.get("date")
+    service = request.args.get("service")
+
+    if not date_str:
+        return jsonify([])
+
+    try:
+
+        selected_date = datetime.strptime(
+            date_str,
+            "%Y-%m-%d"
+        ).date()
+
+    except ValueError:
+
+        return jsonify([])
+
+    slots = slots_for(
+        selected_date,
+        service
+    )
+
+    con = get_db()
+    cur = con.cursor(
+        cursor_factory=RealDictCursor
+    )
+
+    try:
+
+        # --------------------------------------------------
+        # AGENDAMENTOS ATIVOS
+        # --------------------------------------------------
+
+        cur.execute("""
+            SELECT *
+            FROM appointments
+            WHERE date = %s
+            AND status = 'active'
+        """, (
+            date_str,
+        ))
+
+        appointments = cur.fetchall()
+
+        # --------------------------------------------------
+        # BLOQUEIOS
+        # --------------------------------------------------
+
+        cur.execute("""
+            SELECT blocked_time
+            FROM blocked_slots
+            WHERE blocked_date = %s
+        """, (
+            date_str,
+        ))
+
+        blocked_rows = cur.fetchall()
+
+    finally:
+
+        cur.close()
+        con.close()
+
+    blocked_times = {
+        row["blocked_time"]
+        for row in blocked_rows
     }
 
+    available = []
+
+    for slot in slots:
+
+        slot_start = datetime.strptime(
+            f"{date_str} {slot}",
+            "%Y-%m-%d %H:%M"
+        )
+
+        slot_end = slot_start + timedelta(
+            minutes=30
+        )
+
+        occupied = False
+
+        # --------------------------------------------------
+        # VERIFICA AGENDAMENTOS
+        # --------------------------------------------------
+
+        for appt in appointments:
+
+            appt_start = datetime.strptime(
+                f"{appt['date']} {appt['time']}",
+                "%Y-%m-%d %H:%M"
+            )
+
+            appt_duration = service_duration(
+                appt["service"]
+            )
+
+            appt_end = appt_start + timedelta(
+                minutes=appt_duration
+            )
+
+            if (
+                slot_start < appt_end
+                and slot_end > appt_start
+            ):
+                occupied = True
+                break
+
+        # --------------------------------------------------
+        # VERIFICA BLOQUEIO
+        # --------------------------------------------------
+
+        if slot in blocked_times:
+            occupied = True
+
+        if not occupied:
+            available.append(slot)
+
+    return jsonify(available)
+
 
 # ==========================================================
-# ROTA PRINCIPAL
+# PÁGINA PRINCIPAL
 # ==========================================================
 
 @app.route("/")
@@ -626,220 +538,10 @@ def index():
 
 
 # ==========================================================
-# HORÁRIOS PARA CLIENTE
+# AGENDAMENTO
 # ==========================================================
 
-@app.route("/horarios")
-def horarios():
-
-    day = request.args.get(
-        "date",
-        ""
-    ).strip()
-
-
-    service = request.args.get(
-        "service",
-        ""
-    ).strip()
-
-
-    if not day:
-
-        return {
-            "slots": []
-        }
-
-
-    try:
-
-        datetime.strptime(
-            day,
-            "%Y-%m-%d"
-        )
-
-    except ValueError:
-
-        return {
-            "slots": []
-        }
-
-
-    con = db()
-
-
-    try:
-
-        # --------------------------------------------------
-        # AGENDAMENTOS
-        # --------------------------------------------------
-
-        appointments = con.execute(
-            """
-            SELECT
-                appointment_time,
-                service
-
-            FROM appointments
-
-            WHERE appointment_date = %s
-
-            AND status <> 'Cancelado'
-            """,
-            (day,)
-        ).fetchall()
-
-
-        # --------------------------------------------------
-        # BLOQUEIOS
-        # --------------------------------------------------
-
-        blocked = con.execute(
-            """
-            SELECT
-                blocked_time
-
-            FROM blocked_slots
-
-            WHERE blocked_date = %s
-            """,
-            (day,)
-        ).fetchall()
-
-
-    finally:
-
-        con.close()
-
-
-    duration = service_duration(
-        service
-    )
-
-
-    available = []
-
-
-    blocked_times = {
-
-        item["blocked_time"]
-
-        for item in blocked
-
-    }
-
-
-    # ======================================================
-    # ANALISA CADA HORÁRIO
-    # ======================================================
-
-    for slot in slots_for(
-        day,
-        service
-    ):
-
-        slot_start = datetime.strptime(
-            f"{day} {slot}",
-            "%Y-%m-%d %H:%M"
-        )
-
-
-        slot_end = (
-            slot_start +
-            timedelta(minutes=duration)
-        )
-
-
-        conflict = False
-
-
-        # --------------------------------------------------
-        # VERIFICA AGENDAMENTOS
-        # --------------------------------------------------
-
-        for appointment in appointments:
-
-            existing_start = datetime.strptime(
-                f"{day} "
-                f"{appointment['appointment_time']}",
-                "%Y-%m-%d %H:%M"
-            )
-
-
-            existing_duration = service_duration(
-                appointment["service"]
-            )
-
-
-            existing_end = (
-                existing_start +
-                timedelta(
-                    minutes=existing_duration
-                )
-            )
-
-
-            if (
-                slot_start < existing_end
-                and slot_end > existing_start
-            ):
-
-                conflict = True
-
-                break
-
-
-        if conflict:
-
-            continue
-
-
-        # --------------------------------------------------
-        # VERIFICA BLOQUEIOS
-        # --------------------------------------------------
-
-        for blocked_time in blocked_times:
-
-            blocked_start = datetime.strptime(
-                f"{day} {blocked_time}",
-                "%Y-%m-%d %H:%M"
-            )
-
-
-            blocked_end = (
-                blocked_start +
-                timedelta(minutes=30)
-            )
-
-
-            if (
-                slot_start < blocked_end
-                and slot_end > blocked_start
-            ):
-
-                conflict = True
-
-                break
-
-
-        if not conflict:
-
-            available.append(slot)
-
-
-    return {
-        "slots": available
-    }
-
-
-# ==========================================================
-# AGENDAR
-# ==========================================================
-
-@app.route(
-    "/agendar",
-    methods=["POST"]
-)
+@app.route("/agendar", methods=["POST"])
 def agendar():
 
     name = request.form.get(
@@ -847,60 +549,40 @@ def agendar():
         ""
     ).strip()
 
-
     phone = request.form.get(
         "phone",
         ""
     ).strip()
-
 
     service = request.form.get(
         "service",
         ""
     ).strip()
 
-
-    day = request.form.get(
+    appointment_date = request.form.get(
         "date",
         ""
     ).strip()
 
-
-    time = request.form.get(
+    appointment_time = request.form.get(
         "time",
         ""
     ).strip()
 
-
-    notes = request.form.get(
-        "notes",
-        ""
-    ).strip()
-
-
-    valid_services = {
-        s[0]
-        for s in SERVICES
-    }
-
-
-    # ======================================================
+    # ------------------------------------------------------
     # CAMPOS OBRIGATÓRIOS
-    # ======================================================
+    # ------------------------------------------------------
 
-    if (
-        not all([
-            name,
-            phone,
-            service,
-            day,
-            time
-        ])
-        or service not in valid_services
-    ):
+    if not all([
+        name,
+        phone,
+        service,
+        appointment_date,
+        appointment_time
+    ]):
 
         flash(
-            "Preencha todos os campos obrigatórios.",
+            "Preencha todos os campos.",
             "error"
         )
 
@@ -908,18 +590,36 @@ def agendar():
             url_for("index")
         )
 
+    # ------------------------------------------------------
+    # VALIDA SERVIÇO
+    # ------------------------------------------------------
 
-    # ======================================================
+    valid_service = any(
+        item[0] == service
+        for item in SERVICES
+    )
+
+    if not valid_service:
+
+        flash(
+            "Serviço inválido.",
+            "error"
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    # ------------------------------------------------------
     # VALIDA DATA
-    # ======================================================
+    # ------------------------------------------------------
 
     try:
 
-        chosen = datetime.strptime(
-            day,
+        selected_date = datetime.strptime(
+            appointment_date,
             "%Y-%m-%d"
         ).date()
-
 
     except ValueError:
 
@@ -932,89 +632,88 @@ def agendar():
             url_for("index")
         )
 
-
-    # ======================================================
-    # NÃO PERMITE DATA PASSADA
-    # ======================================================
-
-    if chosen < date.today():
-
-        flash(
-            "Não é possível agendar para uma data passada.",
-            "error"
-        )
-
-        return redirect(
-            url_for("index")
-        )
-
-
-    # ======================================================
-    # NÃO PERMITE HORÁRIO PASSADO HOJE
-    # ======================================================
-
-    if chosen == date.today():
-
-        try:
-
-            chosen_datetime = datetime.strptime(
-                f"{day} {time}",
-                "%Y-%m-%d %H:%M"
-            )
-
-        except ValueError:
-
-            flash(
-                "Horário inválido.",
-                "error"
-            )
-
-            return redirect(
-                url_for("index")
-            )
-
-
-        if chosen_datetime < datetime.now():
-
-            flash(
-                "Esse horário já passou. "
-                "Escolha outro horário.",
-                "error"
-            )
-
-            return redirect(
-                url_for("index")
-            )
-
-
-    # ======================================================
+    # ------------------------------------------------------
     # VALIDA HORÁRIO
-    # ======================================================
-
-    if time not in slots_for(
-        day,
-        service
-    ):
-
-        flash(
-            "Data ou horário inválido.",
-            "error"
-        )
-
-        return redirect(
-            url_for("index")
-        )
-
-
-    con = db()
-
+    # ------------------------------------------------------
 
     try:
 
-        duration = service_duration(
-            service
+        datetime.strptime(
+            appointment_time,
+            "%H:%M"
         )
 
+    except ValueError:
+
+        flash(
+            "Horário inválido.",
+            "error"
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    # ------------------------------------------------------
+    # NÃO PERMITE DATA PASSADA
+    # ------------------------------------------------------
+
+    if selected_date < date.today():
+
+        flash(
+            "Não é possível agendar em uma data passada.",
+            "error"
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    # ------------------------------------------------------
+    # NÃO PERMITE HORÁRIO PASSADO HOJE
+    # ------------------------------------------------------
+
+    if selected_date == date.today():
+
+        selected_datetime = datetime.strptime(
+            f"{appointment_date} {appointment_time}",
+            "%Y-%m-%d %H:%M"
+        )
+
+        if selected_datetime <= datetime.now():
+
+            flash(
+                "Esse horário já passou.",
+                "error"
+            )
+
+            return redirect(
+                url_for("index")
+            )
+
+    # ------------------------------------------------------
+    # VERIFICA SE O HORÁRIO EXISTE
+    # ------------------------------------------------------
+
+    valid_slots = slots_for(
+        selected_date,
+        service
+    )
+
+    if appointment_time not in valid_slots:
+
+        flash(
+            "Esse horário não está disponível.",
+            "error"
+        )
+
+        return redirect(
+            url_for("index")
+        )
+
+    con = get_db()
+
+    try:
 
         # --------------------------------------------------
         # VERIFICA BLOQUEIO
@@ -1022,9 +721,9 @@ def agendar():
 
         if blocked_slot_conflict(
             con,
-            day,
-            time,
-            duration
+            appointment_date,
+            appointment_time,
+            service
         ):
 
             flash(
@@ -1036,21 +735,19 @@ def agendar():
                 url_for("index")
             )
 
-
         # --------------------------------------------------
-        # VERIFICA CONFLITO
+        # VERIFICA OUTRO AGENDAMENTO
         # --------------------------------------------------
 
         if appointment_conflict(
             con,
-            day,
-            time,
-            duration
+            appointment_date,
+            appointment_time,
+            service
         ):
 
             flash(
-                "Esse horário acabou de ser reservado. "
-                "Escolha outro.",
+                "Esse horário já está ocupado.",
                 "error"
             )
 
@@ -1058,24 +755,22 @@ def agendar():
                 url_for("index")
             )
 
-
         # --------------------------------------------------
         # SALVA AGENDAMENTO
         # --------------------------------------------------
 
-        con.execute(
-            """
-            INSERT INTO appointments
-            (
+        cur = con.cursor()
+
+        cur.execute("""
+            INSERT INTO appointments (
                 name,
                 phone,
                 service,
-                appointment_date,
-                appointment_time,
-                notes,
-                created_at
+                date,
+                time,
+                created_at,
+                status
             )
-
             VALUES (
                 %s,
                 %s,
@@ -1083,47 +778,42 @@ def agendar():
                 %s,
                 %s,
                 %s,
-                %s
+                'active'
             )
-            """,
-            (
-                name,
-                phone,
-                service,
-                day,
-                time,
-                notes,
-                datetime.now().isoformat(
-                    timespec="seconds"
-                )
-            )
-        )
-
+        """, (
+            name,
+            phone,
+            service,
+            appointment_date,
+            appointment_time,
+            datetime.now().isoformat()
+        ))
 
         con.commit()
 
+        cur.close()
+
+        flash(
+            "Agendamento realizado com sucesso!",
+            "success"
+        )
 
     except IntegrityError:
 
         con.rollback()
 
         flash(
-            "Esse horário acabou de ser reservado. "
-            "Escolha outro.",
+            "Não foi possível realizar o agendamento.",
             "error"
         )
-
-        return redirect(
-            url_for("index")
-        )
-
 
     except Exception as e:
 
         con.rollback()
 
         print(
-            f"Erro ao realizar agendamento: {e}"
+            "ERRO AO AGENDAR:",
+            e
         )
 
         flash(
@@ -1131,27 +821,12 @@ def agendar():
             "error"
         )
 
-        return redirect(
-            url_for("index")
-        )
-
-
     finally:
 
         con.close()
 
-
-    # ======================================================
-    # CONFIRMAÇÃO
-    # ======================================================
-
-    return render_template(
-        "confirmacao.html",
-        name=name,
-        phone=phone,
-        service=service,
-        day=day,
-        time=time
+    return redirect(
+        url_for("index")
     )
 
 
@@ -1159,9 +834,7 @@ def agendar():
 # MEUS AGENDAMENTOS
 # ==========================================================
 
-@app.route(
-    "/meus-agendamentos"
-)
+@app.route("/meus-agendamentos")
 def meus_agendamentos():
 
     return render_template(
@@ -1169,13 +842,7 @@ def meus_agendamentos():
     )
 
 
-# ==========================================================
-# API - MEUS AGENDAMENTOS
-# ==========================================================
-
-@app.route(
-    "/api/meus-agendamentos"
-)
+@app.route("/api/meus-agendamentos")
 def api_meus_agendamentos():
 
     phone = request.args.get(
@@ -1183,624 +850,374 @@ def api_meus_agendamentos():
         ""
     ).strip()
 
-
     if not phone:
 
-        return {
-            "success": False,
-            "appointments": [],
-            "message": "Informe o WhatsApp."
-        }, 400
+        return jsonify([])
 
-
-    con = db()
-
+    con = get_db()
+    cur = con.cursor(
+        cursor_factory=RealDictCursor
+    )
 
     try:
 
-        appointments = con.execute(
-            """
+        cur.execute("""
             SELECT
                 id,
                 name,
                 phone,
                 service,
-                appointment_date,
-                appointment_time,
-                notes,
+                date,
+                time,
                 status
-
             FROM appointments
+            WHERE phone = %s
+            ORDER BY date, time
+        """, (
+            phone,
+        ))
 
-            WHERE regexp_replace(
-                phone,
-                '[^0-9]',
-                '',
-                'g'
-            )
-            =
-            regexp_replace(
-                %s,
-                '[^0-9]',
-                '',
-                'g'
-            )
-
-            ORDER BY
-                appointment_date,
-                appointment_time
-            """,
-            (phone,)
-        ).fetchall()
-
+        appointments = cur.fetchall()
 
     finally:
 
+        cur.close()
         con.close()
 
-
-    result = [
-
-        {
-            "id": appt["id"],
-
-            "name": appt["name"],
-
-            "service": appt["service"],
-
-            "date": appt["appointment_date"],
-
-            "time": appt["appointment_time"],
-
-            "notes": appt["notes"] or "",
-
-            "status": appt["status"]
-        }
-
-        for appt in appointments
-
-    ]
-
-
-    return {
-        "success": True,
-        "appointments": result
-    }
+    return jsonify(
+        appointments
+    )
 
 
 # ==========================================================
-# PROTEÇÃO ADMINISTRATIVA
+# LOGIN ADMIN
 # ==========================================================
 
-def proteger_admin(func):
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
 
-    @wraps(func)
-    def wrapper(
-        *args,
-        **kwargs
-    ):
+    if request.method == "POST":
 
-        auth = request.authorization
+        username = request.form.get(
+            "username",
+            ""
+        ).strip()
 
+        password = request.form.get(
+            "password",
+            ""
+        )
 
         if (
-            not auth
-            or auth.username != ADMIN_USERNAME
-            or auth.password != ADMIN_PASSWORD
+            username == ADMIN_USERNAME
+            and password == ADMIN_PASSWORD
         ):
 
-            return Response(
-                "Acesso restrito. Digite a senha correta.",
-                401,
-                {
-                    "WWW-Authenticate":
-                    'Basic realm="Área administrativa"'
-                }
+            response = redirect(
+                url_for("admin")
             )
 
+            response.set_cookie(
+                "admin_logged",
+                "1",
+                httponly=True,
+                samesite="Lax"
+            )
 
-        return func(
+            return response
+
+        flash(
+            "Usuário ou senha incorretos.",
+            "error"
+        )
+
+    return render_template(
+        "admin_login.html"
+    )
+
+
+# ==========================================================
+# PROTEÇÃO ADMIN
+# ==========================================================
+
+def proteger_admin(view):
+
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+
+        if request.cookies.get(
+            "admin_logged"
+        ) != "1":
+
+            return redirect(
+                url_for("admin_login")
+            )
+
+        return view(
             *args,
             **kwargs
         )
 
-
-    return wrapper
+    return wrapped_view
 
 
 # ==========================================================
-# PAINEL ADMINISTRATIVO
+# LOGOUT ADMIN
+# ==========================================================
+
+@app.route("/admin/logout")
+def admin_logout():
+
+    response = redirect(
+        url_for("admin_login")
+    )
+
+    response.delete_cookie(
+        "admin_logged"
+    )
+
+    return response
+
+
+# ==========================================================
+# PAINEL ADMIN
 # ==========================================================
 
 @app.route("/admin")
 @proteger_admin
 def admin():
 
-    con = db()
-
+    con = get_db()
+    cur = con.cursor(
+        cursor_factory=RealDictCursor
+    )
 
     try:
 
-        # ==================================================
-        # TODOS OS AGENDAMENTOS
-        # ==================================================
+        # --------------------------------------------------
+        # AGENDAMENTOS
+        # --------------------------------------------------
 
-        appointments_raw = con.execute(
-            """
-            SELECT
-                id,
-                name,
-                phone,
-                service,
-                appointment_date,
-                appointment_time,
-                notes,
-                created_at,
-                status
-
+        cur.execute("""
+            SELECT *
             FROM appointments
+            WHERE status = 'active'
+            ORDER BY date, time
+        """)
 
-            ORDER BY
-                appointment_date DESC,
-                appointment_time DESC
-            """
-        ).fetchall()
+        appointments = cur.fetchall()
 
+        # --------------------------------------------------
+        # HISTÓRICO DE BLOQUEIOS
+        # --------------------------------------------------
 
-        # ==================================================
-        # CONVERTE OS CAMPOS PARA O ADMIN.HTML
-        # ==================================================
-
-        appointments = [
-
-            {
-                "id": item["id"],
-                "name": item["name"],
-                "phone": item["phone"],
-                "service": item["service"],
-                "date": item["appointment_date"],
-                "time": item["appointment_time"],
-                "notes": item["notes"],
-                "created_at": item["created_at"],
-                "status": item["status"]
-            }
-
-            for item in appointments_raw
-
-        ]
-
-
-        # ==================================================
-        # TODOS OS BLOQUEIOS
-        # ==================================================
-
-        blocked_slots = con.execute(
-            """
-            SELECT
-                id,
-                blocked_date,
-                blocked_time,
-                reason,
-                created_at
-
+        cur.execute("""
+            SELECT *
             FROM blocked_slots
+            ORDER BY blocked_date, blocked_time
+        """)
 
-            ORDER BY
-                blocked_date ASC,
-                blocked_time ASC
-            """
-        ).fetchall()
-
+        blocked_rows = cur.fetchall()
 
     finally:
 
+        cur.close()
         con.close()
 
+    # ======================================================
+    # AGRUPAR BLOQUEIOS CONTÍGUOS
+    # ======================================================
 
-   # ======================================================
-# AGRUPA OS BLOQUEIOS
-# ======================================================
+    grouped_blocks = []
 
-grouped_blocks = []
+    # Agrupa por:
+    # - data
+    # - motivo
+    groups = {}
 
-current_group = None
+    for block in blocked_rows:
 
-
-for block in blocked_slots:
-
-    block_date = block["blocked_date"]
-    block_time = block["blocked_time"]
-    block_reason = block["reason"] or ""
-
-
-    # --------------------------------------------------
-    # PRIMEIRO BLOQUEIO
-    # --------------------------------------------------
-
-    if current_group is None:
-
-        current_group = {
-
-            "id": block["id"],
-
-            "date": block_date,
-
-            "start": block_time,
-
-            "end": block_time,
-
-            "reason": block_reason,
-
-            "count": 1
-
-        }
-
-        continue
-
-
-    # --------------------------------------------------
-    # VERIFICA SE É A MESMA DATA
-    # --------------------------------------------------
-
-    same_date = (
-        current_group["date"] == block_date
-    )
-
-
-    # --------------------------------------------------
-    # VERIFICA SE É O MESMO MOTIVO
-    # --------------------------------------------------
-
-    same_reason = (
-        current_group["reason"] == block_reason
-    )
-
-
-    # --------------------------------------------------
-    # VERIFICA SE É CONTÍNUO
-    # --------------------------------------------------
-
-    try:
-
-        previous_time = datetime.strptime(
-            current_group["end"],
-            "%H:%M"
+        key = (
+            block["blocked_date"],
+            block.get("reason") or ""
         )
 
-        new_time = datetime.strptime(
-            block_time,
-            "%H:%M"
-        )
+        if key not in groups:
+            groups[key] = []
 
-        difference = (
-            new_time - previous_time
-        ).total_seconds() / 60
+        groups[key].append(block)
 
-    except ValueError:
+    # ======================================================
+    # PROCESSA CADA GRUPO
+    # ======================================================
 
-        difference = 999
-
-
-    is_continuous = (
-        difference == 30
-    )
-
-
-    # --------------------------------------------------
-    # CONTINUA NO MESMO GRUPO
-    # --------------------------------------------------
-
-    if (
-        same_date
-        and same_reason
-        and is_continuous
-    ):
-
-        current_group["end"] = block_time
-
-        current_group["count"] += 1
-
-        continue
-
-
-    # --------------------------------------------------
-    # FINALIZA GRUPO
-    # --------------------------------------------------
-
-    grouped_blocks.append(
-        current_group
-    )
-
-
-    # --------------------------------------------------
-    # COMEÇA NOVO GRUPO
-    # --------------------------------------------------
-
-    current_group = {
-
-        "id": block["id"],
-
-        "date": block_date,
-
-        "start": block_time,
-
-        "end": block_time,
-
-        "reason": block_reason,
-
-        "count": 1
-
-    }
-
-
-# ======================================================
-# ADICIONA ÚLTIMO GRUPO
-# ======================================================
-
-if current_group is not None:
-
-    grouped_blocks.append(
-        current_group
-    )
-
-
-# ======================================================
-# CALCULA O HORÁRIO FINAL VISUAL
-# ======================================================
-
-for group in grouped_blocks:
-
-    try:
-
-        end_datetime = datetime.strptime(
-            group["end"],
-            "%H:%M"
-        )
-
-        end_datetime += timedelta(
-            minutes=30
-        )
-
-        group["end_display"] = (
-            end_datetime.strftime("%H:%M")
-        )
-
-    except ValueError:
-
-        group["end_display"] = (
-            group["end"]
-        )
-
-
-# ======================================================
-# IDENTIFICA DIAS COMPLETAMENTE BLOQUEADOS
-# ======================================================
-
-normal_slots_by_date = {}
-
-blocked_by_date = {}
-
-
-# ------------------------------------------------------
-# HORÁRIOS NORMAIS DE CADA DATA
-# ------------------------------------------------------
-
-for block in blocked_slots:
-
-    block_date = block["blocked_date"]
-
-    if block_date not in normal_slots_by_date:
-
-        normal_slots_by_date[block_date] = slots_for(
-            block_date
-        )
-
-
-# ------------------------------------------------------
-# BLOQUEIOS AGRUPADOS POR DATA
-# ------------------------------------------------------
-
-for block in blocked_slots:
-
-    block_date = block["blocked_date"]
-
-    if block_date not in blocked_by_date:
-
-        blocked_by_date[block_date] = []
-
-    blocked_by_date[block_date].append(
-        block
-    )
-
-
-# ======================================================
-# CRIA A LISTA FINAL DO HISTÓRICO
-# ======================================================
-
-final_blocks = []
-
-
-processed_full_days = set()
-
-
-for group in grouped_blocks:
-
-    group_date = group["date"]
-
-    normal_slots = normal_slots_by_date.get(
+    for (
         group_date,
-        []
-    )
+        reason
+    ), blocks in groups.items():
 
-    date_blocks = blocked_by_date.get(
-        group_date,
-        []
-    )
-
-
-    # --------------------------------------------------
-    # QUANTIDADE DE HORÁRIOS BLOQUEADOS
-    # --------------------------------------------------
-
-    blocked_times_for_date = {
-
-        block["blocked_time"]
-
-        for block in date_blocks
-
-    }
-
-
-    # --------------------------------------------------
-    # VERIFICA SE O DIA TODO ESTÁ BLOQUEADO
-    # --------------------------------------------------
-
-    day_is_full = (
-
-        len(normal_slots) > 0
-
-        and
-
-        all(
-            slot in blocked_times_for_date
-            for slot in normal_slots
+        # Ordena por horário
+        blocks.sort(
+            key=lambda x: x["blocked_time"]
         )
 
-    )
-
-
-    # ==================================================
-    # SE FOR DIA INTEIRO
-    # ==================================================
-
-    if day_is_full:
-
-        # ----------------------------------------------
-        # EVITA DUPLICAR O MESMO DIA
-        # ----------------------------------------------
-
-        if group_date in processed_full_days:
-
-            continue
-
-
-        processed_full_days.add(
-            group_date
-        )
-
-
-        # ----------------------------------------------
-        # USA O PRIMEIRO BLOQUEIO COMO ID
-        # ----------------------------------------------
-
-        first_block = date_blocks[0]
-
-        last_block = date_blocks[-1]
-
+        # --------------------------------------------------
+        # HORÁRIOS NORMAIS DO DIA
+        # --------------------------------------------------
 
         try:
 
-            end_datetime = datetime.strptime(
-                last_block["blocked_time"],
-                "%H:%M"
-            )
-
-            end_datetime += timedelta(
-                minutes=30
-            )
-
-            end_display = (
-                end_datetime.strftime("%H:%M")
-            )
+            day_obj = datetime.strptime(
+                group_date,
+                "%Y-%m-%d"
+            ).date()
 
         except ValueError:
 
-            end_display = (
-                last_block["blocked_time"]
-            )
+            continue
 
-
-        # ----------------------------------------------
-        # VERIFICA O MOTIVO
-        # ----------------------------------------------
-
-        reasons = {
-
-            block["reason"] or ""
-
-            for block in date_blocks
-
-        }
-
-
-        if len(reasons) == 1:
-
-            full_reason = (
-                next(iter(reasons))
-            )
-
-        else:
-
-            full_reason = ""
-
-
-        # ----------------------------------------------
-        # CRIA UMA ÚNICA LINHA
-        # ----------------------------------------------
-
-        final_blocks.append({
-
-            "id": first_block["id"],
-
-            "date": group_date,
-
-            "start": normal_slots[0],
-
-            "end": normal_slots[-1],
-
-            "end_display": end_display,
-
-            "reason": full_reason,
-
-            "count": len(date_blocks),
-
-            "day_full": True
-
-        })
-
-
-    # ==================================================
-    # NÃO É DIA INTEIRO
-    # ==================================================
-
-    else:
-
-        group["day_full"] = False
-
-        final_blocks.append(
-            group
+        normal_slots = slots_for(
+            day_obj
         )
 
+        blocked_times = {
+            block["blocked_time"]
+            for block in blocks
+        }
 
-# ======================================================
-# SUBSTITUI A LISTA ORIGINAL
-# ======================================================
+        # --------------------------------------------------
+        # VERIFICA SE O DIA INTEIRO ESTÁ BLOQUEADO
+        # --------------------------------------------------
 
-grouped_blocks = final_blocks
+        is_full_day = (
+            len(normal_slots) > 0
+            and all(
+                slot in blocked_times
+                for slot in normal_slots
+            )
+        )
 
+        if is_full_day:
+
+            grouped_blocks.append({
+                "id": blocks[0]["id"],
+                "date": group_date,
+                "start": normal_slots[0],
+                "end": normal_slots[-1],
+                "end_display": normal_slots[-1],
+                "reason": reason,
+                "day_full": True,
+                "block_ids": [
+                    block["id"]
+                    for block in blocks
+                ]
+            })
+
+            continue
+
+        # --------------------------------------------------
+        # AGRUPA HORÁRIOS CONTÍGUOS
+        # --------------------------------------------------
+
+        current_group = []
+
+        for block in blocks:
+
+            if not current_group:
+
+                current_group = [
+                    block
+                ]
+
+                continue
+
+            previous_time = datetime.strptime(
+                current_group[-1]["blocked_time"],
+                "%H:%M"
+            )
+
+            current_time = datetime.strptime(
+                block["blocked_time"],
+                "%H:%M"
+            )
+
+            difference = (
+                current_time
+                - previous_time
+            )
+
+            # Se diferença for exatamente 30 minutos,
+            # faz parte do mesmo período.
+            if difference == timedelta(
+                minutes=30
+            ):
+
+                current_group.append(
+                    block
+                )
+
+            else:
+
+                first = current_group[0]
+                last = current_group[-1]
+
+                grouped_blocks.append({
+                    "id": first["id"],
+                    "date": group_date,
+                    "start": first["blocked_time"],
+                    "end": last["blocked_time"],
+                    "end_display": last["blocked_time"],
+                    "reason": reason,
+                    "day_full": False,
+                    "block_ids": [
+                        item["id"]
+                        for item in current_group
+                    ]
+                })
+
+                current_group = [
+                    block
+                ]
+
+        # --------------------------------------------------
+        # SALVA O ÚLTIMO GRUPO
+        # --------------------------------------------------
+
+        if current_group:
+
+            first = current_group[0]
+            last = current_group[-1]
+
+            grouped_blocks.append({
+                "id": first["id"],
+                "date": group_date,
+                "start": first["blocked_time"],
+                "end": last["blocked_time"],
+                "end_display": last["blocked_time"],
+                "reason": reason,
+                "day_full": False,
+                "block_ids": [
+                    item["id"]
+                    for item in current_group
+                ]
+            })
 
     # ======================================================
-    # ENVIA PARA O ADMIN.HTML
+    # ORDENA HISTÓRICO
     # ======================================================
+
+    grouped_blocks.sort(
+        key=lambda x: (
+            x["date"],
+            x["start"]
+        )
+    )
 
     return render_template(
         "admin.html",
-
         appointments=appointments,
-
         blocked_slots=grouped_blocks,
-
-        now=date.today().isoformat()
+        services=SERVICES
     )
 
 
@@ -1813,88 +1230,37 @@ grouped_blocks = final_blocks
     methods=["POST"]
 )
 @proteger_admin
-def cancelar(
+def cancelar_agendamento(
     appointment_id
 ):
 
-    con = db()
-
+    con = get_db()
+    cur = con.cursor()
 
     try:
 
-        appointment = con.execute(
-            """
-            SELECT
-                id,
-                status
-
-            FROM appointments
-
-            WHERE id = %s
-            """,
-            (appointment_id,)
-        ).fetchone()
-
-
-        if not appointment:
-
-            flash(
-                "Agendamento não encontrado.",
-                "error"
-            )
-
-            return redirect(
-                url_for("admin")
-            )
-
-
-        # --------------------------------------------------
-        # JÁ ESTÁ CANCELADO
-        # --------------------------------------------------
-
-        if appointment["status"] == "Cancelado":
-
-            flash(
-                "Esse agendamento já está cancelado.",
-                "error"
-            )
-
-            return redirect(
-                url_for("admin")
-            )
-
-
-        # --------------------------------------------------
-        # CANCELA
-        # --------------------------------------------------
-
-        con.execute(
-            """
+        cur.execute("""
             UPDATE appointments
-
-            SET status = 'Cancelado'
-
+            SET status = 'cancelled'
             WHERE id = %s
-            """,
-            (appointment_id,)
-        )
-
+        """, (
+            appointment_id,
+        ))
 
         con.commit()
 
-
         flash(
-            "Agendamento cancelado com sucesso.",
+            "Agendamento cancelado.",
             "success"
         )
-
 
     except Exception as e:
 
         con.rollback()
 
         print(
-            f"Erro ao cancelar agendamento: {e}"
+            "ERRO AO CANCELAR:",
+            e
         )
 
         flash(
@@ -1902,11 +1268,10 @@ def cancelar(
             "error"
         )
 
-
     finally:
 
+        cur.close()
         con.close()
-
 
     return redirect(
         url_for("admin")
@@ -1914,110 +1279,55 @@ def cancelar(
 
 
 # ==========================================================
-# APAGAR AGENDAMENTO CANCELADO
-# DO HISTÓRICO
+# EXCLUIR AGENDAMENTO DO HISTÓRICO
 # ==========================================================
 
 @app.route(
-    "/admin/apagar-historico/<int:appointment_id>",
+    "/admin/excluir/<int:appointment_id>",
     methods=["POST"]
 )
 @proteger_admin
-def apagar_historico(
+def excluir_agendamento(
     appointment_id
 ):
 
-    con = db()
-
+    con = get_db()
+    cur = con.cursor()
 
     try:
 
-        appointment = con.execute(
-            """
-            SELECT
-                id,
-                status
-
-            FROM appointments
-
-            WHERE id = %s
-            """,
-            (appointment_id,)
-        ).fetchone()
-
-
-        if not appointment:
-
-            flash(
-                "Agendamento não encontrado.",
-                "error"
-            )
-
-            return redirect(
-                url_for("admin")
-            )
-
-
-        # --------------------------------------------------
-        # SOMENTE CANCELADOS
-        # --------------------------------------------------
-
-        if appointment["status"] != "Cancelado":
-
-            flash(
-                "Somente agendamentos cancelados "
-                "podem ser apagados do histórico.",
-                "error"
-            )
-
-            return redirect(
-                url_for("admin")
-            )
-
-
-        # --------------------------------------------------
-        # APAGA
-        # --------------------------------------------------
-
-        con.execute(
-            """
+        cur.execute("""
             DELETE FROM appointments
-
             WHERE id = %s
-
-            AND status = 'Cancelado'
-            """,
-            (appointment_id,)
-        )
-
+        """, (
+            appointment_id,
+        ))
 
         con.commit()
 
-
         flash(
-            "Agendamento apagado do histórico.",
+            "Agendamento excluído.",
             "success"
         )
-
 
     except Exception as e:
 
         con.rollback()
 
         print(
-            f"Erro ao apagar histórico: {e}"
+            "ERRO AO EXCLUIR:",
+            e
         )
 
         flash(
-            "Não foi possível apagar o agendamento.",
+            "Não foi possível excluir o agendamento.",
             "error"
         )
 
-
     finally:
 
+        cur.close()
         con.close()
-
 
     return redirect(
         url_for("admin")
@@ -2035,45 +1345,39 @@ def apagar_historico(
 @proteger_admin
 def bloquear_horario():
 
+    block_type = request.form.get(
+        "block_type",
+        "specific"
+    )
+
     blocked_date = request.form.get(
-        "blocked_date",
+        "date",
         ""
     ).strip()
-
-
-    blocked_type = request.form.get(
-        "blocked_type",
-        "specific"
-    ).strip()
-
 
     blocked_time = request.form.get(
-        "blocked_time",
+        "time",
         ""
     ).strip()
-
 
     start_time = request.form.get(
         "start_time",
         ""
     ).strip()
 
-
     end_time = request.form.get(
         "end_time",
         ""
     ).strip()
-
 
     reason = request.form.get(
         "reason",
         ""
     ).strip()
 
-
-    # ======================================================
-    # VALIDA DATA
-    # ======================================================
+    # ------------------------------------------------------
+    # DATA
+    # ------------------------------------------------------
 
     try:
 
@@ -2081,7 +1385,6 @@ def bloquear_horario():
             blocked_date,
             "%Y-%m-%d"
         ).date()
-
 
     except ValueError:
 
@@ -2094,10 +1397,9 @@ def bloquear_horario():
             url_for("admin")
         )
 
-
-    # ======================================================
+    # ------------------------------------------------------
     # NÃO PERMITE DATA PASSADA
-    # ======================================================
+    # ------------------------------------------------------
 
     if selected_date < date.today():
 
@@ -2110,228 +1412,26 @@ def bloquear_horario():
             url_for("admin")
         )
 
-
-    # ======================================================
-    # HORÁRIOS NORMAIS
-    # ======================================================
-
-    available_slots = slots_for(
-        blocked_date
-    )
-
-
-    slots_to_block = []
-
-
-    # ======================================================
-    # 1 - HORÁRIO ESPECÍFICO
-    # ======================================================
-
-    if blocked_type == "specific":
-
-        if blocked_time not in available_slots:
-
-            flash(
-                "Horário inválido para essa data.",
-                "error"
-            )
-
-            return redirect(
-                url_for("admin")
-            )
-
-
-        slots_to_block = [
-            blocked_time
-        ]
-
-
-    # ======================================================
-    # 2 - PERÍODO
-    # ======================================================
-
-    elif blocked_type == "period":
-
-        if not start_time or not end_time:
-
-            flash(
-                "Informe o horário inicial "
-                "e final do período.",
-                "error"
-            )
-
-            return redirect(
-                url_for("admin")
-            )
-
-
-        try:
-
-            start = datetime.strptime(
-                start_time,
-                "%H:%M"
-            )
-
-
-            end = datetime.strptime(
-                end_time,
-                "%H:%M"
-            )
-
-
-        except ValueError:
-
-            flash(
-                "Horário do período inválido.",
-                "error"
-            )
-
-            return redirect(
-                url_for("admin")
-            )
-
-
-        if end <= start:
-
-            flash(
-                "O horário final deve ser maior "
-                "que o horário inicial.",
-                "error"
-            )
-
-            return redirect(
-                url_for("admin")
-            )
-
-
-        # --------------------------------------------------
-        # GERA BLOCOS DE 30 MINUTOS
-        # --------------------------------------------------
-
-        current = start
-
-
-        while current < end:
-
-            current_time = current.strftime(
-                "%H:%M"
-            )
-
-
-            if current_time in available_slots:
-
-                slots_to_block.append(
-                    current_time
-                )
-
-
-            current += timedelta(
-                minutes=30
-            )
-
-
-        if not slots_to_block:
-
-            flash(
-                "Nenhum horário válido foi encontrado "
-                "nesse período.",
-                "error"
-            )
-
-            return redirect(
-                url_for("admin")
-            )
-
-
-    # ======================================================
-    # 3 - DIA INTEIRO
-    # ======================================================
-
-    elif blocked_type == "day":
-
-        slots_to_block = list(
-            available_slots
-        )
-
-
-        if not slots_to_block:
-
-            flash(
-                "Não existem horários disponíveis "
-                "nessa data.",
-                "error"
-            )
-
-            return redirect(
-                url_for("admin")
-            )
-
-
-    # ======================================================
-    # TIPO INVÁLIDO
-    # ======================================================
-
-    else:
-
-        flash(
-            "Tipo de bloqueio inválido.",
-            "error"
-        )
-
-        return redirect(
-            url_for("admin")
-        )
-
-
-    # ======================================================
-    # BANCO
-    # ======================================================
-
-    con = db()
-
+    con = get_db()
 
     try:
 
         # ==================================================
-        # VERIFICA TODOS OS HORÁRIOS ANTES DE BLOQUEAR
+        # MONTA LISTA DE HORÁRIOS A BLOQUEAR
         # ==================================================
 
-        for slot in slots_to_block:
+        times_to_block = []
 
-            # ----------------------------------------------
-            # AGENDAMENTO EXATO
-            # ----------------------------------------------
+        # --------------------------------------------------
+        # BLOQUEIO DE UM HORÁRIO
+        # --------------------------------------------------
 
-            appointment = con.execute(
-                """
-                SELECT
-                    id,
-                    name,
-                    service
+        if block_type == "specific":
 
-                FROM appointments
-
-                WHERE appointment_date = %s
-
-                AND appointment_time = %s
-
-                AND status <> 'Cancelado'
-
-                LIMIT 1
-                """,
-                (
-                    blocked_date,
-                    slot
-                )
-            ).fetchone()
-
-
-            if appointment:
+            if not blocked_time:
 
                 flash(
-                    f"O horário {slot} já possui "
-                    f"um agendamento e não pode "
-                    f"ser bloqueado.",
+                    "Selecione um horário.",
                     "error"
                 )
 
@@ -2339,22 +1439,20 @@ def bloquear_horario():
                     url_for("admin")
                 )
 
+            times_to_block = [
+                blocked_time
+            ]
 
-            # ----------------------------------------------
-            # SERVIÇO MAIS LONGO
-            # ----------------------------------------------
+        # --------------------------------------------------
+        # BLOQUEIO DE PERÍODO
+        # --------------------------------------------------
 
-            if appointment_conflict(
-                con,
-                blocked_date,
-                slot,
-                30
-            ):
+        elif block_type == "period":
+
+            if not start_time or not end_time:
 
                 flash(
-                    f"O horário {slot} está dentro "
-                    f"do período de um agendamento "
-                    f"existente.",
+                    "Informe o horário inicial e final.",
                     "error"
                 )
 
@@ -2362,150 +1460,211 @@ def bloquear_horario():
                     url_for("admin")
                 )
 
+            try:
+
+                current = datetime.strptime(
+                    start_time,
+                    "%H:%M"
+                )
+
+                finish = datetime.strptime(
+                    end_time,
+                    "%H:%M"
+                )
+
+            except ValueError:
+
+                flash(
+                    "Horário inválido.",
+                    "error"
+                )
+
+                return redirect(
+                    url_for("admin")
+                )
+
+            if current >= finish:
+
+                flash(
+                    "O horário inicial deve ser menor que o horário final.",
+                    "error"
+                )
+
+                return redirect(
+                    url_for("admin")
+                )
+
+            while current < finish:
+
+                time_string = current.strftime(
+                    "%H:%M"
+                )
+
+                # Só adiciona horários que fazem
+                # parte da agenda normal.
+                if time_string in slots_for(
+                    selected_date
+                ):
+
+                    times_to_block.append(
+                        time_string
+                    )
+
+                current += timedelta(
+                    minutes=30
+                )
+
+        # --------------------------------------------------
+        # BLOQUEIO DO DIA INTEIRO
+        # --------------------------------------------------
+
+        elif block_type == "day":
+
+            times_to_block = slots_for(
+                selected_date
+            )
+
+        else:
+
+            flash(
+                "Tipo de bloqueio inválido.",
+                "error"
+            )
+
+            return redirect(
+                url_for("admin")
+            )
+
+        # --------------------------------------------------
+        # VERIFICA SE EXISTE ALGUM AGENDAMENTO
+        # --------------------------------------------------
+
+        cur = con.cursor(
+            cursor_factory=RealDictCursor
+        )
+
+        cur.execute("""
+            SELECT *
+            FROM appointments
+            WHERE date = %s
+            AND status = 'active'
+        """, (
+            blocked_date,
+        ))
+
+        appointments = cur.fetchall()
+
+        cur.close()
+
+        # --------------------------------------------------
+        # NÃO PERMITE BLOQUEAR HORÁRIO JÁ AGENDADO
+        # --------------------------------------------------
+
+        for slot in times_to_block:
+
+            slot_start = datetime.strptime(
+                f"{blocked_date} {slot}",
+                "%Y-%m-%d %H:%M"
+            )
+
+            slot_end = slot_start + timedelta(
+                minutes=30
+            )
+
+            for appt in appointments:
+
+                appt_start = datetime.strptime(
+                    f"{appt['date']} {appt['time']}",
+                    "%Y-%m-%d %H:%M"
+                )
+
+                appt_end = appt_start + timedelta(
+                    minutes=service_duration(
+                        appt["service"]
+                    )
+                )
+
+                if (
+                    slot_start < appt_end
+                    and slot_end > appt_start
+                ):
+
+                    flash(
+                        f"O horário {slot} já possui um agendamento.",
+                        "error"
+                    )
+
+                    return redirect(
+                        url_for("admin")
+                    )
 
         # ==================================================
-        # INSERE BLOQUEIOS
+        # INSERE OS BLOQUEIOS
         # ==================================================
 
-        bloqueados = 0
+        cur = con.cursor()
 
+        for slot in times_to_block:
 
-        for slot in slots_to_block:
+            try:
 
-            existing = con.execute(
-                """
-                SELECT
-                    id
-
-                FROM blocked_slots
-
-                WHERE blocked_date = %s
-
-                AND blocked_time = %s
-
-                LIMIT 1
-                """,
-                (
-                    blocked_date,
-                    slot
-                )
-            ).fetchone()
-
-
-            if existing:
-
-                continue
-
-
-            con.execute(
-                """
-                INSERT INTO blocked_slots
-                (
-                    blocked_date,
-                    blocked_time,
-                    reason,
-                    created_at
-                )
-
-                VALUES (
-                    %s,
-                    %s,
-                    %s,
-                    %s
-                )
-                """,
-                (
+                cur.execute("""
+                    INSERT INTO blocked_slots (
+                        blocked_date,
+                        blocked_time,
+                        reason,
+                        created_at
+                    )
+                    VALUES (
+                        %s,
+                        %s,
+                        %s,
+                        %s
+                    )
+                    ON CONFLICT (
+                        blocked_date,
+                        blocked_time
+                    )
+                    DO NOTHING
+                """, (
                     blocked_date,
                     slot,
                     reason,
-                    datetime.now().isoformat(
-                        timespec="seconds"
-                    )
+                    datetime.now().isoformat()
+                ))
+
+            except Exception as e:
+
+                print(
+                    "ERRO AO INSERIR BLOQUEIO:",
+                    e
                 )
-            )
-
-
-            bloqueados += 1
-
 
         con.commit()
 
+        cur.close()
 
-        # ==================================================
-        # MENSAGEM
-        # ==================================================
+        if not times_to_block:
 
-        if blocked_type == "specific":
+            flash(
+                "Nenhum horário válido foi encontrado para bloquear.",
+                "error"
+            )
 
-            if bloqueados:
+        else:
 
-                flash(
-                    f"Horário {slots_to_block[0]} "
-                    f"bloqueado com sucesso.",
-                    "success"
-                )
-
-            else:
-
-                flash(
-                    "Esse horário já estava bloqueado.",
-                    "error"
-                )
-
-
-        elif blocked_type == "period":
-
-            if bloqueados:
-
-                flash(
-                    f"Período bloqueado com sucesso: "
-                    f"{start_time} às {end_time}.",
-                    "success"
-                )
-
-            else:
-
-                flash(
-                    "Todos os horários desse período "
-                    "já estavam bloqueados.",
-                    "error"
-                )
-
-
-        elif blocked_type == "day":
-
-            if bloqueados:
-
-                flash(
-                    "Dia inteiro bloqueado com sucesso.",
-                    "success"
-                )
-
-            else:
-
-                flash(
-                    "Todos os horários desse dia "
-                    "já estavam bloqueados.",
-                    "error"
-                )
-
-
-    except IntegrityError:
-
-        con.rollback()
-
-        flash(
-            "Não foi possível concluir o bloqueio.",
-            "error"
-        )
-
+            flash(
+                "Horário bloqueado com sucesso.",
+                "success"
+            )
 
     except Exception as e:
 
         con.rollback()
 
         print(
-            f"Erro ao bloquear horário: {e}"
+            "ERRO AO BLOQUEAR:",
+            e
         )
 
         flash(
@@ -2513,11 +1672,9 @@ def bloquear_horario():
             "error"
         )
 
-
     finally:
 
         con.close()
-
 
     return redirect(
         url_for("admin")
@@ -2525,375 +1682,7 @@ def bloquear_horario():
 
 
 # ==========================================================
-# DESBLOQUEAR HORÁRIO / PERÍODO
-# ==========================================================
-
-@app.route(
-    "/admin/desbloquear-horario/<int:block_id>",
-    methods=["POST"]
-)
-@proteger_admin
-def desbloquear_horario(
-    block_id
-):
-
-    con = db()
-
-
-    try:
-
-        # ==================================================
-        # LOCALIZA O BLOQUEIO CLICADO
-        # ==================================================
-
-        block = con.execute(
-            """
-            SELECT
-                id,
-                blocked_date,
-                blocked_time,
-                reason
-
-            FROM blocked_slots
-
-            WHERE id = %s
-            """,
-            (block_id,)
-        ).fetchone()
-
-
-        if not block:
-
-            flash(
-                "Horário bloqueado não encontrado.",
-                "error"
-            )
-
-            return redirect(
-                url_for("admin")
-            )
-
-
-        blocked_date = block["blocked_date"]
-
-        blocked_time = block["blocked_time"]
-
-        reason = block["reason"] or ""
-
-
-        # ==================================================
-        # BUSCA TODOS OS HORÁRIOS NORMAIS DO DIA
-        # ==================================================
-
-        normal_slots = slots_for(
-            blocked_date
-        )
-
-
-        # ==================================================
-        # BUSCA TODOS OS BLOQUEIOS DO DIA
-        # ==================================================
-
-        all_day_blocks = con.execute(
-            """
-            SELECT
-                id,
-                blocked_time,
-                reason
-
-            FROM blocked_slots
-
-            WHERE blocked_date = %s
-
-            ORDER BY blocked_time
-            """,
-            (blocked_date,)
-        ).fetchall()
-
-
-        # ==================================================
-        # VERIFICA SE O DIA ESTÁ COMPLETAMENTE BLOQUEADO
-        # ==================================================
-
-        blocked_times = {
-
-            item["blocked_time"]
-
-            for item in all_day_blocks
-
-        }
-
-
-        day_is_full = (
-
-            len(normal_slots) > 0
-
-            and
-
-            all(
-                slot in blocked_times
-                for slot in normal_slots
-            )
-
-        )
-
-
-        # ==================================================
-        # SE FOR DIA INTEIRO
-        # ==================================================
-
-        if day_is_full:
-
-            ids_to_delete = [
-
-                item["id"]
-
-                for item in all_day_blocks
-
-            ]
-
-
-            con.execute(
-                """
-                DELETE FROM blocked_slots
-
-                WHERE id = ANY(%s)
-                """,
-                (
-                    ids_to_delete,
-                )
-            )
-
-
-            con.commit()
-
-
-            flash(
-                "Dia inteiro desbloqueado com sucesso.",
-                "success"
-            )
-
-
-            return redirect(
-                url_for("admin")
-            )
-
-
-        # ==================================================
-        # NÃO É DIA INTEIRO
-        # ==================================================
-        #
-        # Neste caso continua funcionando como antes:
-        # remove somente o período contínuo clicado.
-        # ==================================================
-
-        blocks = con.execute(
-            """
-            SELECT
-                id,
-                blocked_time
-
-            FROM blocked_slots
-
-            WHERE blocked_date = %s
-
-            AND COALESCE(reason, '') = %s
-
-            ORDER BY blocked_time
-            """,
-            (
-                blocked_date,
-                reason
-            )
-        ).fetchall()
-
-
-        # ==================================================
-        # LOCALIZA O BLOQUEIO CLICADO
-        # ==================================================
-
-        target_index = None
-
-
-        for index, item in enumerate(blocks):
-
-            if item["id"] == block_id:
-
-                target_index = index
-
-                break
-
-
-        if target_index is None:
-
-            flash(
-                "Período bloqueado não encontrado.",
-                "error"
-            )
-
-            return redirect(
-                url_for("admin")
-            )
-
-
-        # ==================================================
-        # IDS QUE SERÃO APAGADOS
-        # ==================================================
-
-        ids_to_delete = [
-            block_id
-        ]
-
-
-        # ==================================================
-        # CAMINHA PARA TRÁS
-        # ==================================================
-
-        previous_time = datetime.strptime(
-            blocked_time,
-            "%H:%M"
-        )
-
-
-        index = target_index - 1
-
-
-        while index >= 0:
-
-            current_time = datetime.strptime(
-                blocks[index]["blocked_time"],
-                "%H:%M"
-            )
-
-
-            difference = (
-                previous_time - current_time
-            ).total_seconds() / 60
-
-
-            if difference != 30:
-
-                break
-
-
-            ids_to_delete.insert(
-                0,
-                blocks[index]["id"]
-            )
-
-
-            previous_time = current_time
-
-            index -= 1
-
-
-        # ==================================================
-        # CAMINHA PARA FRENTE
-        # ==================================================
-
-        next_time = datetime.strptime(
-            blocked_time,
-            "%H:%M"
-        )
-
-
-        index = target_index + 1
-
-
-        while index < len(blocks):
-
-            current_time = datetime.strptime(
-                blocks[index]["blocked_time"],
-                "%H:%M"
-            )
-
-
-            difference = (
-                current_time - next_time
-            ).total_seconds() / 60
-
-
-            if difference != 30:
-
-                break
-
-
-            ids_to_delete.append(
-                blocks[index]["id"]
-            )
-
-
-            next_time = current_time
-
-            index += 1
-
-
-        # ==================================================
-        # APAGA O PERÍODO
-        # ==================================================
-
-        con.execute(
-            """
-            DELETE FROM blocked_slots
-
-            WHERE id = ANY(%s)
-            """,
-            (
-                ids_to_delete,
-            )
-        )
-
-
-        con.commit()
-
-
-        # ==================================================
-        # MENSAGEM
-        # ==================================================
-
-        if len(ids_to_delete) == 1:
-
-            flash(
-                f"Horário {blocked_time} "
-                "desbloqueado com sucesso.",
-                "success"
-            )
-
-        else:
-
-            flash(
-                "Período desbloqueado com sucesso.",
-                "success"
-            )
-
-
-    except Exception as e:
-
-        con.rollback()
-
-        print(
-            f"Erro ao desbloquear horário: {e}"
-        )
-
-        flash(
-            "Não foi possível desbloquear o horário.",
-            "error"
-        )
-
-
-    finally:
-
-        con.close()
-
-
-    return redirect(
-        url_for("admin")
-    )
-    )
-
-
-# ==========================================================
-# API DO CALENDÁRIO DE BLOQUEIO
+# HORÁRIOS DE BLOQUEIO DO ADMIN
 # ==========================================================
 
 @app.route(
@@ -2902,225 +1691,474 @@ def desbloquear_horario(
 @proteger_admin
 def horarios_bloqueio():
 
-    day = request.args.get(
+    date_str = request.args.get(
         "date",
         ""
     ).strip()
 
+    if not date_str:
 
-    # ======================================================
-    # VALIDA DATA
-    # ======================================================
+        return jsonify({
+            "slots": []
+        })
 
     try:
 
-        datetime.strptime(
-            day,
+        selected_date = datetime.strptime(
+            date_str,
             "%Y-%m-%d"
-        )
-
+        ).date()
 
     except ValueError:
 
         return jsonify({
+            "slots": []
+        })
 
-            "success": False,
+    slots = slots_for(
+        selected_date
+    )
 
-            "message": "Data inválida.",
+    con = get_db()
 
-            "slots": [],
-
-            "blocked": [],
-
-            "appointments": []
-
-        }), 400
-
-
-    con = db()
-
+    cur = con.cursor(
+        cursor_factory=RealDictCursor
+    )
 
     try:
 
-        # ==================================================
+        # --------------------------------------------------
         # BLOQUEIOS
-        # ==================================================
+        # --------------------------------------------------
 
-        blocked = con.execute(
-            """
-            SELECT
-                id,
-                blocked_time,
-                reason
-
+        cur.execute("""
+            SELECT blocked_time
             FROM blocked_slots
-
             WHERE blocked_date = %s
+        """, (
+            date_str,
+        ))
 
-            ORDER BY blocked_time
-            """,
-            (day,)
-        ).fetchall()
+        blocked_rows = cur.fetchall()
 
-
-        # ==================================================
+        # --------------------------------------------------
         # AGENDAMENTOS
+        # --------------------------------------------------
+
+        cur.execute("""
+            SELECT *
+            FROM appointments
+            WHERE date = %s
+            AND status = 'active'
+        """, (
+            date_str,
+        ))
+
+        appointments = cur.fetchall()
+
+    finally:
+
+        cur.close()
+        con.close()
+
+    blocked_times = {
+        row["blocked_time"]
+        for row in blocked_rows
+    }
+
+    slots_result = []
+
+    # ======================================================
+    # MONTA RESPOSTA
+    # ======================================================
+
+    for slot in slots:
+
+        slot_start = datetime.strptime(
+            f"{date_str} {slot}",
+            "%Y-%m-%d %H:%M"
+        )
+
+        slot_end = slot_start + timedelta(
+            minutes=30
+        )
+
+        appointment_conflict_found = False
+
+        # --------------------------------------------------
+        # VERIFICA SE O SLOT ESTÁ DENTRO DE ALGUM AGENDAMENTO
+        # --------------------------------------------------
+
+        for appt in appointments:
+
+            appt_start = datetime.strptime(
+                f"{appt['date']} {appt['time']}",
+                "%Y-%m-%d %H:%M"
+            )
+
+            appt_end = appt_start + timedelta(
+                minutes=service_duration(
+                    appt["service"]
+                )
+            )
+
+            if (
+                slot_start < appt_end
+                and slot_end > appt_start
+            ):
+
+                appointment_conflict_found = True
+                break
+
+        slots_result.append({
+            "time": slot,
+            "blocked": (
+                slot in blocked_times
+            ),
+            "appointment": (
+                appointment_conflict_found
+            )
+        })
+
+    return jsonify({
+        "slots": slots_result
+    })
+
+
+# ==========================================================
+# DESBLOQUEAR HORÁRIO / PERÍODO
+# ==========================================================
+
+@app.route(
+    "/admin/desbloquear/<int:block_id>",
+    methods=["POST"]
+)
+@proteger_admin
+def desbloquear_horario(
+    block_id
+):
+
+    con = get_db()
+
+    try:
+
+        cur = con.cursor(
+            cursor_factory=RealDictCursor
+        )
+
+        # --------------------------------------------------
+        # LOCALIZA O BLOQUEIO CLICADO
+        # --------------------------------------------------
+
+        cur.execute("""
+            SELECT *
+            FROM blocked_slots
+            WHERE id = %s
+        """, (
+            block_id,
+        ))
+
+        clicked = cur.fetchone()
+
+        if not clicked:
+
+            cur.close()
+
+            flash(
+                "Bloqueio não encontrado.",
+                "error"
+            )
+
+            return redirect(
+                url_for("admin")
+            )
+
+        blocked_date = clicked[
+            "blocked_date"
+        ]
+
+        clicked_time = clicked[
+            "blocked_time"
+        ]
+
+        clicked_reason = (
+            clicked.get("reason")
+            or ""
+        )
+
+        # --------------------------------------------------
+        # PEGA TODOS OS BLOQUEIOS DO MESMO DIA
+        # --------------------------------------------------
+
+        cur.execute("""
+            SELECT *
+            FROM blocked_slots
+            WHERE blocked_date = %s
+            ORDER BY blocked_time
+        """, (
+            blocked_date,
+        ))
+
+        blocks = cur.fetchall()
+
+        cur.close()
+
+        # ==================================================
+        # VERIFICA SE O DIA INTEIRO ESTÁ BLOQUEADO
         # ==================================================
 
-        appointments = con.execute(
-            """
-            SELECT
-                id,
-                appointment_time,
-                name,
-                service,
-                status
+        try:
 
-            FROM appointments
+            day_obj = datetime.strptime(
+                blocked_date,
+                "%Y-%m-%d"
+            ).date()
 
-            WHERE appointment_date = %s
+        except ValueError:
 
-            AND status <> 'Cancelado'
+            day_obj = None
 
-            ORDER BY appointment_time
-            """,
-            (day,)
-        ).fetchall()
+        if day_obj:
 
+            normal_slots = slots_for(
+                day_obj
+            )
+
+            blocked_times = {
+                block["blocked_time"]
+                for block in blocks
+            }
+
+            is_full_day = (
+                len(normal_slots) > 0
+                and all(
+                    slot in blocked_times
+                    for slot in normal_slots
+                )
+            )
+
+        else:
+
+            is_full_day = False
+
+        # ==================================================
+        # DIA INTEIRO
+        # ==================================================
+
+        if is_full_day:
+
+            cur = con.cursor()
+
+            cur.execute("""
+                DELETE FROM blocked_slots
+                WHERE blocked_date = %s
+            """, (
+                blocked_date,
+            ))
+
+            con.commit()
+
+            cur.close()
+
+            flash(
+                "O dia inteiro foi desbloqueado.",
+                "success"
+            )
+
+            return redirect(
+                url_for("admin")
+            )
+
+        # ==================================================
+        # ENCONTRA O PERÍODO CONTÍGUO
+        # ==================================================
+
+        same_reason_blocks = [
+            block
+            for block in blocks
+            if (
+                (block.get("reason") or "")
+                == clicked_reason
+            )
+        ]
+
+        same_reason_blocks.sort(
+            key=lambda x: x["blocked_time"]
+        )
+
+        clicked_index = None
+
+        for index, block in enumerate(
+            same_reason_blocks
+        ):
+
+            if block["id"] == block_id:
+
+                clicked_index = index
+                break
+
+        if clicked_index is None:
+
+            flash(
+                "Bloqueio não encontrado.",
+                "error"
+            )
+
+            return redirect(
+                url_for("admin")
+            )
+
+        # --------------------------------------------------
+        # EXPANDE PARA TRÁS
+        # --------------------------------------------------
+
+        start_index = clicked_index
+
+        while start_index > 0:
+
+            current_time = datetime.strptime(
+                same_reason_blocks[
+                    start_index
+                ]["blocked_time"],
+                "%H:%M"
+            )
+
+            previous_time = datetime.strptime(
+                same_reason_blocks[
+                    start_index - 1
+                ]["blocked_time"],
+                "%H:%M"
+            )
+
+            difference = (
+                current_time
+                - previous_time
+            )
+
+            if difference == timedelta(
+                minutes=30
+            ):
+
+                start_index -= 1
+
+            else:
+
+                break
+
+        # --------------------------------------------------
+        # EXPANDE PARA FRENTE
+        # --------------------------------------------------
+
+        end_index = clicked_index
+
+        while (
+            end_index
+            < len(same_reason_blocks) - 1
+        ):
+
+            current_time = datetime.strptime(
+                same_reason_blocks[
+                    end_index
+                ]["blocked_time"],
+                "%H:%M"
+            )
+
+            next_time = datetime.strptime(
+                same_reason_blocks[
+                    end_index + 1
+                ]["blocked_time"],
+                "%H:%M"
+            )
+
+            difference = (
+                next_time
+                - current_time
+            )
+
+            if difference == timedelta(
+                minutes=30
+            ):
+
+                end_index += 1
+
+            else:
+
+                break
+
+        # ==================================================
+        # PEGA OS IDs DO PERÍODO
+        # ==================================================
+
+        period_blocks = (
+            same_reason_blocks[
+                start_index:end_index + 1
+            ]
+        )
+
+        ids_to_delete = [
+            block["id"]
+            for block in period_blocks
+        ]
+
+        # ==================================================
+        # EXCLUI TODO O PERÍODO
+        # ==================================================
+
+        cur = con.cursor()
+
+        cur.execute("""
+            DELETE FROM blocked_slots
+            WHERE id = ANY(%s)
+        """, (
+            ids_to_delete,
+        ))
+
+        con.commit()
+
+        cur.close()
+
+        flash(
+            "Período desbloqueado com sucesso.",
+            "success"
+        )
+
+    except Exception as e:
+
+        con.rollback()
+
+        print(
+            "ERRO AO DESBLOQUEAR:",
+            e
+        )
+
+        flash(
+            "Não foi possível desbloquear o período.",
+            "error"
+        )
 
     finally:
 
         con.close()
 
-
-    # ======================================================
-    # HORÁRIOS NORMAIS
-    # ======================================================
-
-    normal_slots = slots_for(
-        day
+    return redirect(
+        url_for("admin")
     )
 
 
-    # ======================================================
-    # CONJUNTOS PARA CONSULTA RÁPIDA
-    # ======================================================
-
-    blocked_times = {
-
-        item["blocked_time"]
-
-        for item in blocked
-
-    }
-
-
-    appointment_times = {
-
-        item["appointment_time"]
-
-        for item in appointments
-
-    }
-
-
-    # ======================================================
-    # FORMATA HORÁRIOS PARA O JAVASCRIPT
-    # ======================================================
-
-    slots_result = []
-
-
-    for slot in normal_slots:
-
-        slots_result.append({
-
-            "time": slot,
-
-            "blocked": (
-                slot in blocked_times
-            ),
-
-            "appointment": (
-                slot in appointment_times
-            )
-
-        })
-
-
-    # ======================================================
-    # FORMATA BLOQUEIOS
-    # ======================================================
-
-    blocked_result = [
-
-        {
-            "id": item["id"],
-
-            "time": item["blocked_time"],
-
-            "reason": item["reason"] or ""
-
-        }
-
-        for item in blocked
-
-    ]
-
-
-    # ======================================================
-    # FORMATA AGENDAMENTOS
-    # ======================================================
-
-    appointments_result = [
-
-        {
-            "id": item["id"],
-
-            "time": item["appointment_time"],
-
-            "name": item["name"],
-
-            "service": item["service"],
-
-            "status": item["status"]
-
-        }
-
-        for item in appointments
-
-    ]
-
-
-    return jsonify({
-
-        "success": True,
-
-        "slots": slots_result,
-
-        "blocked": blocked_result,
-
-        "appointments": appointments_result
-
-    })
-
-
 # ==========================================================
-# INICIALIZAÇÃO
+# INICIALIZA BANCO
 # ==========================================================
 
-with app.app_context():
+try:
 
-    try:
+    init_db()
 
-        init_db()
+except Exception as e:
 
-    except Exception as e:
-
-        print(
-            "Falha ao rodar init_db "
-            f"na inicialização: {e}"
-        )
+    print(
+        "ERRO AO INICIALIZAR BANCO:",
+        e
+    )
 
 
 # ==========================================================
@@ -3130,12 +2168,5 @@ with app.app_context():
 if __name__ == "__main__":
 
     app.run(
-        host="0.0.0.0",
-
-        port=int(
-            os.environ.get(
-                "PORT",
-                5000
-            )
-        )
+        debug=True
     )
