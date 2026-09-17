@@ -1137,34 +1137,47 @@
 
         {% if blocked_slots %}
 
-            {% for block in blocked_slots %}
+            ```html
+{% for block in blocked_slots %}
 
-                <div class="blocked-item">
+    <div class="blocked-item">
 
-                    <div class="blocked-info">
+        <div class="blocked-info">
 
-                        <span class="blocked-date">
+            <span class="blocked-date">
 
-                            {{ block.blocked_date }}
+                {{ block.date }}
 
-                            —
+                —
 
-                            {{ block.blocked_time }}
+                {% if block.start == "07:30" and block.end == "20:30" %}
 
-                        </span>
+                    Dia inteiro
+
+                {% else %}
+
+                    {{ block.start }} às {{ block.end }}
+
+                {% endif %}
+
+            </span>
 
 
-                        <span class="blocked-reason">
+            <span class="blocked-reason">
 
-                            {% if block.reason %}
+                {% if block.reason %}
 
-                                {{ block.reason }}
+                    {{ block.reason }}
 
-                            {% else %}
+                {% else %}
 
-                                Horário bloqueado
+                    Horário bloqueado
 
-                            {% endif %}
+                {% endif %}
+
+            </span>
+```
+
 
                         </span>
 
