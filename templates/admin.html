@@ -1137,30 +1137,37 @@
 
         {% if blocked_slots %}
 
-            ```html
+            
 {% for block in blocked_slots %}
 
-    <div class="blocked-item">
+<div class="blocked-item">
 
-        <div class="blocked-info">
+```
+<div class="blocked-info">
 
-            <span class="blocked-date">
+    <span class="blocked-date">
 
-                {{ block.date }}
+        {{ block.date }}
 
-                —
+        —
 
-                {% if block.start == "07:30" and block.end == "20:30" %}
+        {{ block.start }} às {{ block.end }}
 
-                    Dia inteiro
+    </span>
 
-                {% else %}
+    <span class="blocked-reason">
 
-                    {{ block.start }} às {{ block.end }}
+        {% if block.reason %}
 
-                {% endif %}
+            {{ block.reason }}
 
-            </span>
+        {% else %}
+
+            Horário bloqueado
+
+        {% endif %}
+
+    </span>
 
 
             <span class="blocked-reason">
@@ -1176,8 +1183,7 @@
                 {% endif %}
 
             </span>
-```
-
+    
 
                         </span>
 
