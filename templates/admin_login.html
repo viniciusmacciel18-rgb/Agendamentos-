@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>Login Administrativo</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #f8f1f2,
+                    #ead9dc
+                );
+
+            color: #4a3539;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+
+            padding: 20px;
+        }
+
+        .login-box {
+            background: #ffffff;
+
+            padding: 38px 32px;
+
+            border-radius: 18px;
+
+            box-shadow:
+                0 15px 40px
+                rgba(70, 40, 45, 0.15);
+
+            text-align: center;
+        }
+
+        .login-box h1 {
+            margin: 0 0 8px;
+
+            font-size: 28px;
+
+            color: #704b53;
+        }
+
+        .login-box p {
+            margin: 0 0 28px;
+
+            color: #8a7075;
+
+            font-size: 14px;
+        }
+
+        .field {
+            text-align: left;
+
+            margin-bottom: 18px;
+        }
+
+        .field label {
+            display: block;
+
+            margin-bottom: 7px;
+
+            font-size: 14px;
+
+            font-weight: 600;
+
+            color: #60454a;
+        }
+
+        .field input {
+            width: 100%;
+
+            padding: 13px 14px;
+
+            border: 1px solid #dcc9cd;
+
+            border-radius: 10px;
+
+            outline: none;
+
+            font-size: 15px;
+
+            background: #fff;
+        }
+
+        .field input:focus {
+            border-color: #9b7078;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(155, 112, 120, 0.12);
+        }
+
+        .login-button {
+            width: 100%;
+
+            margin-top: 8px;
+
+            padding: 14px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background: #8f5f67;
+
+            color: white;
+
+            font-size: 15px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+        }
+
+        .login-button:hover {
+            opacity: 0.92;
+        }
+
+        .error-message {
+            margin-bottom: 18px;
+
+            padding: 12px;
+
+            border-radius: 10px;
+
+            background: #fbeaea;
+
+            color: #9b3333;
+
+            font-size: 14px;
+        }
+
+        .back-link {
+            display: inline-block;
+
+            margin-top: 22px;
+
+            color: #8f5f67;
+
+            text-decoration: none;
+
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="login-container">
+
+        <div class="login-box">
+
+            <h1>Área administrativa</h1>
+
+            <p>
+                Entre com seu usuário e senha
+            </p>
+
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+
+                {% if messages %}
+
+                    {% for category, message in messages %}
+
+                        <div class="error-message">
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                {% endif %}
+
+            {% endwith %}
+
+
+            <form
+                method="POST"
+                action="{{ url_for('admin_login') }}"
+            >
+
+                <div class="field">
+
+                    <label for="username">
+                        Usuário
+                    </label>
+
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        autocomplete="username"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label for="password">
+                        Senha
+                    </label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="login-button"
+                >
+                    Entrar
+                </button>
+
+            </form>
+
+
+            <a
+                href="{{ url_for('index') }}"
+                class="back-link"
+            >
+                ← Voltar para o agendamento
+            </a>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
