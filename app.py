@@ -37,9 +37,13 @@ app.secret_key = os.environ.get(
 
 ADMIN_USERNAME = "Rayssa"
 
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
+ADMIN_PASSWORD = os.environ.get(
+    "ADMIN_PASSWORD"
+)
 
-DATABASE_URL = os.environ.get("DATABASE_URL")
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL"
+)
 
 
 # ==========================================================
@@ -66,20 +70,30 @@ class Database:
     def __init__(self):
 
         if not DATABASE_URL:
+
             raise RuntimeError(
                 "DATABASE_URL não configurada no ambiente."
             )
 
-        self.con = psycopg2.connect(DATABASE_URL)
+        self.con = psycopg2.connect(
+            DATABASE_URL
+        )
 
 
-    def execute(self, sql, params=None):
+    def execute(
+        self,
+        sql,
+        params=None
+    ):
 
         cursor = self.con.cursor(
             cursor_factory=RealDictCursor
         )
 
-        cursor.execute(sql, params)
+        cursor.execute(
+            sql,
+            params
+        )
 
         return cursor
 
@@ -122,6 +136,7 @@ def init_db():
 
     con = db()
 
+
     try:
 
         # --------------------------------------------------
@@ -162,6 +177,7 @@ def init_db():
         con.execute(
             """
             ALTER TABLE appointments
+
             ADD COLUMN IF NOT EXISTS
             status TEXT NOT NULL
             DEFAULT 'Confirmado'
@@ -176,6 +192,7 @@ def init_db():
         con.execute(
             """
             ALTER TABLE appointments
+
             DROP CONSTRAINT IF EXISTS
             appointments_appointment_date_appointment_time_key
             """
@@ -225,8 +242,7 @@ def init_db():
 
 
         # --------------------------------------------------
-        # IMPEDE MESMO HORÁRIO DE SER
-        # BLOQUEADO DUAS VEZES
+        # IMPEDE BLOQUEIO DUPLICADO
         # --------------------------------------------------
 
         con.execute(
@@ -268,6 +284,7 @@ def service_duration(service):
     for name, minutes, price in SERVICES:
 
         if name == service:
+
             return minutes
 
     return 30
@@ -320,6 +337,7 @@ def appointment_conflict(
             ignore_id is not None
             and appointment["id"] == ignore_id
         ):
+
             continue
 
 
@@ -365,7 +383,8 @@ def blocked_slot_conflict(
 
     blocked = con.execute(
         """
-        SELECT blocked_time
+        SELECT
+            blocked_time
 
         FROM blocked_slots
 
@@ -396,7 +415,6 @@ def blocked_slot_conflict(
         )
 
 
-        # Cada bloqueio representa 30 minutos
         blocked_end = (
             blocked_start +
             timedelta(minutes=30)
@@ -418,7 +436,10 @@ def blocked_slot_conflict(
 # GERA HORÁRIOS DISPONÍVEIS
 # ==========================================================
 
-def slots_for(day, service=None):
+def slots_for(
+    day,
+    service=None
+):
 
     d = datetime.strptime(
         day,
@@ -426,8 +447,12 @@ def slots_for(day, service=None):
     ).date()
 
 
-    # Domingo fechado
+    # ------------------------------------------------------
+    # DOMINGO FECHADO
+    # ------------------------------------------------------
+
     if d.weekday() == 6:
+
         return []
 
 
@@ -441,13 +466,16 @@ def slots_for(day, service=None):
     slots = []
 
 
-    # ------------------------------------------------------
+    # ======================================================
     # SEGUNDA A SEXTA
-    # ------------------------------------------------------
+    # ======================================================
 
     if d.weekday() <= 4:
 
-        # Quarta-feira
+        # --------------------------------------------------
+        # QUARTA-FEIRA
+        # --------------------------------------------------
+
         if d.weekday() == 2:
 
             periods = [
@@ -456,7 +484,10 @@ def slots_for(day, service=None):
             ]
 
 
-        # Segunda, Terça, Quinta e Sexta
+        # --------------------------------------------------
+        # SEGUNDA, TERÇA, QUINTA E SEXTA
+        # --------------------------------------------------
+
         else:
 
             periods = [
@@ -465,9 +496,9 @@ def slots_for(day, service=None):
             ]
 
 
-    # ------------------------------------------------------
+    # ======================================================
     # SÁBADO
-    # ------------------------------------------------------
+    # ======================================================
 
     else:
 
@@ -476,9 +507,9 @@ def slots_for(day, service=None):
         ]
 
 
-    # ------------------------------------------------------
-    # CRIA OS HORÁRIOS DE 30 EM 30 MINUTOS
-    # ------------------------------------------------------
+    # ======================================================
+    # CRIA HORÁRIOS DE 30 EM 30 MINUTOS
+    # ======================================================
 
     for (
         start_hour,
@@ -486,7 +517,6 @@ def slots_for(day, service=None):
         end_hour,
         end_minute
     ) in periods:
-
 
         period_start = (
             datetime.combine(
@@ -536,7 +566,9 @@ def slots_for(day, service=None):
                 )
 
 
-            current += timedelta(minutes=30)
+            current += timedelta(
+                minutes=30
+            )
 
 
     # ======================================================
@@ -689,20 +721,22 @@ def horarios():
 
 
     blocked_times = {
+
         item["blocked_time"]
+
         for item in blocked
+
     }
 
 
-    # ------------------------------------------------------
+    # ======================================================
     # ANALISA CADA HORÁRIO
-    # ------------------------------------------------------
+    # ======================================================
 
     for slot in slots_for(
         day,
         service
     ):
-
 
         slot_start = datetime.strptime(
             f"{day} {slot}",
@@ -756,6 +790,7 @@ def horarios():
 
 
         if conflict:
+
             continue
 
 
@@ -796,10 +831,6 @@ def horarios():
         "slots": available
     }
 
-
-# ==========================================================
-# AGENDAR
-# ==========================================================
 
 # ==========================================================
 # AGENDAR
@@ -853,9 +884,9 @@ def agendar():
     }
 
 
-    # ------------------------------------------------------
+    # ======================================================
     # CAMPOS OBRIGATÓRIOS
-    # ------------------------------------------------------
+    # ======================================================
 
     if (
         not all([
@@ -878,9 +909,9 @@ def agendar():
         )
 
 
-    # ------------------------------------------------------
+    # ======================================================
     # VALIDA DATA
-    # ------------------------------------------------------
+    # ======================================================
 
     try:
 
@@ -902,9 +933,9 @@ def agendar():
         )
 
 
-    # ------------------------------------------------------
+    # ======================================================
     # NÃO PERMITE DATA PASSADA
-    # ------------------------------------------------------
+    # ======================================================
 
     if chosen < date.today():
 
@@ -918,9 +949,9 @@ def agendar():
         )
 
 
-    # ------------------------------------------------------
-    # NÃO PERMITE AGENDAR HORÁRIO QUE JÁ PASSOU HOJE
-    # ------------------------------------------------------
+    # ======================================================
+    # NÃO PERMITE HORÁRIO PASSADO HOJE
+    # ======================================================
 
     if chosen == date.today():
 
@@ -946,7 +977,8 @@ def agendar():
         if chosen_datetime < datetime.now():
 
             flash(
-                "Esse horário já passou. Escolha outro horário.",
+                "Esse horário já passou. "
+                "Escolha outro horário.",
                 "error"
             )
 
@@ -955,9 +987,9 @@ def agendar():
             )
 
 
-    # ------------------------------------------------------
+    # ======================================================
     # VALIDA HORÁRIO
-    # ------------------------------------------------------
+    # ======================================================
 
     if time not in slots_for(
         day,
@@ -1109,9 +1141,9 @@ def agendar():
         con.close()
 
 
-    # ------------------------------------------------------
+    # ======================================================
     # CONFIRMAÇÃO
-    # ------------------------------------------------------
+    # ======================================================
 
     return render_template(
         "confirmacao.html",
@@ -1121,7 +1153,8 @@ def agendar():
         day=day,
         time=time
     )
-    
+
+
 # ==========================================================
 # MEUS AGENDAMENTOS
 # ==========================================================
@@ -1242,7 +1275,10 @@ def api_meus_agendamentos():
 def proteger_admin(func):
 
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(
+        *args,
+        **kwargs
+    ):
 
         auth = request.authorization
 
@@ -1282,13 +1318,14 @@ def admin():
 
     con = db()
 
+
     try:
 
-        # --------------------------------------------------
+        # ==================================================
         # TODOS OS AGENDAMENTOS
-        # --------------------------------------------------
+        # ==================================================
 
-        appointments = con.execute(
+        appointments_raw = con.execute(
             """
             SELECT
                 id,
@@ -1310,9 +1347,32 @@ def admin():
         ).fetchall()
 
 
-        # --------------------------------------------------
-        # TODOS OS HORÁRIOS BLOQUEADOS
-        # --------------------------------------------------
+        # ==================================================
+        # CONVERTE OS CAMPOS PARA O ADMIN.HTML
+        # ==================================================
+
+        appointments = [
+
+            {
+                "id": item["id"],
+                "name": item["name"],
+                "phone": item["phone"],
+                "service": item["service"],
+                "date": item["appointment_date"],
+                "time": item["appointment_time"],
+                "notes": item["notes"],
+                "created_at": item["created_at"],
+                "status": item["status"]
+            }
+
+            for item in appointments_raw
+
+        ]
+
+
+        # ==================================================
+        # TODOS OS BLOQUEIOS
+        # ==================================================
 
         blocked_slots = con.execute(
             """
@@ -1338,7 +1398,7 @@ def admin():
 
 
     # ======================================================
-    # AGRUPA OS BLOQUEIOS EM PERÍODOS
+    # AGRUPA OS BLOQUEIOS
     # ======================================================
 
     grouped_blocks = []
@@ -1362,29 +1422,47 @@ def admin():
         if current_group is None:
 
             current_group = {
+
                 "id": block["id"],
+
                 "date": block_date,
+
                 "start": block_time,
+
                 "end": block_time,
+
                 "reason": block_reason,
+
                 "count": 1
+
             }
 
             continue
 
 
         # --------------------------------------------------
-        # VERIFICA SE É CONTÍNUO
+        # MESMA DATA
         # --------------------------------------------------
 
         same_date = (
-            current_group["date"] == block_date
+            current_group["date"]
+            == block_date
         )
+
+
+        # --------------------------------------------------
+        # MESMO MOTIVO
+        # --------------------------------------------------
 
         same_reason = (
-            current_group["reason"] == block_reason
+            current_group["reason"]
+            == block_reason
         )
 
+
+        # --------------------------------------------------
+        # VERIFICA CONTINUIDADE
+        # --------------------------------------------------
 
         try:
 
@@ -1393,10 +1471,12 @@ def admin():
                 "%H:%M"
             )
 
+
             new_time = datetime.strptime(
                 block_time,
                 "%H:%M"
             )
+
 
             difference = (
                 new_time - previous_time
@@ -1414,7 +1494,7 @@ def admin():
 
 
         # --------------------------------------------------
-        # CONTINUA NO MESMO PERÍODO
+        # CONTINUA NO MESMO GRUPO
         # --------------------------------------------------
 
         if (
@@ -1431,7 +1511,7 @@ def admin():
 
 
         # --------------------------------------------------
-        # TERMINOU O PERÍODO ANTERIOR
+        # FINALIZA GRUPO ANTERIOR
         # --------------------------------------------------
 
         grouped_blocks.append(
@@ -1440,7 +1520,7 @@ def admin():
 
 
         # --------------------------------------------------
-        # COMEÇA NOVO PERÍODO
+        # COMEÇA NOVO GRUPO
         # --------------------------------------------------
 
         current_group = {
@@ -1460,9 +1540,9 @@ def admin():
         }
 
 
-    # ------------------------------------------------------
-    # ADICIONA O ÚLTIMO GRUPO
-    # ------------------------------------------------------
+    # ======================================================
+    # ADICIONA ÚLTIMO GRUPO
+    # ======================================================
 
     if current_group is not None:
 
@@ -1472,41 +1552,126 @@ def admin():
 
 
     # ======================================================
-    # IDENTIFICA DIA INTEIRO
+    # HORÁRIO FINAL VISUAL
     # ======================================================
 
     for group in grouped_blocks:
 
         try:
 
-            normal_slots = slots_for(
-                group["date"]
+            end_datetime = datetime.strptime(
+                group["end"],
+                "%H:%M"
             )
 
 
-            if (
-                len(normal_slots) > 0
-                and group["count"] == len(normal_slots)
-            ):
-
-                group["day_full"] = True
-
-            else:
-
-                group["day_full"] = False
+            end_datetime += timedelta(
+                minutes=30
+            )
 
 
-        except Exception:
+            group["end_display"] = (
+                end_datetime.strftime("%H:%M")
+            )
 
-            group["day_full"] = False
 
+        except ValueError:
+
+            group["end_display"] = (
+                group["end"]
+            )
+
+
+    # ======================================================
+    # VERIFICA QUAIS DATAS ESTÃO COMPLETAMENTE BLOQUEADAS
+    # ======================================================
+
+    normal_slots_by_date = {}
+
+    blocked_count_by_date = {}
+
+
+    # ------------------------------------------------------
+    # QUANTIDADE DE HORÁRIOS NORMAIS
+    # ------------------------------------------------------
+
+    for group in grouped_blocks:
+
+        group_date = group["date"]
+
+
+        if group_date not in normal_slots_by_date:
+
+            try:
+
+                normal_slots_by_date[group_date] = len(
+                    slots_for(group_date)
+                )
+
+            except Exception:
+
+                normal_slots_by_date[group_date] = 0
+
+
+    # ------------------------------------------------------
+    # QUANTIDADE DE BLOQUEIOS POR DATA
+    # ------------------------------------------------------
+
+    for block in blocked_slots:
+
+        group_date = block["blocked_date"]
+
+
+        blocked_count_by_date[group_date] = (
+            blocked_count_by_date.get(
+                group_date,
+                0
+            ) + 1
+        )
+
+
+    # ------------------------------------------------------
+    # MARCA DIA INTEIRO
+    # ------------------------------------------------------
+
+    for group in grouped_blocks:
+
+        group["day_full"] = (
+
+            normal_slots_by_date.get(
+                group["date"],
+                0
+            ) > 0
+
+            and
+
+            blocked_count_by_date.get(
+                group["date"],
+                0
+            )
+            >=
+            normal_slots_by_date.get(
+                group["date"],
+                0
+            )
+
+        )
+
+
+    # ======================================================
+    # ENVIA PARA O ADMIN.HTML
+    # ======================================================
 
     return render_template(
         "admin.html",
+
         appointments=appointments,
+
         blocked_slots=grouped_blocks,
+
         now=date.today().isoformat()
     )
+
 
 # ==========================================================
 # CANCELAR AGENDAMENTO
@@ -1517,7 +1682,9 @@ def admin():
     methods=["POST"]
 )
 @proteger_admin
-def cancelar(appointment_id):
+def cancelar(
+    appointment_id
+):
 
     con = db()
 
@@ -1625,7 +1792,9 @@ def cancelar(appointment_id):
     methods=["POST"]
 )
 @proteger_admin
-def apagar_historico(appointment_id):
+def apagar_historico(
+    appointment_id
+):
 
     con = db()
 
@@ -1659,7 +1828,7 @@ def apagar_historico(appointment_id):
 
 
         # --------------------------------------------------
-        # SÓ PERMITE APAGAR CANCELADOS
+        # SOMENTE CANCELADOS
         # --------------------------------------------------
 
         if appointment["status"] != "Cancelado":
@@ -1740,25 +1909,30 @@ def bloquear_horario():
         ""
     ).strip()
 
+
     blocked_type = request.form.get(
         "blocked_type",
         "specific"
     ).strip()
+
 
     blocked_time = request.form.get(
         "blocked_time",
         ""
     ).strip()
 
+
     start_time = request.form.get(
         "start_time",
         ""
     ).strip()
 
+
     end_time = request.form.get(
         "end_time",
         ""
     ).strip()
+
 
     reason = request.form.get(
         "reason",
@@ -1766,9 +1940,9 @@ def bloquear_horario():
     ).strip()
 
 
-    # ------------------------------------------------------
+    # ======================================================
     # VALIDA DATA
-    # ------------------------------------------------------
+    # ======================================================
 
     try:
 
@@ -1776,6 +1950,7 @@ def bloquear_horario():
             blocked_date,
             "%Y-%m-%d"
         ).date()
+
 
     except ValueError:
 
@@ -1789,9 +1964,9 @@ def bloquear_horario():
         )
 
 
-    # ------------------------------------------------------
+    # ======================================================
     # NÃO PERMITE DATA PASSADA
-    # ------------------------------------------------------
+    # ======================================================
 
     if selected_date < date.today():
 
@@ -1805,13 +1980,16 @@ def bloquear_horario():
         )
 
 
-    # ------------------------------------------------------
-    # DEFINE OS HORÁRIOS QUE SERÃO BLOQUEADOS
-    # ------------------------------------------------------
+    # ======================================================
+    # HORÁRIOS NORMAIS
+    # ======================================================
 
     available_slots = slots_for(
         blocked_date
     )
+
+
+    slots_to_block = []
 
 
     # ======================================================
@@ -1831,6 +2009,7 @@ def bloquear_horario():
                 url_for("admin")
             )
 
+
         slots_to_block = [
             blocked_time
         ]
@@ -1845,7 +2024,8 @@ def bloquear_horario():
         if not start_time or not end_time:
 
             flash(
-                "Informe o horário inicial e final do período.",
+                "Informe o horário inicial "
+                "e final do período.",
                 "error"
             )
 
@@ -1861,10 +2041,12 @@ def bloquear_horario():
                 "%H:%M"
             )
 
+
             end = datetime.strptime(
                 end_time,
                 "%H:%M"
             )
+
 
         except ValueError:
 
@@ -1881,7 +2063,8 @@ def bloquear_horario():
         if end <= start:
 
             flash(
-                "O horário final deve ser maior que o horário inicial.",
+                "O horário final deve ser maior "
+                "que o horário inicial.",
                 "error"
             )
 
@@ -1891,10 +2074,8 @@ def bloquear_horario():
 
 
         # --------------------------------------------------
-        # GERA OS BLOCOS DE 30 MINUTOS
+        # GERA BLOCOS DE 30 MINUTOS
         # --------------------------------------------------
-
-        slots_to_block = []
 
         current = start
 
@@ -1921,7 +2102,8 @@ def bloquear_horario():
         if not slots_to_block:
 
             flash(
-                "Nenhum horário válido foi encontrado nesse período.",
+                "Nenhum horário válido foi encontrado "
+                "nesse período.",
                 "error"
             )
 
@@ -1944,7 +2126,8 @@ def bloquear_horario():
         if not slots_to_block:
 
             flash(
-                "Não existem horários disponíveis nessa data.",
+                "Não existem horários disponíveis "
+                "nessa data.",
                 "error"
             )
 
@@ -1969,19 +2152,23 @@ def bloquear_horario():
         )
 
 
+    # ======================================================
+    # BANCO
+    # ======================================================
+
     con = db()
 
 
     try:
 
-        # --------------------------------------------------
+        # ==================================================
         # VERIFICA TODOS OS HORÁRIOS ANTES DE BLOQUEAR
-        # --------------------------------------------------
+        # ==================================================
 
         for slot in slots_to_block:
 
             # ----------------------------------------------
-            # VERIFICA CONFLITO COM AGENDAMENTO
+            # AGENDAMENTO EXATO
             # ----------------------------------------------
 
             appointment = con.execute(
@@ -2011,8 +2198,9 @@ def bloquear_horario():
             if appointment:
 
                 flash(
-                    f"O horário {slot} já possui um agendamento "
-                    f"e não pode ser bloqueado.",
+                    f"O horário {slot} já possui "
+                    f"um agendamento e não pode "
+                    f"ser bloqueado.",
                     "error"
                 )
 
@@ -2022,7 +2210,7 @@ def bloquear_horario():
 
 
             # ----------------------------------------------
-            # VERIFICA CONFLITO COM SERVIÇOS MAIS LONGOS
+            # SERVIÇO MAIS LONGO
             # ----------------------------------------------
 
             if appointment_conflict(
@@ -2033,8 +2221,9 @@ def bloquear_horario():
             ):
 
                 flash(
-                    f"O horário {slot} está dentro do período "
-                    f"de um agendamento existente.",
+                    f"O horário {slot} está dentro "
+                    f"do período de um agendamento "
+                    f"existente.",
                     "error"
                 )
 
@@ -2043,22 +2232,19 @@ def bloquear_horario():
                 )
 
 
-        # --------------------------------------------------
-        # INSERE OS BLOQUEIOS
-        # --------------------------------------------------
+        # ==================================================
+        # INSERE BLOQUEIOS
+        # ==================================================
 
         bloqueados = 0
 
 
         for slot in slots_to_block:
 
-            # ----------------------------------------------
-            # NÃO DUPLICA BLOQUEIOS JÁ EXISTENTES
-            # ----------------------------------------------
-
             existing = con.execute(
                 """
-                SELECT id
+                SELECT
+                    id
 
                 FROM blocked_slots
 
@@ -2114,9 +2300,9 @@ def bloquear_horario():
         con.commit()
 
 
-        # --------------------------------------------------
-        # MENSAGEM FINAL
-        # --------------------------------------------------
+        # ==================================================
+        # MENSAGEM
+        # ==================================================
 
         if blocked_type == "specific":
 
@@ -2208,7 +2394,7 @@ def bloquear_horario():
 
 
 # ==========================================================
-# DESBLOQUEAR HORÁRIO
+# DESBLOQUEAR HORÁRIO / PERÍODO
 # ==========================================================
 
 @app.route(
@@ -2216,16 +2402,18 @@ def bloquear_horario():
     methods=["POST"]
 )
 @proteger_admin
-def desbloquear_horario(block_id):
+def desbloquear_horario(
+    block_id
+):
 
     con = db()
 
 
     try:
 
-        # --------------------------------------------------
+        # ==================================================
         # LOCALIZA O BLOQUEIO CLICADO
-        # --------------------------------------------------
+        # ==================================================
 
         block = con.execute(
             """
@@ -2262,9 +2450,9 @@ def desbloquear_horario(block_id):
         reason = block["reason"] or ""
 
 
-        # --------------------------------------------------
-        # BUSCA TODOS OS BLOQUEIOS DO MESMO DIA E MOTIVO
-        # --------------------------------------------------
+        # ==================================================
+        # BUSCA BLOQUEIOS DO MESMO DIA E MOTIVO
+        # ==================================================
 
         blocks = con.execute(
             """
@@ -2287,9 +2475,9 @@ def desbloquear_horario(block_id):
         ).fetchall()
 
 
-        # --------------------------------------------------
-        # ENCONTRA O PERÍODO CONTÍNUO
-        # --------------------------------------------------
+        # ==================================================
+        # LOCALIZA O BLOQUEIO CLICADO
+        # ==================================================
 
         target_index = None
 
@@ -2315,18 +2503,18 @@ def desbloquear_horario(block_id):
             )
 
 
-        # --------------------------------------------------
-        # DEFINE OS BLOQUEIOS QUE SERÃO REMOVIDOS
-        # --------------------------------------------------
+        # ==================================================
+        # IDS QUE SERÃO APAGADOS
+        # ==================================================
 
         ids_to_delete = [
             block_id
         ]
 
 
-        # --------------------------------------------------
+        # ==================================================
         # CAMINHA PARA TRÁS
-        # --------------------------------------------------
+        # ==================================================
 
         previous_time = datetime.strptime(
             blocked_time,
@@ -2366,9 +2554,9 @@ def desbloquear_horario(block_id):
             index -= 1
 
 
-        # --------------------------------------------------
+        # ==================================================
         # CAMINHA PARA FRENTE
-        # --------------------------------------------------
+        # ==================================================
 
         next_time = datetime.strptime(
             blocked_time,
@@ -2407,9 +2595,9 @@ def desbloquear_horario(block_id):
             index += 1
 
 
-        # --------------------------------------------------
-        # APAGA TODO O PERÍODO
-        # --------------------------------------------------
+        # ==================================================
+        # APAGA O PERÍODO INTEIRO
+        # ==================================================
 
         con.execute(
             """
@@ -2426,9 +2614,9 @@ def desbloquear_horario(block_id):
         con.commit()
 
 
-        # --------------------------------------------------
+        # ==================================================
         # MENSAGEM
-        # --------------------------------------------------
+        # ==================================================
 
         if len(ids_to_delete) == 1:
 
@@ -2469,6 +2657,7 @@ def desbloquear_horario(block_id):
         url_for("admin")
     )
 
+
 # ==========================================================
 # API DO CALENDÁRIO DE BLOQUEIO
 # ==========================================================
@@ -2485,9 +2674,9 @@ def horarios_bloqueio():
     ).strip()
 
 
-    # ------------------------------------------------------
+    # ======================================================
     # VALIDA DATA
-    # ------------------------------------------------------
+    # ======================================================
 
     try:
 
@@ -2500,11 +2689,17 @@ def horarios_bloqueio():
     except ValueError:
 
         return jsonify({
+
             "success": False,
+
             "message": "Data inválida.",
+
             "slots": [],
+
             "blocked": [],
+
             "appointments": []
+
         }), 400
 
 
@@ -2513,9 +2708,9 @@ def horarios_bloqueio():
 
     try:
 
-        # --------------------------------------------------
-        # HORÁRIOS BLOQUEADOS
-        # --------------------------------------------------
+        # ==================================================
+        # BLOQUEIOS
+        # ==================================================
 
         blocked = con.execute(
             """
@@ -2534,9 +2729,9 @@ def horarios_bloqueio():
         ).fetchall()
 
 
-        # --------------------------------------------------
+        # ==================================================
         # AGENDAMENTOS
-        # --------------------------------------------------
+        # ==================================================
 
         appointments = con.execute(
             """
@@ -2564,23 +2759,74 @@ def horarios_bloqueio():
         con.close()
 
 
-    # ------------------------------------------------------
+    # ======================================================
     # HORÁRIOS NORMAIS
-    # ------------------------------------------------------
+    # ======================================================
 
-    slots = slots_for(day)
+    normal_slots = slots_for(
+        day
+    )
 
 
-    # ------------------------------------------------------
+    # ======================================================
+    # CONJUNTOS PARA CONSULTA RÁPIDA
+    # ======================================================
+
+    blocked_times = {
+
+        item["blocked_time"]
+
+        for item in blocked
+
+    }
+
+
+    appointment_times = {
+
+        item["appointment_time"]
+
+        for item in appointments
+
+    }
+
+
+    # ======================================================
+    # FORMATA HORÁRIOS PARA O JAVASCRIPT
+    # ======================================================
+
+    slots_result = []
+
+
+    for slot in normal_slots:
+
+        slots_result.append({
+
+            "time": slot,
+
+            "blocked": (
+                slot in blocked_times
+            ),
+
+            "appointment": (
+                slot in appointment_times
+            )
+
+        })
+
+
+    # ======================================================
     # FORMATA BLOQUEIOS
-    # ------------------------------------------------------
+    # ======================================================
 
     blocked_result = [
 
         {
             "id": item["id"],
+
             "time": item["blocked_time"],
+
             "reason": item["reason"] or ""
+
         }
 
         for item in blocked
@@ -2588,18 +2834,23 @@ def horarios_bloqueio():
     ]
 
 
-    # ------------------------------------------------------
+    # ======================================================
     # FORMATA AGENDAMENTOS
-    # ------------------------------------------------------
+    # ======================================================
 
     appointments_result = [
 
         {
             "id": item["id"],
+
             "time": item["appointment_time"],
+
             "name": item["name"],
+
             "service": item["service"],
+
             "status": item["status"]
+
         }
 
         for item in appointments
@@ -2611,7 +2862,7 @@ def horarios_bloqueio():
 
         "success": True,
 
-        "slots": slots,
+        "slots": slots_result,
 
         "blocked": blocked_result,
 
@@ -2646,6 +2897,7 @@ if __name__ == "__main__":
 
     app.run(
         host="0.0.0.0",
+
         port=int(
             os.environ.get(
                 "PORT",
