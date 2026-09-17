@@ -1397,131 +1397,27 @@ def admin():
         con.close()
 
 
-    # ======================================================
-    # AGRUPA OS BLOQUEIOS
-    # ======================================================
+   # ======================================================
+# AGRUPA OS BLOQUEIOS
+# ======================================================
 
-    grouped_blocks = []
+grouped_blocks = []
 
-    current_group = None
-
-
-    for block in blocked_slots:
-
-        block_date = block["blocked_date"]
-
-        block_time = block["blocked_time"]
-
-        block_reason = block["reason"] or ""
+current_group = None
 
 
-        # --------------------------------------------------
-        # PRIMEIRO BLOQUEIO
-        # --------------------------------------------------
+for block in blocked_slots:
 
-        if current_group is None:
-
-            current_group = {
-
-                "id": block["id"],
-
-                "date": block_date,
-
-                "start": block_time,
-
-                "end": block_time,
-
-                "reason": block_reason,
-
-                "count": 1
-
-            }
-
-            continue
+    block_date = block["blocked_date"]
+    block_time = block["blocked_time"]
+    block_reason = block["reason"] or ""
 
 
-        # --------------------------------------------------
-        # MESMA DATA
-        # --------------------------------------------------
+    # --------------------------------------------------
+    # PRIMEIRO BLOQUEIO
+    # --------------------------------------------------
 
-        same_date = (
-            current_group["date"]
-            == block_date
-        )
-
-
-        # --------------------------------------------------
-        # MESMO MOTIVO
-        # --------------------------------------------------
-
-        same_reason = (
-            current_group["reason"]
-            == block_reason
-        )
-
-
-        # --------------------------------------------------
-        # VERIFICA CONTINUIDADE
-        # --------------------------------------------------
-
-        try:
-
-            previous_time = datetime.strptime(
-                current_group["end"],
-                "%H:%M"
-            )
-
-
-            new_time = datetime.strptime(
-                block_time,
-                "%H:%M"
-            )
-
-
-            difference = (
-                new_time - previous_time
-            ).total_seconds() / 60
-
-
-        except ValueError:
-
-            difference = 999
-
-
-        is_continuous = (
-            difference == 30
-        )
-
-
-        # --------------------------------------------------
-        # CONTINUA NO MESMO GRUPO
-        # --------------------------------------------------
-
-        if (
-            same_date
-            and same_reason
-            and is_continuous
-        ):
-
-            current_group["end"] = block_time
-
-            current_group["count"] += 1
-
-            continue
-
-
-        # --------------------------------------------------
-        # FINALIZA GRUPO ANTERIOR
-        # --------------------------------------------------
-
-        grouped_blocks.append(
-            current_group
-        )
-
-
-        # --------------------------------------------------
-        # COMEÇA NOVO GRUPO
-        # --------------------------------------------------
+    if current_group is None:
 
         current_group = {
 
@@ -1539,123 +1435,358 @@ def admin():
 
         }
 
+        continue
 
-    # ======================================================
-    # ADICIONA ÚLTIMO GRUPO
-    # ======================================================
 
-    if current_group is not None:
+    # --------------------------------------------------
+    # VERIFICA SE É A MESMA DATA
+    # --------------------------------------------------
 
-        grouped_blocks.append(
-            current_group
+    same_date = (
+        current_group["date"] == block_date
+    )
+
+
+    # --------------------------------------------------
+    # VERIFICA SE É O MESMO MOTIVO
+    # --------------------------------------------------
+
+    same_reason = (
+        current_group["reason"] == block_reason
+    )
+
+
+    # --------------------------------------------------
+    # VERIFICA SE É CONTÍNUO
+    # --------------------------------------------------
+
+    try:
+
+        previous_time = datetime.strptime(
+            current_group["end"],
+            "%H:%M"
+        )
+
+        new_time = datetime.strptime(
+            block_time,
+            "%H:%M"
+        )
+
+        difference = (
+            new_time - previous_time
+        ).total_seconds() / 60
+
+    except ValueError:
+
+        difference = 999
+
+
+    is_continuous = (
+        difference == 30
+    )
+
+
+    # --------------------------------------------------
+    # CONTINUA NO MESMO GRUPO
+    # --------------------------------------------------
+
+    if (
+        same_date
+        and same_reason
+        and is_continuous
+    ):
+
+        current_group["end"] = block_time
+
+        current_group["count"] += 1
+
+        continue
+
+
+    # --------------------------------------------------
+    # FINALIZA GRUPO
+    # --------------------------------------------------
+
+    grouped_blocks.append(
+        current_group
+    )
+
+
+    # --------------------------------------------------
+    # COMEÇA NOVO GRUPO
+    # --------------------------------------------------
+
+    current_group = {
+
+        "id": block["id"],
+
+        "date": block_date,
+
+        "start": block_time,
+
+        "end": block_time,
+
+        "reason": block_reason,
+
+        "count": 1
+
+    }
+
+
+# ======================================================
+# ADICIONA ÚLTIMO GRUPO
+# ======================================================
+
+if current_group is not None:
+
+    grouped_blocks.append(
+        current_group
+    )
+
+
+# ======================================================
+# CALCULA O HORÁRIO FINAL VISUAL
+# ======================================================
+
+for group in grouped_blocks:
+
+    try:
+
+        end_datetime = datetime.strptime(
+            group["end"],
+            "%H:%M"
+        )
+
+        end_datetime += timedelta(
+            minutes=30
+        )
+
+        group["end_display"] = (
+            end_datetime.strftime("%H:%M")
+        )
+
+    except ValueError:
+
+        group["end_display"] = (
+            group["end"]
         )
 
 
-    # ======================================================
-    # HORÁRIO FINAL VISUAL
-    # ======================================================
+# ======================================================
+# IDENTIFICA DIAS COMPLETAMENTE BLOQUEADOS
+# ======================================================
 
-    for group in grouped_blocks:
+normal_slots_by_date = {}
+
+blocked_by_date = {}
+
+
+# ------------------------------------------------------
+# HORÁRIOS NORMAIS DE CADA DATA
+# ------------------------------------------------------
+
+for block in blocked_slots:
+
+    block_date = block["blocked_date"]
+
+    if block_date not in normal_slots_by_date:
+
+        normal_slots_by_date[block_date] = slots_for(
+            block_date
+        )
+
+
+# ------------------------------------------------------
+# BLOQUEIOS AGRUPADOS POR DATA
+# ------------------------------------------------------
+
+for block in blocked_slots:
+
+    block_date = block["blocked_date"]
+
+    if block_date not in blocked_by_date:
+
+        blocked_by_date[block_date] = []
+
+    blocked_by_date[block_date].append(
+        block
+    )
+
+
+# ======================================================
+# CRIA A LISTA FINAL DO HISTÓRICO
+# ======================================================
+
+final_blocks = []
+
+
+processed_full_days = set()
+
+
+for group in grouped_blocks:
+
+    group_date = group["date"]
+
+    normal_slots = normal_slots_by_date.get(
+        group_date,
+        []
+    )
+
+    date_blocks = blocked_by_date.get(
+        group_date,
+        []
+    )
+
+
+    # --------------------------------------------------
+    # QUANTIDADE DE HORÁRIOS BLOQUEADOS
+    # --------------------------------------------------
+
+    blocked_times_for_date = {
+
+        block["blocked_time"]
+
+        for block in date_blocks
+
+    }
+
+
+    # --------------------------------------------------
+    # VERIFICA SE O DIA TODO ESTÁ BLOQUEADO
+    # --------------------------------------------------
+
+    day_is_full = (
+
+        len(normal_slots) > 0
+
+        and
+
+        all(
+            slot in blocked_times_for_date
+            for slot in normal_slots
+        )
+
+    )
+
+
+    # ==================================================
+    # SE FOR DIA INTEIRO
+    # ==================================================
+
+    if day_is_full:
+
+        # ----------------------------------------------
+        # EVITA DUPLICAR O MESMO DIA
+        # ----------------------------------------------
+
+        if group_date in processed_full_days:
+
+            continue
+
+
+        processed_full_days.add(
+            group_date
+        )
+
+
+        # ----------------------------------------------
+        # USA O PRIMEIRO BLOQUEIO COMO ID
+        # ----------------------------------------------
+
+        first_block = date_blocks[0]
+
+        last_block = date_blocks[-1]
+
 
         try:
 
             end_datetime = datetime.strptime(
-                group["end"],
+                last_block["blocked_time"],
                 "%H:%M"
             )
-
 
             end_datetime += timedelta(
                 minutes=30
             )
 
-
-            group["end_display"] = (
+            end_display = (
                 end_datetime.strftime("%H:%M")
             )
 
-
         except ValueError:
 
-            group["end_display"] = (
-                group["end"]
+            end_display = (
+                last_block["blocked_time"]
             )
 
 
-    # ======================================================
-    # VERIFICA QUAIS DATAS ESTÃO COMPLETAMENTE BLOQUEADAS
-    # ======================================================
+        # ----------------------------------------------
+        # VERIFICA O MOTIVO
+        # ----------------------------------------------
 
-    normal_slots_by_date = {}
+        reasons = {
 
-    blocked_count_by_date = {}
+            block["reason"] or ""
 
+            for block in date_blocks
 
-    # ------------------------------------------------------
-    # QUANTIDADE DE HORÁRIOS NORMAIS
-    # ------------------------------------------------------
-
-    for group in grouped_blocks:
-
-        group_date = group["date"]
+        }
 
 
-        if group_date not in normal_slots_by_date:
+        if len(reasons) == 1:
 
-            try:
+            full_reason = (
+                next(iter(reasons))
+            )
 
-                normal_slots_by_date[group_date] = len(
-                    slots_for(group_date)
-                )
+        else:
 
-            except Exception:
-
-                normal_slots_by_date[group_date] = 0
+            full_reason = ""
 
 
-    # ------------------------------------------------------
-    # QUANTIDADE DE BLOQUEIOS POR DATA
-    # ------------------------------------------------------
+        # ----------------------------------------------
+        # CRIA UMA ÚNICA LINHA
+        # ----------------------------------------------
 
-    for block in blocked_slots:
+        final_blocks.append({
 
-        group_date = block["blocked_date"]
+            "id": first_block["id"],
+
+            "date": group_date,
+
+            "start": normal_slots[0],
+
+            "end": normal_slots[-1],
+
+            "end_display": end_display,
+
+            "reason": full_reason,
+
+            "count": len(date_blocks),
+
+            "day_full": True
+
+        })
 
 
-        blocked_count_by_date[group_date] = (
-            blocked_count_by_date.get(
-                group_date,
-                0
-            ) + 1
+    # ==================================================
+    # NÃO É DIA INTEIRO
+    # ==================================================
+
+    else:
+
+        group["day_full"] = False
+
+        final_blocks.append(
+            group
         )
 
 
-    # ------------------------------------------------------
-    # MARCA DIA INTEIRO
-    # ------------------------------------------------------
+# ======================================================
+# SUBSTITUI A LISTA ORIGINAL
+# ======================================================
 
-    for group in grouped_blocks:
-
-        group["day_full"] = (
-
-            normal_slots_by_date.get(
-                group["date"],
-                0
-            ) > 0
-
-            and
-
-            blocked_count_by_date.get(
-                group["date"],
-                0
-            )
-            >=
-            normal_slots_by_date.get(
-                group["date"],
-                0
-            )
-
-        )
+grouped_blocks = final_blocks
 
 
     # ======================================================
@@ -2451,7 +2582,109 @@ def desbloquear_horario(
 
 
         # ==================================================
-        # BUSCA BLOQUEIOS DO MESMO DIA E MOTIVO
+        # BUSCA TODOS OS HORÁRIOS NORMAIS DO DIA
+        # ==================================================
+
+        normal_slots = slots_for(
+            blocked_date
+        )
+
+
+        # ==================================================
+        # BUSCA TODOS OS BLOQUEIOS DO DIA
+        # ==================================================
+
+        all_day_blocks = con.execute(
+            """
+            SELECT
+                id,
+                blocked_time,
+                reason
+
+            FROM blocked_slots
+
+            WHERE blocked_date = %s
+
+            ORDER BY blocked_time
+            """,
+            (blocked_date,)
+        ).fetchall()
+
+
+        # ==================================================
+        # VERIFICA SE O DIA ESTÁ COMPLETAMENTE BLOQUEADO
+        # ==================================================
+
+        blocked_times = {
+
+            item["blocked_time"]
+
+            for item in all_day_blocks
+
+        }
+
+
+        day_is_full = (
+
+            len(normal_slots) > 0
+
+            and
+
+            all(
+                slot in blocked_times
+                for slot in normal_slots
+            )
+
+        )
+
+
+        # ==================================================
+        # SE FOR DIA INTEIRO
+        # ==================================================
+
+        if day_is_full:
+
+            ids_to_delete = [
+
+                item["id"]
+
+                for item in all_day_blocks
+
+            ]
+
+
+            con.execute(
+                """
+                DELETE FROM blocked_slots
+
+                WHERE id = ANY(%s)
+                """,
+                (
+                    ids_to_delete,
+                )
+            )
+
+
+            con.commit()
+
+
+            flash(
+                "Dia inteiro desbloqueado com sucesso.",
+                "success"
+            )
+
+
+            return redirect(
+                url_for("admin")
+            )
+
+
+        # ==================================================
+        # NÃO É DIA INTEIRO
+        # ==================================================
+        #
+        # Neste caso continua funcionando como antes:
+        # remove somente o período contínuo clicado.
         # ==================================================
 
         blocks = con.execute(
@@ -2596,7 +2829,7 @@ def desbloquear_horario(
 
 
         # ==================================================
-        # APAGA O PERÍODO INTEIRO
+        # APAGA O PERÍODO
         # ==================================================
 
         con.execute(
@@ -2655,6 +2888,7 @@ def desbloquear_horario(
 
     return redirect(
         url_for("admin")
+    )
     )
 
 
