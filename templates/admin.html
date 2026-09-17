@@ -1,760 +1,357 @@
 <!doctype html>
-
 <html lang="pt-BR">
 
 <head>
 
-```
-<meta charset="utf-8">
+    <meta charset="utf-8">
 
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1"
->
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
 
-<title>Agendamentos | Rayssa Lima</title>
+    <title>Painel Administrativo</title>
 
-<link
-    rel="stylesheet"
-    href="{{ url_for('static', filename='style.css') }}"
->
+    <style>
 
-<style>
-
-    /* ==================================================
-       ÁREA DE BLOQUEIO
-       ================================================== */
-
-    .admin-block-section {
-        margin-top: 30px;
-        padding: 28px;
-        border-radius: 18px;
-        background: #fff;
-        box-shadow:
-            0 8px 30px rgba(0,0,0,0.06);
-    }
-
-    .admin-block-title {
-        margin-bottom: 8px;
-        font-size: 22px;
-    }
-
-    .admin-block-description {
-        margin-bottom: 24px;
-        color: #777;
-    }
-
-    .admin-block-form {
-        display: grid;
-
-        grid-template-columns:
-            1fr
-            1fr
-            1fr
-            1fr
-            1.5fr
-            auto;
-
-        gap: 12px;
-
-        align-items: end;
-    }
-
-    .admin-field {
-        display: flex;
-        flex-direction: column;
-        gap: 7px;
-    }
-
-    .admin-field label {
-        font-size: 13px;
-        font-weight: 600;
-    }
-
-    .admin-field input,
-    .admin-field select {
-        width: 100%;
-        min-height: 44px;
-        padding: 10px 12px;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        background: #fff;
-        box-sizing: border-box;
-    }
-
-    .admin-block-button {
-        min-height: 44px;
-        padding: 10px 18px;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        font-weight: 600;
-    }
-
-    .admin-blocked-list {
-        margin-top: 28px;
-    }
-
-    .admin-blocked-list h3 {
-        margin-bottom: 14px;
-    }
-
-    .blocked-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 15px;
-        padding: 14px;
-        margin-bottom: 10px;
-        border: 1px solid #eee;
-        border-radius: 12px;
-    }
-
-    .blocked-info {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
-
-    .blocked-date {
-        font-weight: 700;
-    }
-
-    .blocked-reason {
-        color: #777;
-        font-size: 14px;
-    }
-
-    .blocked-remove {
-        border: none;
-        padding: 8px 12px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-    }
-
-
-    /* ==================================================
-       STATUS
-       ================================================== */
-
-    .admin-status {
-        display: inline-flex;
-        padding: 6px 10px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 700;
-    }
-
-    .admin-status-confirmado {
-        background: #e9f8ef;
-        color: #287a47;
-    }
-
-    .admin-status-cancelado {
-        background: #fbeaea;
-        color: #a33a3a;
-    }
-
-
-    /* ==================================================
-       BOTÕES
-       ================================================== */
-
-    .admin-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 7px;
-    }
-
-    .admin-cancel,
-    .admin-delete {
-        border: none;
-        border-radius: 8px;
-        padding: 8px 12px;
-        cursor: pointer;
-        font-weight: 600;
-    }
-
-    .admin-delete {
-        background: #eee;
-        color: #555;
-    }
-
-    .admin-cancel {
-        background: #f5dddd;
-        color: #9b3333;
-    }
-
-
-    /* ==================================================
-       RESPONSIVO
-       ================================================== */
-
-    @media (max-width: 1100px) {
-
-        .admin-block-form {
-            grid-template-columns: 1fr 1fr 1fr;
+        * {
+            box-sizing: border-box;
         }
 
-    }
-
-    @media (max-width: 850px) {
-
-        .admin-block-form {
-            grid-template-columns: 1fr;
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f5f7;
+            color: #222;
         }
 
-        .blocked-item {
-            align-items: flex-start;
-            flex-direction: column;
+        .container {
+            width: 94%;
+            max-width: 1200px;
+            margin: 30px auto;
         }
 
-        .admin-table-wrapper {
+        h1 {
+            margin-bottom: 25px;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,.06);
+        }
+
+        /* =====================================================
+           TABELA DE AGENDAMENTOS
+           ===================================================== */
+
+        .table-wrapper {
             overflow-x: auto;
         }
 
-    }
-
-
-    /* ==================================================
-       NOTIFICAÇÕES TOAST
-       ================================================== */
-
-    .toast-container {
-        position: fixed;
-        top: 25px;
-        right: 25px;
-        z-index: 9999;
-
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-
-        width: min(380px, calc(100vw - 30px));
-    }
-
-    .toast-message {
-        position: relative;
-
-        display: flex;
-        align-items: center;
-        gap: 13px;
-
-        padding: 16px 18px;
-
-        border-radius: 15px;
-
-        background: #ffffff;
-
-        box-shadow:
-            0 12px 35px rgba(0, 0, 0, 0.14);
-
-        border: 1px solid #eeeeee;
-
-        animation:
-            toastEntrada 0.45s ease forwards;
-
-        overflow: hidden;
-    }
-
-    .toast-icon {
-        width: 38px;
-        height: 38px;
-
-        min-width: 38px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        border-radius: 50%;
-
-        font-size: 19px;
-        font-weight: 800;
-    }
-
-    .toast-content {
-        display: flex;
-        flex-direction: column;
-
-        gap: 3px;
-
-        flex: 1;
-    }
-
-    .toast-content strong {
-        font-size: 14px;
-    }
-
-    .toast-content span {
-        font-size: 13px;
-        color: #777;
-        line-height: 1.4;
-    }
-
-    .toast-close {
-        border: none;
-        background: transparent;
-
-        font-size: 23px;
-
-        color: #999;
-
-        cursor: pointer;
-
-        padding: 2px 5px;
-
-        line-height: 1;
-    }
-
-    .toast-close:hover {
-        color: #444;
-    }
-
-    .toast-message.success {
-        border-left: 4px solid #7abf91;
-    }
-
-    .toast-message.success .toast-icon {
-        background: #e8f7ed;
-        color: #398054;
-    }
-
-    .toast-message.error {
-        border-left: 4px solid #d77a7a;
-    }
-
-    .toast-message.error .toast-icon {
-        background: #fbeaea;
-        color: #a33a3a;
-    }
-
-    @keyframes toastEntrada {
-
-        from {
-            opacity: 0;
-            transform: translateX(40px);
+        table {
+            width: 100%;
+            border-collapse: collapse;
         }
 
-        to {
-            opacity: 1;
-            transform: translateX(0);
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
         }
 
-    }
-
-    @keyframes toastSaida {
-
-        from {
-            opacity: 1;
-            transform: translateX(0);
+        th {
+            font-size: 14px;
+            color: #666;
         }
 
-        to {
-            opacity: 0;
-            transform: translateX(40px);
+        /* =====================================================
+           FORMULÁRIO DE BLOQUEIO
+           ===================================================== */
+
+        .form-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(auto-fit, minmax(180px, 1fr));
+
+            gap: 15px;
         }
 
-    }
-
-    @media (max-width: 600px) {
-
-        .toast-container {
-            top: 15px;
-            right: 15px;
-            left: 15px;
-
-            width: auto;
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 6px;
         }
 
-    }
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #ddd;
+            border-radius: 9px;
+            font-size: 14px;
+            background: white;
+        }
 
-</style>
-```
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            border: 0;
+            border-radius: 9px;
+            padding: 11px 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: #222;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #000;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #bb2d3b;
+        }
+
+        /* =====================================================
+           HISTÓRICO DE BLOQUEIOS
+           ===================================================== */
+
+        .blocked-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .blocked-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+
+            padding: 16px 18px;
+
+            border: 1px solid #eee;
+            border-radius: 12px;
+
+            background: #fafafa;
+        }
+
+        .blocked-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .blocked-date {
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .blocked-reason {
+            color: #777;
+            font-size: 13px;
+        }
+
+        .empty-message {
+            padding: 20px;
+            text-align: center;
+            color: #777;
+            background: #fafafa;
+            border-radius: 10px;
+        }
+
+        /* =====================================================
+           TOAST
+           ===================================================== */
+
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+
+            z-index: 9999;
+
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            min-width: 280px;
+            max-width: 380px;
+
+            padding: 14px 18px;
+
+            border-radius: 10px;
+
+            background: #222;
+            color: white;
+
+            box-shadow: 0 8px 25px rgba(0,0,0,.15);
+
+            animation: toastIn .3s ease;
+        }
+
+        .toast.success {
+            background: #198754;
+        }
+
+        .toast.error {
+            background: #dc3545;
+        }
+
+        @keyframes toastIn {
+
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+        }
+
+        /* =====================================================
+           RESPONSIVO
+           ===================================================== */
+
+        @media (max-width: 700px) {
+
+            .container {
+                width: 94%;
+                margin: 20px auto;
+            }
+
+            .card {
+                padding: 18px;
+            }
+
+            .blocked-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .blocked-item button {
+                width: 100%;
+            }
+
+        }
+
+    </style>
 
 </head>
 
-<body class="admin-page">
 
-```
-<main class="admin-container">
+<body>
 
+<div class="container">
 
-    <!-- =================================================
-         CABEÇALHO
-         ================================================= -->
-
-    <header class="admin-header">
-
-        <div class="admin-brand">
-
-            <img
-                src="{{ url_for('static', filename='logo.png') }}"
-                alt="Rayssa Lima Nail Designer"
-            >
-
-        </div>
+    <h1>Painel Administrativo</h1>
 
 
-        <div class="admin-user">
+    <!-- =====================================================
+         AGENDAMENTOS
+         ===================================================== -->
 
-            <span class="admin-user-icon">
-                ♙
-            </span>
+    <div class="card">
 
-            <span>
-                Olá, Rayssa
-            </span>
+        <h2>Agendamentos</h2>
 
-        </div>
+        {% if appointments %}
 
-    </header>
+        <div class="table-wrapper">
 
-
-    <!-- =================================================
-         TÍTULO
-         ================================================= -->
-
-    <section class="admin-title">
-
-        <div class="admin-title-icon">
-            ♡
-        </div>
-
-        <h1>
-            Agendamentos
-        </h1>
-
-        <p>
-            Aqui você acompanha todos os seus atendimentos
-        </p>
-
-        <div class="admin-decoration">
-
-            <span></span>
-
-            ♡
-
-            <span></span>
-
-        </div>
-
-    </section>
-
-
-    <!-- =================================================
-         MENSAGENS
-         ================================================= -->
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-
-        {% if messages %}
-
-            <div class="toast-container">
-
-                {% for category, message in messages %}
-
-                    <div class="toast-message {{ category }}">
-
-                        <div class="toast-icon">
-
-                            {% if category == "error" %}
-                                !
-                            {% else %}
-                                ✓
-                            {% endif %}
-
-                        </div>
-
-                        <div class="toast-content">
-
-                            <strong>
-
-                                {% if category == "error" %}
-                                    Atenção
-                                {% else %}
-                                    Tudo certo!
-                                {% endif %}
-
-                            </strong>
-
-                            <span>
-                                {{ message }}
-                            </span>
-
-                        </div>
-
-                        <button
-                            type="button"
-                            class="toast-close"
-                            onclick="fecharToast(this)"
-                        >
-                            ×
-                        </button>
-
-                    </div>
-
-                {% endfor %}
-
-            </div>
-
-        {% endif %}
-
-    {% endwith %}
-
-
-    <!-- =================================================
-         PAINEL
-         ================================================= -->
-
-    <section class="admin-panel">
-
-        <div class="admin-panel-top">
-
-            <a
-                href="{{ url_for('index') }}"
-                class="admin-back"
-            >
-                ← Página de agendamento
-            </a>
-
-        </div>
-
-
-        <!-- =================================================
-             TABELA DE AGENDAMENTOS
-             ================================================= -->
-
-        <div class="admin-table-wrapper">
-
-            <table class="admin-table">
+            <table>
 
                 <thead>
 
                     <tr>
 
                         <th>Data</th>
-                        <th>Hora</th>
+                        <th>Horário</th>
                         <th>Cliente</th>
-                        <th>WhatsApp</th>
                         <th>Serviço</th>
-                        <th>Observação</th>
-                        <th>Status</th>
+                        <th>Telefone</th>
                         <th>Ação</th>
 
                     </tr>
 
                 </thead>
 
-
                 <tbody>
 
-                    {% for a in appointments %}
+                    {% for appointment in appointments %}
 
-                        <tr>
+                    <tr>
 
-                            <td>
+                        <td>
+                            {{ appointment.date }}
+                        </td>
 
-                                <div class="admin-date">
+                        <td>
+                            {{ appointment.time }}
+                        </td>
 
-                                    <strong>
-                                        {{ a.appointment_date }}
-                                    </strong>
+                        <td>
+                            {{ appointment.name }}
+                        </td>
 
-                                </div>
+                        <td>
+                            {{ appointment.service }}
+                        </td>
 
-                            </td>
+                        <td>
+                            {{ appointment.phone }}
+                        </td>
 
+                        <td>
 
-                            <td>
-
-                                <span class="admin-time">
-
-                                    ◷
-
-                                    {{ a.appointment_time }}
-
-                                </span>
-
-                            </td>
-
-
-                            <td>
-
-                                <div class="admin-client">
-
-                                    <span>
-                                        ♡
-                                    </span>
-
-                                    {{ a.name }}
-
-                                </div>
-
-                            </td>
-
-
-                            <td>
-
-                                <a
-                                    class="admin-whatsapp"
-                                    href="https://wa.me/{{ a.phone }}"
-                                    target="_blank"
-                                >
-
-                                    {{ a.phone }}
-
-                                </a>
-
-                            </td>
-
-
-                            <td>
-
-                                <span class="admin-service">
-
-                                    {{ a.service }}
-
-                                </span>
-
-                            </td>
-
-
-                            <td>
-
-                                <span class="admin-notes">
-
-                                    {{
-                                        a.notes
-                                        if a.notes
-                                        else "—"
-                                    }}
-
-                                </span>
-
-                            </td>
-
-
-                            <td>
-
-                                {% if a.status == "Cancelado" %}
-
-                                    <span
-                                        class="
-                                            admin-status
-                                            admin-status-cancelado
-                                        "
-                                    >
-                                        Cancelado
-                                    </span>
-
-                                {% else %}
-
-                                    <span
-                                        class="
-                                            admin-status
-                                            admin-status-confirmado
-                                        "
-                                    >
-                                        Confirmado
-                                    </span>
-
-                                {% endif %}
-
-                            </td>
-
-
-                            <td>
-
-                                <div class="admin-actions">
-
-                                    {% if a.status != "Cancelado" %}
-
-                                        <form
-                                            method="post"
-                                            action="{{
-                                                url_for(
-                                                    'cancelar',
-                                                    appointment_id=a.id
-                                                )
-                                            }}"
-                                            onsubmit="
-                                                return confirm(
-                                                    'Cancelar este agendamento?'
-                                                )
-                                            "
-                                        >
-
-                                            <button
-                                                class="admin-cancel"
-                                                type="submit"
-                                            >
-                                                Cancelar
-                                            </button>
-
-                                        </form>
-
-                                    {% else %}
-
-                                        <form
-                                            method="post"
-                                            action="{{
-                                                url_for(
-                                                    'apagar_historico',
-                                                    appointment_id=a.id
-                                                )
-                                            }}"
-                                            onsubmit="
-                                                return confirm(
-                                                    'Apagar este agendamento cancelado do histórico?'
-                                                )
-                                            "
-                                        >
-
-                                            <button
-                                                class="admin-delete"
-                                                type="submit"
-                                            >
-                                                Apagar do histórico
-                                            </button>
-
-                                        </form>
-
-                                    {% endif %}
-
-                                </div>
-
-                            </td>
-
-                        </tr>
-
-                    {% else %}
-
-                        <tr>
-
-                            <td
-                                colspan="8"
-                                class="admin-empty"
+                            <form
+                                method="POST"
+                                action="{{ url_for(
+                                    'cancelar_agendamento',
+                                    appointment_id=appointment.id
+                                ) }}"
                             >
 
-                                <div
-                                    class="admin-empty-icon"
+                                <button
+                                    type="submit"
+                                    class="btn-danger"
+                                    onclick="
+                                        return confirm(
+                                            'Deseja realmente cancelar este agendamento?'
+                                        );
+                                    "
                                 >
-                                    ♡
-                                </div>
+                                    Cancelar
+                                </button>
 
-                                <strong>
-                                    Nenhum agendamento ainda
-                                </strong>
+                            </form>
 
-                                <span>
-                                    Os novos horários aparecerão aqui.
-                                </span>
+                        </td>
 
-                            </td>
-
-                        </tr>
+                    </tr>
 
                     {% endfor %}
 
@@ -764,18 +361,600 @@
 
         </div>
 
-    </section>
+        {% else %}
+
+        <div class="empty-message">
+            Nenhum agendamento encontrado.
+        </div>
+
+        {% endif %}
+
+    </div>
 
 
-    <!-- =================================================
-         BLOQUEAR HORÁRIOS
-         ================================================= -->
+    <!-- =====================================================
+         CALENDÁRIO DE BLOQUEIO
+         ===================================================== -->
 
-    <section class="admin-block-section">
+    <div class="card">
 
-        <h2 class="admin-block-title">
-            Calendário de bloqueio
-        </h2>
+        <h2>Calendário de bloqueio</h2>
 
-        <p
-```
+        <form
+            method="POST"
+            action="{{ url_for('bloquear_horario') }}"
+        >
+
+            <div class="form-grid">
+
+                <!-- DATA -->
+
+                <div>
+
+                    <label for="blocked_date">
+                        Data
+                    </label>
+
+                    <input
+                        type="date"
+                        id="blocked_date"
+                        name="blocked_date"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- TIPO -->
+
+                <div>
+
+                    <label for="blocked_type">
+                        Tipo de bloqueio
+                    </label>
+
+                    <select
+                        id="blocked_type"
+                        name="blocked_type"
+                        required
+                    >
+
+                        <option value="specific">
+                            Horário específico
+                        </option>
+
+                        <option value="period">
+                            Período
+                        </option>
+
+                        <option value="day">
+                            Dia inteiro
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- HORÁRIO ESPECÍFICO -->
+
+                <div id="specific_time_container">
+
+                    <label for="blocked_time">
+                        Horário
+                    </label>
+
+                    <select
+                        id="blocked_time"
+                        name="blocked_time"
+                    >
+
+                        <option value="">
+                            Selecione o horário
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- INÍCIO DO PERÍODO -->
+
+                <div
+                    id="start_time_container"
+                    style="display:none;"
+                >
+
+                    <label for="start_time">
+                        Início
+                    </label>
+
+                    <select
+                        id="start_time"
+                        name="start_time"
+                    >
+
+                        <option value="">
+                            Selecione
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- FIM DO PERÍODO -->
+
+                <div
+                    id="end_time_container"
+                    style="display:none;"
+                >
+
+                    <label for="end_time">
+                        Fim
+                    </label>
+
+                    <select
+                        id="end_time"
+                        name="end_time"
+                    >
+
+                        <option value="">
+                            Selecione
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- MOTIVO -->
+
+                <div>
+
+                    <label for="reason">
+                        Motivo
+                    </label>
+
+                    <input
+                        type="text"
+                        id="reason"
+                        name="reason"
+                        placeholder="Ex.: Compromisso pessoal"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <br>
+
+
+            <button
+                type="submit"
+                class="btn-primary"
+            >
+                Bloquear horário
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- =====================================================
+         HISTÓRICO DE BLOQUEIOS
+         ===================================================== -->
+
+    <div class="card">
+
+        <h2>Horários bloqueados</h2>
+
+        {% if blocked_slots %}
+
+        <div class="blocked-list">
+
+            {% for block in blocked_slots %}
+
+            <div class="blocked-item">
+
+                <div class="blocked-info">
+
+                    <span class="blocked-date">
+
+                        {{ block.date }}
+
+                        —
+
+                        {% if block.day_full %}
+
+                            Dia inteiro
+
+                        {% else %}
+
+                            {{ block.start }}
+                            às
+                            {{ block.end_display }}
+
+                        {% endif %}
+
+                    </span>
+
+
+                    <span class="blocked-reason">
+
+                        {% if block.reason %}
+
+                            {{ block.reason }}
+
+                        {% else %}
+
+                            Horário bloqueado
+
+                        {% endif %}
+
+                    </span>
+
+                </div>
+
+
+                <!-- DESBLOQUEAR -->
+
+                <form
+                    method="POST"
+                    action="{{ url_for(
+                        'desbloquear_horario',
+                        block_id=block.id
+                    ) }}"
+                >
+
+                    <button
+                        type="submit"
+                        class="btn-danger"
+                        onclick="
+                            return confirm(
+                                'Deseja realmente desbloquear este período?'
+                            );
+                        "
+                    >
+                        Desbloquear
+                    </button>
+
+                </form>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% else %}
+
+        <div class="empty-message">
+            Nenhum horário bloqueado.
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     TOASTS
+     ===================================================== -->
+
+<div id="toast-container"></div>
+
+
+<script>
+
+    /* =====================================================
+       ELEMENTOS DO FORMULÁRIO
+       ===================================================== */
+
+    const blockedDate =
+        document.getElementById("blocked_date");
+
+    const blockedType =
+        document.getElementById("blocked_type");
+
+    const specificContainer =
+        document.getElementById(
+            "specific_time_container"
+        );
+
+    const startContainer =
+        document.getElementById(
+            "start_time_container"
+        );
+
+    const endContainer =
+        document.getElementById(
+            "end_time_container"
+        );
+
+    const blockedTime =
+        document.getElementById("blocked_time");
+
+    const startTime =
+        document.getElementById("start_time");
+
+    const endTime =
+        document.getElementById("end_time");
+
+
+    /* =====================================================
+       ALTERAR TIPO DE BLOQUEIO
+       ===================================================== */
+
+    function updateBlockType() {
+
+        const type = blockedType.value;
+
+
+        if (type === "specific") {
+
+            specificContainer.style.display = "block";
+
+            startContainer.style.display = "none";
+
+            endContainer.style.display = "none";
+
+        }
+
+
+        else if (type === "period") {
+
+            specificContainer.style.display = "none";
+
+            startContainer.style.display = "block";
+
+            endContainer.style.display = "block";
+
+        }
+
+
+        else if (type === "day") {
+
+            specificContainer.style.display = "none";
+
+            startContainer.style.display = "none";
+
+            endContainer.style.display = "none";
+
+        }
+
+    }
+
+
+    blockedType.addEventListener(
+        "change",
+        updateBlockType
+    );
+
+
+    updateBlockType();
+
+
+    /* =====================================================
+       BUSCAR HORÁRIOS DA DATA
+       ===================================================== */
+
+    async function carregarHorarios() {
+
+        const date = blockedDate.value;
+
+        if (!date) {
+            return;
+        }
+
+
+        try {
+
+            const response = await fetch(
+                `/admin/horarios-bloqueio?date=${date}`
+            );
+
+            const data = await response.json();
+
+
+            /* =============================================
+               LIMPAR SELECTS
+               ============================================= */
+
+            blockedTime.innerHTML =
+                '<option value="">Selecione o horário</option>';
+
+            startTime.innerHTML =
+                '<option value="">Selecione</option>';
+
+            endTime.innerHTML =
+                '<option value="">Selecione</option>';
+
+
+            /* =============================================
+               HORÁRIOS DISPONÍVEIS
+               ============================================= */
+
+            data.slots.forEach(function(slot) {
+
+                const option =
+                    document.createElement("option");
+
+                option.value = slot.time;
+
+                option.textContent = slot.time;
+
+
+                if (slot.blocked || slot.appointment) {
+
+                    option.disabled = true;
+
+                    if (slot.appointment) {
+
+                        option.textContent +=
+                            " — Agendado";
+
+                    }
+                    else {
+
+                        option.textContent +=
+                            " — Bloqueado";
+
+                    }
+
+                }
+
+
+                blockedTime.appendChild(option);
+
+            });
+
+
+            /* =============================================
+               INÍCIO DO PERÍODO
+               ============================================= */
+
+            data.slots.forEach(function(slot) {
+
+                const option =
+                    document.createElement("option");
+
+                option.value = slot.time;
+
+                option.textContent = slot.time;
+
+
+                if (slot.blocked || slot.appointment) {
+
+                    option.disabled = true;
+
+                }
+
+
+                startTime.appendChild(option);
+
+            });
+
+
+            /* =============================================
+               FIM DO PERÍODO
+               ============================================= */
+
+            data.slots.forEach(function(slot) {
+
+                const option =
+                    document.createElement("option");
+
+                option.value = slot.time;
+
+                option.textContent = slot.time;
+
+
+                if (slot.blocked || slot.appointment) {
+
+                    option.disabled = true;
+
+                }
+
+
+                endTime.appendChild(option);
+
+            });
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Erro ao carregar horários:",
+                error
+            );
+
+        }
+
+    }
+
+
+    blockedDate.addEventListener(
+        "change",
+        carregarHorarios
+    );
+
+
+    /* =====================================================
+       TOAST
+       ===================================================== */
+
+    function showToast(message, type) {
+
+        const container =
+            document.getElementById(
+                "toast-container"
+            );
+
+
+        const toast =
+            document.createElement("div");
+
+        toast.className =
+            "toast " + (type || "");
+
+
+        toast.textContent = message;
+
+
+        container.appendChild(toast);
+
+
+        setTimeout(function() {
+
+            toast.style.opacity = "0";
+
+            setTimeout(function() {
+
+                toast.remove();
+
+            }, 300);
+
+        }, 3500);
+
+    }
+
+</script>
+
+
+<!-- =====================================================
+     MENSAGENS FLASH DO FLASK
+     ===================================================== -->
+
+{% with messages = get_flashed_messages(
+    with_categories=true
+) %}
+
+    {% if messages %}
+
+        <script>
+
+            {% for category, message in messages %}
+
+                showToast(
+                    {{ message|tojson }},
+                    {{ category|tojson }}
+                );
+
+            {% endfor %}
+
+        </script>
+
+    {% endif %}
+
+{% endwith %}
+
+
+</body>
+
+</html>
