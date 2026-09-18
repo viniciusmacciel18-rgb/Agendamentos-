@@ -643,9 +643,9 @@ def horarios():
     # ENVIA OS HORÁRIOS PARA O SITE
     # ======================================================
 
-return jsonify({
-    "slots": available
-})  
+        return jsonify({
+        "slots": available
+    })
 # ==========================================================
 # PÁGINA PRINCIPAL
 # ==========================================================
