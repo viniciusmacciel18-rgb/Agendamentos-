@@ -1448,18 +1448,18 @@ def excluir_agendamento(
 @proteger_admin
 def bloquear_horario():
 
-   block_type = request.form.get(
-    "blocked_type",
-    "specific"
-)
-
     blocked_date = request.form.get(
-    "blocked_date",
-    ""
-).strip()
+        "blocked_date",
+        ""
+    ).strip()
+
+    block_type = request.form.get(
+        "blocked_type",
+        "specific"
+    ).strip()
 
     blocked_time = request.form.get(
-        "time",
+        "blocked_time",
         ""
     ).strip()
 
