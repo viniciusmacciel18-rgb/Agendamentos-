@@ -402,13 +402,8 @@ def blocked_slot_conflict(
 @app.route("/horarios")
 def horarios():
 
-    date_str = request.args.get(
-        "date"
-    )
-
-    service = request.args.get(
-        "service"
-    )
+    date_str = request.args.get("date")
+    service = request.args.get("service")
 
 
     # ------------------------------------------------------
@@ -416,12 +411,11 @@ def horarios():
     # ------------------------------------------------------
 
     if not date_str:
-
         return jsonify([])
 
 
     # ------------------------------------------------------
-    # CONVERTE A DATA
+    # VALIDA A DATA
     # ------------------------------------------------------
 
     try:
@@ -438,12 +432,6 @@ def horarios():
 
     # ------------------------------------------------------
     # GERA OS HORÁRIOS NORMAIS
-    #
-    # A função slots_for já considera:
-    # - dia da semana
-    # - horário de funcionamento
-    # - duração do serviço
-    # - horários que já passaram hoje
     # ------------------------------------------------------
 
     slots = slots_for(
@@ -466,21 +454,14 @@ def horarios():
     try:
 
         # ==================================================
-        # BUSCA AGENDAMENTOS
+        # BUSCA AGENDAMENTOS DO DIA
         # ==================================================
 
         cur.execute(
             """
             SELECT
-                id,
-                name,
-                phone,
-                service,
-                appointment_date,
                 appointment_time,
-                notes,
-                created_at,
-                status
+                service
 
             FROM appointments
 
@@ -520,12 +501,11 @@ def horarios():
     finally:
 
         cur.close()
-
         con.close()
 
 
     # ======================================================
-    # TRANSFORMA OS BLOQUEIOS EM DATETIME
+    # CONVERTE OS BLOQUEIOS PARA INTERVALOS
     # ======================================================
 
     blocked_intervals = []
@@ -533,10 +513,8 @@ def horarios():
 
     for row in blocked_rows:
 
-        blocked_time = row["blocked_time"]
-
         blocked_start = datetime.strptime(
-            f"{date_str} {blocked_time}",
+            f"{date_str} {row['blocked_time']}",
             "%Y-%m-%d %H:%M"
         )
 
@@ -554,7 +532,7 @@ def horarios():
 
 
     # ======================================================
-    # MONTA OS HORÁRIOS DISPONÍVEIS
+    # HORÁRIOS DISPONÍVEIS
     # ======================================================
 
     available = []
@@ -573,9 +551,7 @@ def horarios():
 
 
         # --------------------------------------------------
-        # FIM DO HORÁRIO BASE
-        #
-        # Cada opção representa um intervalo de 30 minutos.
+        # CADA HORÁRIO REPRESENTA 30 MINUTOS
         # --------------------------------------------------
 
         slot_end = (
@@ -588,7 +564,7 @@ def horarios():
 
 
         # ==================================================
-        # VERIFICA AGENDAMENTOS EXISTENTES
+        # VERIFICA AGENDAMENTOS
         # ==================================================
 
         for appointment in appointments:
@@ -628,27 +604,21 @@ def horarios():
 
 
         # ==================================================
-        # SE JÁ ESTIVER OCUPADO, PASSA PARA O PRÓXIMO
+        # SE ESTIVER OCUPADO, IGNORA
         # ==================================================
 
         if occupied:
-
             continue
 
 
         # ==================================================
-        # VERIFICA HORÁRIOS BLOQUEADOS
+        # VERIFICA BLOQUEIOS
         # ==================================================
 
         for (
             blocked_start,
             blocked_end
         ) in blocked_intervals:
-
-
-            # --------------------------------------------------
-            # VERIFICA SOBREPOSIÇÃO COM O BLOQUEIO
-            # --------------------------------------------------
 
             if (
                 slot_start < blocked_end
@@ -661,24 +631,21 @@ def horarios():
 
 
         # ==================================================
-        # SE NÃO ESTIVER OCUPADO
+        # HORÁRIO DISPONÍVEL
         # ==================================================
 
         if not occupied:
 
-            available.append(
-                slot
-            )
+            available.append(slot)
 
 
     # ======================================================
-    # DEVOLVE OS HORÁRIOS PARA O SITE
+    # ENVIA OS HORÁRIOS PARA O SITE
     # ======================================================
 
     return jsonify(
         available
-    )
-    
+    )  
 # ==========================================================
 # PÁGINA PRINCIPAL
 # ==========================================================
