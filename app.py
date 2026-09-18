@@ -402,11 +402,27 @@ def blocked_slot_conflict(
 @app.route("/horarios")
 def horarios():
 
-    date_str = request.args.get("date")
-    service = request.args.get("service")
+    date_str = request.args.get(
+        "date"
+    )
+
+    service = request.args.get(
+        "service"
+    )
+
+
+    # ------------------------------------------------------
+    # SE NÃO INFORMOU A DATA
+    # ------------------------------------------------------
 
     if not date_str:
+
         return jsonify([])
+
+
+    # ------------------------------------------------------
+    # CONVERTE A DATA
+    # ------------------------------------------------------
 
     try:
 
@@ -419,111 +435,250 @@ def horarios():
 
         return jsonify([])
 
+
+    # ------------------------------------------------------
+    # GERA OS HORÁRIOS NORMAIS
+    #
+    # A função slots_for já considera:
+    # - dia da semana
+    # - horário de funcionamento
+    # - duração do serviço
+    # - horários que já passaram hoje
+    # ------------------------------------------------------
+
     slots = slots_for(
         selected_date,
         service
     )
 
+
+    # ------------------------------------------------------
+    # CONECTA AO BANCO
+    # ------------------------------------------------------
+
     con = get_db()
+
     cur = con.cursor(
         cursor_factory=RealDictCursor
     )
 
+
     try:
 
-        # --------------------------------------------------
-        # AGENDAMENTOS ATIVOS
-        # --------------------------------------------------
+        # ==================================================
+        # BUSCA AGENDAMENTOS
+        # ==================================================
 
-        cur.execute("""
-            SELECT *
+        cur.execute(
+            """
+            SELECT
+                id,
+                name,
+                phone,
+                service,
+                appointment_date,
+                appointment_time,
+                notes,
+                created_at,
+                status
+
             FROM appointments
-            WHERE date = %s
-            AND status = 'active'
-        """, (
-            date_str,
-        ))
+
+            WHERE appointment_date = %s
+
+            AND status <> 'Cancelado'
+            """,
+            (
+                date_str,
+            )
+        )
 
         appointments = cur.fetchall()
 
-        # --------------------------------------------------
-        # BLOQUEIOS
-        # --------------------------------------------------
 
-        cur.execute("""
-            SELECT blocked_time
+        # ==================================================
+        # BUSCA HORÁRIOS BLOQUEADOS
+        # ==================================================
+
+        cur.execute(
+            """
+            SELECT
+                blocked_time
+
             FROM blocked_slots
+
             WHERE blocked_date = %s
-        """, (
-            date_str,
-        ))
+            """,
+            (
+                date_str,
+            )
+        )
 
         blocked_rows = cur.fetchall()
+
 
     finally:
 
         cur.close()
+
         con.close()
 
-    blocked_times = {
-        row["blocked_time"]
-        for row in blocked_rows
-    }
+
+    # ======================================================
+    # TRANSFORMA OS BLOQUEIOS EM DATETIME
+    # ======================================================
+
+    blocked_intervals = []
+
+
+    for row in blocked_rows:
+
+        blocked_time = row["blocked_time"]
+
+        blocked_start = datetime.strptime(
+            f"{date_str} {blocked_time}",
+            "%Y-%m-%d %H:%M"
+        )
+
+        blocked_end = (
+            blocked_start
+            + timedelta(minutes=30)
+        )
+
+        blocked_intervals.append(
+            (
+                blocked_start,
+                blocked_end
+            )
+        )
+
+
+    # ======================================================
+    # MONTA OS HORÁRIOS DISPONÍVEIS
+    # ======================================================
 
     available = []
 
+
     for slot in slots:
+
+        # --------------------------------------------------
+        # INÍCIO DO HORÁRIO
+        # --------------------------------------------------
 
         slot_start = datetime.strptime(
             f"{date_str} {slot}",
             "%Y-%m-%d %H:%M"
         )
 
-        slot_end = slot_start + timedelta(
-            minutes=30
+
+        # --------------------------------------------------
+        # FIM DO HORÁRIO BASE
+        #
+        # Cada opção representa um intervalo de 30 minutos.
+        # --------------------------------------------------
+
+        slot_end = (
+            slot_start
+            + timedelta(minutes=30)
         )
+
 
         occupied = False
 
-        # --------------------------------------------------
-        # VERIFICA AGENDAMENTOS
-        # --------------------------------------------------
 
-        for appt in appointments:
+        # ==================================================
+        # VERIFICA AGENDAMENTOS EXISTENTES
+        # ==================================================
 
-            appt_start = datetime.strptime(
-                f"{appt['date']} {appt['time']}",
+        for appointment in appointments:
+
+            appointment_start = datetime.strptime(
+                f"{date_str} "
+                f"{appointment['appointment_time']}",
                 "%Y-%m-%d %H:%M"
             )
 
-            appt_duration = service_duration(
-                appt["service"]
+
+            appointment_duration = service_duration(
+                appointment["service"]
             )
 
-            appt_end = appt_start + timedelta(
-                minutes=appt_duration
+
+            appointment_end = (
+                appointment_start
+                + timedelta(
+                    minutes=appointment_duration
+                )
             )
+
+
+            # --------------------------------------------------
+            # VERIFICA SOBREPOSIÇÃO
+            # --------------------------------------------------
 
             if (
-                slot_start < appt_end
-                and slot_end > appt_start
+                slot_start < appointment_end
+                and slot_end > appointment_start
             ):
+
                 occupied = True
+
                 break
 
-        # --------------------------------------------------
-        # VERIFICA BLOQUEIO
-        # --------------------------------------------------
 
-        if slot in blocked_times:
-            occupied = True
+        # ==================================================
+        # SE JÁ ESTIVER OCUPADO, PASSA PARA O PRÓXIMO
+        # ==================================================
+
+        if occupied:
+
+            continue
+
+
+        # ==================================================
+        # VERIFICA HORÁRIOS BLOQUEADOS
+        # ==================================================
+
+        for (
+            blocked_start,
+            blocked_end
+        ) in blocked_intervals:
+
+
+            # --------------------------------------------------
+            # VERIFICA SOBREPOSIÇÃO COM O BLOQUEIO
+            # --------------------------------------------------
+
+            if (
+                slot_start < blocked_end
+                and slot_end > blocked_start
+            ):
+
+                occupied = True
+
+                break
+
+
+        # ==================================================
+        # SE NÃO ESTIVER OCUPADO
+        # ==================================================
 
         if not occupied:
-            available.append(slot)
 
-    return jsonify(available)
+            available.append(
+                slot
+            )
 
 
+    # ======================================================
+    # DEVOLVE OS HORÁRIOS PARA O SITE
+    # ======================================================
+
+    return jsonify(
+        available
+    )
+    
 # ==========================================================
 # PÁGINA PRINCIPAL
 # ==========================================================
