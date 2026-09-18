@@ -443,111 +443,59 @@ def blocked_slot_conflict(
 
 @app.route("/horarios")
 def horarios():
-
-    date_str = request.args.get(
-        "date",
-        ""
-    ).strip()
-
-    service = request.args.get(
-        "service",
-        ""
-    ).strip()
-
-    # ------------------------------------------------------
-    # VALIDA DATA
-    # ------------------------------------------------------
+    date_str = request.args.get("date", "").strip()
+    service = request.args.get("service", "").strip()
 
     if not date_str:
-
-        return jsonify({
-            "slots": []
-        })
+        return jsonify({"slots": []})
 
     try:
-
         selected_date = datetime.strptime(
             date_str,
             "%Y-%m-%d"
         ).date()
-
     except ValueError:
+        return jsonify({"slots": []})
 
-        return jsonify({
-            "slots": []
-        })
-
-    # ------------------------------------------------------
-    # GERA TODOS OS HORÁRIOS NORMAIS
-    # ------------------------------------------------------
-
-    slots = slots_for(
-        selected_date,
-        service
-    )
-
-    # ------------------------------------------------------
-    # BUSCA BANCO
-    # ------------------------------------------------------
+    # Gera os horários possíveis para o dia/serviço
+    slots = slots_for(selected_date, service)
 
     con = get_db()
-
-    cur = con.cursor(
-        cursor_factory=RealDictCursor
-    )
+    cur = con.cursor(cursor_factory=RealDictCursor)
 
     try:
-
-        # AGENDAMENTOS
+        # Agendamentos já existentes
         cur.execute("""
-            SELECT
-                date,
-                time,
-                service
+            SELECT date, time, service
             FROM appointments
             WHERE date = %s
             AND status = 'active'
-        """, (
-            date_str,
-        ))
+        """, (date_str,))
 
         appointments = cur.fetchall()
 
-        # BLOQUEIOS
+        # Horários bloqueados pelo administrador
         cur.execute("""
-            SELECT
-                blocked_time
+            SELECT blocked_time
             FROM blocked_slots
             WHERE blocked_date = %s
-        """, (
-            date_str,
-        ))
+        """, (date_str,))
 
         blocked_rows = cur.fetchall()
 
     finally:
-
         cur.close()
         con.close()
-
-    # ------------------------------------------------------
-    # HORÁRIOS BLOQUEADOS
-    # ------------------------------------------------------
 
     blocked_times = {
         row["blocked_time"]
         for row in blocked_rows
     }
 
-    # ------------------------------------------------------
-    # FILTRA OS HORÁRIOS
-    # ------------------------------------------------------
-
     available = []
 
-    requested_duration = service_duration(
-        service
-    )
+    # Duração do serviço escolhido pelo cliente
+    requested_duration = service_duration(service)
 
     for slot in slots:
 
@@ -556,16 +504,14 @@ def horarios():
             "%Y-%m-%d %H:%M"
         )
 
+        # O horário precisa comportar todo o serviço
         slot_end = slot_start + timedelta(
             minutes=requested_duration
         )
 
         conflict = False
 
-        # ----------------------------------------------
-        # VERIFICA AGENDAMENTOS
-        # ----------------------------------------------
-
+        # Verifica conflitos com agendamentos existentes
         for appt in appointments:
 
             appt_start = datetime.strptime(
@@ -573,27 +519,25 @@ def horarios():
                 "%Y-%m-%d %H:%M"
             )
 
+            appt_duration = service_duration(
+                appt["service"]
+            )
+
             appt_end = appt_start + timedelta(
-                minutes=service_duration(
-                    appt["service"]
-                )
+                minutes=appt_duration
             )
 
             if (
                 slot_start < appt_end
                 and slot_end > appt_start
             ):
-
                 conflict = True
                 break
 
         if conflict:
             continue
 
-        # ----------------------------------------------
-        # VERIFICA BLOQUEIOS
-        # ----------------------------------------------
-
+        # Verifica horários bloqueados
         for blocked_time in blocked_times:
 
             blocked_start = datetime.strptime(
@@ -609,24 +553,15 @@ def horarios():
                 slot_start < blocked_end
                 and slot_end > blocked_start
             ):
-
                 conflict = True
                 break
 
         if not conflict:
-
-            available.append(
-                slot
-            )
-
-    # ------------------------------------------------------
-    # DEVOLVE NO FORMATO PADRÃO
-    # ------------------------------------------------------
+            available.append(slot)
 
     return jsonify({
         "slots": available
     })
-    
 # ==========================================================
 # PÁGINA PRINCIPAL
 # ==========================================================
