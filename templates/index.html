@@ -499,195 +499,134 @@
 
     <!-- JAVASCRIPT -->
 
-    <script>
+   <script>
 
-        const dateInput =
-            document.getElementById("date");
+const dateInput =
+    document.getElementById("date");
 
+const serviceSelect =
+    document.getElementById("service");
 
-        const timeSelect =
-            document.getElementById("time");
-
-
-        const serviceSelect =
-            document.getElementById("service");
+const timeSelect =
+    document.getElementById("time");
 
 
-        async function carregarHorarios() {
+async function carregarHorarios() {
+
+    const date =
+        dateInput.value;
+
+    const service =
+        serviceSelect.value;
 
 
-            /*
-             * Se ainda não escolheu
-             * serviço ou data,
-             * bloqueia o campo de horário.
-             */
+    timeSelect.innerHTML =
+        "<option value=''>Carregando horários...</option>";
 
-            if (
-                !dateInput.value ||
-                !serviceSelect.value
-            ) {
-
-                timeSelect.innerHTML =
-                    "<option value=''>" +
-                    "Escolha o serviço e a data" +
-                    "</option>";
-
-                timeSelect.disabled = true;
-
-                return;
-
-            }
+    timeSelect.disabled = true;
 
 
-            /*
-             * Enquanto o sistema busca
-             * os horários no servidor.
-             */
+    if (!date || !service) {
 
-            timeSelect.innerHTML =
-                "<option value=''>" +
-                "Carregando horários..." +
-                "</option>";
+        timeSelect.innerHTML =
+            "<option value=''>Escolha o serviço e a data</option>";
 
-            timeSelect.disabled = true;
+        return;
+    }
 
 
-            try {
+    try {
+
+        const res = await fetch(
+            `/horarios?date=${
+                encodeURIComponent(date)
+            }&service=${
+                encodeURIComponent(service)
+            }`
+        );
 
 
-                /*
-                 * Busca os horários disponíveis
-                 * no Flask.
-                 */
+        if (!res.ok) {
 
-                const res = await fetch(
-                    `/horarios?date=${dateInput.value}&service=${encodeURIComponent(serviceSelect.value)}`
-                );
-
-
-                /*
-                 * Verifica se o servidor respondeu
-                 * corretamente.
-                 */
-
-                if (!res.ok) {
-
-                    throw new Error(
-                        "Erro ao buscar horários."
-                    );
-
-                }
-
-
-                /*
-                 * Converte a resposta para JSON.
-                 */
-
-                const data =
-                    await res.json();
-
-
-                /*
-                 * Limpa as opções antigas.
-                 */
-
-                timeSelect.innerHTML = "";
-
-
-                /*
-                 * Se não houver horários.
-                 */
-
-                if (!data.slots.length) {
-
-                    timeSelect.innerHTML =
-                        "<option value=''>" +
-                        "Nenhum horário disponível" +
-                        "</option>";
-
-                    timeSelect.disabled = true;
-
-                    return;
-
-                }
-
-
-                /*
-                 * Primeira opção.
-                 */
-
-                timeSelect.append(
-                    new Option(
-                        "Selecione o horário",
-                        ""
-                    )
-                );
-
-
-                /*
-                 * Adiciona cada horário
-                 * disponível no select.
-                 */
-
-                data.slots.forEach(
-                    function(t) {
-
-                        timeSelect.append(
-                            new Option(t, t)
-                        );
-
-                    }
-                );
-
-
-                /*
-                 * Libera o campo.
-                 */
-
-                timeSelect.disabled = false;
-
-
-            } catch (error) {
-
-
-                console.error(error);
-
-
-                timeSelect.innerHTML =
-                    "<option value=''>" +
-                    "Erro ao carregar horários" +
-                    "</option>";
-
-
-                timeSelect.disabled = true;
-
-            }
+            throw new Error(
+                "Erro ao buscar horários."
+            );
 
         }
 
 
-        /*
-         * Quando o cliente escolher
-         * uma data.
-         */
+        const data =
+            await res.json();
 
-        dateInput.addEventListener(
-            "change",
-            carregarHorarios
+
+        timeSelect.innerHTML = "";
+
+
+        if (
+            !data.slots ||
+            data.slots.length === 0
+        ) {
+
+            timeSelect.innerHTML =
+                "<option value=''>Nenhum horário disponível</option>";
+
+            return;
+        }
+
+
+        timeSelect.append(
+            new Option(
+                "Selecione o horário",
+                ""
+            )
         );
 
 
-        /*
-         * Quando o cliente trocar
-         * o serviço.
-         */
+        data.slots.forEach(
+            function(time) {
 
-        serviceSelect.addEventListener(
-            "change",
-            carregarHorarios
+                timeSelect.append(
+                    new Option(
+                        time,
+                        time
+                    )
+                );
+
+            }
         );
 
-    </script>
+
+        timeSelect.disabled = false;
+
+
+    } catch (error) {
+
+        console.error(
+            "Erro ao carregar horários:",
+            error
+        );
+
+
+        timeSelect.innerHTML =
+            "<option value=''>Erro ao carregar horários</option>";
+
+    }
+
+}
+
+
+dateInput.addEventListener(
+    "change",
+    carregarHorarios
+);
+
+
+serviceSelect.addEventListener(
+    "change",
+    carregarHorarios
+);
+
+</script>
 
 
 </body>
