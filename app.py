@@ -169,38 +169,49 @@ def service_price(service_name):
 
 def slots_for(day, service=None):
 
-    weekday = day.weekday()
+    # ------------------------------------------------------
+    # DOMINGO FECHADO
+    # ------------------------------------------------------
 
-    # Domingo fechado
-    if weekday == 6:
+    if day.weekday() == 6:
         return []
 
-    periods = []
 
-    # Segunda, terça, quinta e sexta
-    if weekday in [0, 1, 3, 4]:
+    # ------------------------------------------------------
+    # DEFINE OS HORÁRIOS DE FUNCIONAMENTO
+    # ------------------------------------------------------
+
+    if day.weekday() in [0, 1, 3, 4]:
 
         periods = [
             ("07:30", "11:00"),
             ("13:30", "20:00")
         ]
 
-    # Quarta-feira
-    elif weekday == 2:
+    elif day.weekday() == 2:
 
         periods = [
             ("07:30", "11:00"),
             ("13:30", "15:00")
         ]
 
-    # Sábado
-    elif weekday == 5:
+    elif day.weekday() == 5:
 
         periods = [
             ("09:00", "16:00")
         ]
 
+    else:
+
+        return []
+
+
     slots = []
+
+
+    # ------------------------------------------------------
+    # GERA CADA HORÁRIO DE 30 EM 30 MINUTOS
+    # ------------------------------------------------------
 
     for start, end in periods:
 
@@ -214,17 +225,21 @@ def slots_for(day, service=None):
             "%H:%M"
         )
 
-        # Permite o último horário de início
-        allowed_end = period_end + timedelta(
-            minutes=30
+
+        # Permite que o último atendimento
+        # comece até 30 minutos depois do
+        # horário final definido.
+
+        allowed_end = (
+            period_end
+            + timedelta(minutes=30)
         )
+
 
         while current < allowed_end:
 
-            slot = current.strftime("%H:%M")
-
             # --------------------------------------------------
-            # NÃO MOSTRA HORÁRIOS PASSADOS NO DIA ATUAL
+            # VERIFICA SE O HORÁRIO JÁ PASSOU HOJE
             # --------------------------------------------------
 
             if day == date.today():
@@ -237,11 +252,16 @@ def slots_for(day, service=None):
                 )
 
                 if slot_datetime <= now:
-                    current += timedelta(minutes=30)
+
+                    current += timedelta(
+                        minutes=30
+                    )
+
                     continue
 
+
             # --------------------------------------------------
-            # SE EXISTIR SERVIÇO, VERIFICA SE ELE CABE NO HORÁRIO
+            # VERIFICA A DURAÇÃO DO SERVIÇO
             # --------------------------------------------------
 
             if service:
@@ -250,17 +270,39 @@ def slots_for(day, service=None):
                     service
                 )
 
-                service_end = current + timedelta(
-                    minutes=duration
+                service_end = (
+                    current
+                    + timedelta(
+                        minutes=duration
+                    )
                 )
 
+
+                # O serviço precisa terminar
+                # dentro do período permitido.
+
                 if service_end > allowed_end:
-                    current += timedelta(minutes=30)
+
+                    current += timedelta(
+                        minutes=30
+                    )
+
                     continue
 
-            slots.append(slot)
 
-            current += timedelta(minutes=30)
+            # --------------------------------------------------
+            # ADICIONA O HORÁRIO
+            # --------------------------------------------------
+
+            slots.append(
+                current.strftime("%H:%M")
+            )
+
+
+            current += timedelta(
+                minutes=30
+            )
+
 
     return slots
 
